@@ -1,0 +1,3 @@
+[submodule "log-agent-submodule"]
+	path = log-agent-submodule
+	url = git@github.com:summerKK/logagent.git

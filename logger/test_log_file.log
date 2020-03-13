@@ -1,0 +1,7 @@
+this is a debug test 1
+2020-03-05 23:26:26 DEBUG /Users/summer/Docker/goproject/logger/file_log.go summer/logger.(*FileLog).Debug:70 this is a debug test 1
+2020-03-05 23:28:07 DEBUG file_log.go logger.(*FileLog).Debug:71 this is a debug test 1
+2020-03-05 23:28:41 DEBUG file_log.go logger.(*FileLog).writeToFile:56 this is a debug test 1
+2020-03-05 23:29:00 DEBUG utils.go logger.GetCallStack:6 this is a debug test 1
+2020-03-05 23:29:15 DEBUG log_test.go logger.TestFileLog:7 this is a debug test 1
+2020-03-05 23:29:51 DEBUG (log_test.go logger.TestFileLog:7) this is a debug test 1

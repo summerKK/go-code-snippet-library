@@ -1,0 +1,9 @@
+this is a fatal test 1
+2020-03-05 23:26:26 FATAL /Users/summer/Docker/goproject/logger/file_log.go summer/logger.(*FileLog).Fatal:99 this is a fatal test 1
+2020-03-05 23:28:07 FATAL file_log.go logger.(*FileLog).Fatal:100 this is a fatal test 1
+2020-03-05 23:28:41 FATAL file_log.go logger.(*FileLog).writeToFile:56 this is a fatal test 1
+2020-03-05 23:29:00 FATAL utils.go logger.GetCallStack:6 this is a fatal test 1
+2020-03-05 23:29:15 FATAL log_test.go logger.TestFileLog:8 this is a fatal test 1
+2020-03-05 23:29:51 FATAL (log_test.go logger.TestFileLog:8) this is a fatal test 1
+2020-03-05 23:34:19 FATAL (log_test.go logger.TestFileLog:8) this is a fatal test 1
+2020-03-05 23:38:50.811 FATAL (log_test.go logger.TestFileLog:8) this is a fatal test 1
