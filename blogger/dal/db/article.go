@@ -10,10 +10,10 @@ func ArticleInsert(article *model.ArticleDetail) (articleId int64, err error) {
 		return 0, fmt.Errorf("invalid params")
 	}
 	sqlStr := `insert into article 
-    (category_id,content,title,view_count,comment_count, username,summary)
-    values (?,?,?,?,?,?,?)
+    (category_id,content,title, username,summary)
+    values (?,?,?,?,?)
     `
-	result, err := Db.Exec(sqlStr, article.CategoryId, article.Content, article.Title, article.ViewCount, article.CommentCount, article.Username, article.Summary)
+	result, err := Db.Exec(sqlStr, article.CategoryId, article.Content, article.Title, article.Username, article.Summary)
 	if err != nil {
 		return 0, err
 	}

@@ -20,8 +20,13 @@ func init() {
 func main() {
 	router.Static("/static/", "./static")
 	router.LoadHTMLGlob("views/*")
+	routing()
+
+	router.Run()
 }
 
 func routing() {
 	router.GET("/", controller.IndexHandler)
+	router.GET("/article/new", controller.ArticleCreate)
+	router.POST("/article/submit", controller.ArticleSubmit)
 }

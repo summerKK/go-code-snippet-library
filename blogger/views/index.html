@@ -50,12 +50,12 @@
                         <p>{{.Summary}}</p>
                     </div>
                     <div class="autor">
-                        <span class="lm"><a href="/category/?category_id={{.Category.CategoryId}}" title="CSS3|Html5"
+                        <span class="lm"><a href="/category/?category_id={{.Category.Id}}" title="CSS3|Html5"
                                             target="_blank" class="classname">{{.CategoryName}}</a></span>
-                        <span class="dtime">{{.CreateTime}}</span>
+                        <span class="dtime">{{.ArticleInfo.CreateTime}}</span>
                         <span class="viewnum">浏览（{{.ViewCount}}）</span>
                         <span class="viewnum">评论（{{.CommentCount}}）</span>
-                        <span class="readmore"><a href="/article/detail/?article_id={{.Id}}">阅读原文</a></span>
+                        <span class="readmore"><a href="/article/detail/?article_id={{.ArticleInfo.Id}}">阅读原文</a></span>
                     </div>
                 </li>
             {{end}}
@@ -81,8 +81,8 @@
             <div class="cloud">
                 <h2 class="hometitle">分类云</h2>
                 <ul>
-                    {{range .category_list}}
-                        <a href="/category/?category_id={{.CategoryId}}">{{.CategoryName}}</a>
+                    {{range .}}
+                        <a href="/category/?category_id={{.ArticleInfo.Id}}">{{.CategoryName}}</a>
                     {{end}}
                 </ul>
             </div>

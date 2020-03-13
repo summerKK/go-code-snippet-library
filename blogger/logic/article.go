@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"math"
 	"summer/blogger/dal/db"
 	"summer/blogger/model"
 )
@@ -31,6 +32,23 @@ func GetArticleRecordList(page int, pageSize int) (list []*model.ArticleRecord, 
 		list = append(list, temp)
 	}
 
+	return
+}
+
+func ArticleInsert(username, title, content string, categoryId int64) (err error) {
+	contentLen := []rune(content)
+	min := int(math.Min(float64(len(contentLen)), 128))
+	summary := string(contentLen[:min])
+	articleDetail := &model.ArticleDetail{
+		ArticleInfo: model.ArticleInfo{
+			CategoryId: categoryId,
+			Title:      title,
+			Summary:    summary,
+		},
+		Content: content,
+	}
+
+	_, err = db.ArticleInsert(articleDetail)
 	return
 }
 

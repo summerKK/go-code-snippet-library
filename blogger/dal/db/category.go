@@ -12,7 +12,16 @@ func CategoryList(ids []int64) (list []*model.Category, err error) {
 	}
 	err = Db.Unsafe().Select(&list, sqlStr, args...)
 	if err != nil {
-		return nil, err
+		return
+	}
+	return
+}
+
+func AllCategoryList() (list []*model.Category, err error) {
+	sqlStr := "select * from category order by category_no desc "
+	err = Db.Unsafe().Select(&list, sqlStr)
+	if err != nil {
+		return
 	}
 	return
 }
