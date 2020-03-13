@@ -1,1 +1,2 @@
-package blogger
+package main
+
