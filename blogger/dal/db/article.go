@@ -40,3 +40,33 @@ func ArticleInfo(articleId int64) (articleInfo *model.ArticleDetail, err error) 
 	err = Db.Unsafe().Get(articleInfo, sqlStr, articleId)
 	return
 }
+
+func RelatedArticleList(articleId int64) (list []*model.RelatedArticle, err error) {
+	sql := "select category_id from article where id = ?"
+	var categortId int64
+	err = Db.Get(&categortId, sql, articleId)
+	if err != nil {
+		return
+	}
+	sql = "select id,title from article where category_id = ? and id != ?"
+	err = Db.Select(&list, sql, categortId, articleId)
+	return
+}
+
+func PrevArticle(articleId int64) (article *model.RelatedArticle, err error) {
+	article = &model.RelatedArticle{
+		ArticleId: -1,
+	}
+	sql := "select id,title from article where id < ? order by id desc limit 1"
+	err = Db.Get(article, sql, articleId)
+	return
+}
+
+func NextArticle(articleId int64) (article *model.RelatedArticle, err error) {
+	article = &model.RelatedArticle{
+		ArticleId: -1,
+	}
+	sql := "select id,title from article where id > ? order by id asc limit 1"
+	err = Db.Get(article, sql, articleId)
+	return
+}

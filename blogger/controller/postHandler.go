@@ -56,5 +56,27 @@ func ArticleInfo(c *gin.Context) {
 	}
 	category, _ := logic.GetCategoryById(articleInfo.CategoryId)
 	articleInfo.Category = *category
-	c.HTML(http.StatusOK, "views/detail.html", articleInfo)
+
+	relatedArticles, err := logic.RelatedArticleListById(articleId)
+	if err != nil {
+		fmt.Printf("(2) article info got error:%v\n", err)
+	}
+
+	prevArticle, err := logic.GetPrevArticleById(articleId)
+	if err != nil {
+		fmt.Printf("(3) article info got error:%v\n", err)
+	}
+
+	nextArticle, err := logic.GetNextArticleById(articleId)
+	if err != nil {
+		fmt.Printf("(3) article info got error:%v\n", err)
+	}
+
+	var data map[string]interface{} = make(map[string]interface{}, 10)
+	data["detail"] = articleInfo
+	data["related_article"] = relatedArticles
+	data["prev_article"] = prevArticle
+	data["next_article"] = nextArticle
+
+	c.HTML(http.StatusOK, "views/detail.html", data)
 }

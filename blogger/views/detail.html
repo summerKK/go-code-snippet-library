@@ -42,34 +42,46 @@
         </div>
     </header>
     <article>
-        <h1 class="t_nav"><span>您现在的位置是：首页 > {{.CategoryName}}</span>
+        <h1 class="t_nav"><span>您现在的位置是：首页 > {{.detail.CategoryName}}</span>
         </h1>
         <div class="infos">
             <div class="newsview">
-                <h3 class="news_title">{{.Title}}</h3>
+                <h3 class="news_title">{{.detail.Title}}</h3>
                 <div class="news_author">
         <span class="au01">
-          <a href="mailto:dancesmiling@qq.com">{{.Username}}</a>
-        </span><span class="au02">{{.ArticleInfo.CreateTime}}</span>
+          <a href="mailto:dancesmiling@qq.com">{{.detail.Username}}</a>
+        </span><span class="au02">{{.detail.ArticleInfo.CreateTime}}</span>
                     <span class="au03">共<b>
-             <script src="/view/add_count/?article_id={{.ArticleInfo.Id}}}">
-             </script>{{.ViewCount}}</b>人围观</span>
+             <script src="/view/add_count/?article_id={{.detail.ArticleInfo.Id}}}">
+             </script>{{.detail.ViewCount}}</b>人围观</span>
                 </div>
 
 
-                <div class="news_infos">{{.Content}}</div>
+                <div class="news_infos">{{.detail.Content}}</div>
             </div>
             <div class="share"></div>
             <div class="nextinfo">
                 <p>上一篇：
+                    {{if eq .prev_article.ArticleId -1}}
+                        没有了
+                    {{else}}
+                        <a href="/article/detail/?article_id={{.prev_article.ArticleId}}">{{.prev_article.Title}}</a>
+                    {{end}}
                 </p>
                 <p>下一篇：
+                    {{if eq .next_article.ArticleId -1}}
+                        没有了
+                    {{else}}
+                        <a href="/article/detail/?article_id={{.next_article.ArticleId}}">{{.next_article.Title}}</a>
+                    {{end}}
                 </p>
             </div>
             <div class="otherlink">
                 <h2>相关文章</h2>
-
                 <ul>
+                    {{range .related_article}}
+                        <li><a href="/article/detail/?article_id={{.ArticleId}}">{{.Title}}</a></li>
+                    {{end}}
                 </ul>
             </div>
             <div>
@@ -114,7 +126,7 @@
                                                            maxlength="100" aria-describedby="email-notes"
                                                            required="required">
                                                     <input id="email" name="article_id" type="hidden"
-                                                           value="{{.ArticleInfo.Id}}" size="30" maxlength="100"
+                                                           value="{{.detail.ArticleInfo.Id}}" size="30" maxlength="100"
                                                            aria-describedby="email-notes" required="required">
                                                 </div>
                                                 </p>

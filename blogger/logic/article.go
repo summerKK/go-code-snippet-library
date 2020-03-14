@@ -58,6 +58,19 @@ func ArticleInfo(articleId int64) (articleInfo *model.ArticleDetail, err error) 
 	return
 }
 
+func RelatedArticleListById(articleId int64) (list []*model.RelatedArticle, err error) {
+	list, err = db.RelatedArticleList(articleId)
+	return
+}
+
+func GetPrevArticleById(articleId int64) (article *model.RelatedArticle, err error) {
+	return db.PrevArticle(articleId)
+}
+
+func GetNextArticleById(articleId int64) (article *model.RelatedArticle, err error) {
+	return db.NextArticle(articleId)
+}
+
 func getCategoryIds(list []*model.ArticleInfo) (categoryIds []int64) {
 loop:
 	for _, record := range list {
