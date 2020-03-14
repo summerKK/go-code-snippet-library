@@ -12,3 +12,9 @@ func GetCategoryList() (list []*model.Category, err error) {
 	}
 	return
 }
+
+func GetCategoryById(id int64) (category *model.Category, err error) {
+	category = &model.Category{}
+	category, err = db.CategoryById(id)
+	return
+}

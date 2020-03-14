@@ -52,6 +52,12 @@ func ArticleInsert(username, title, content string, categoryId int64) (err error
 	return
 }
 
+func ArticleInfo(articleId int64) (articleInfo *model.ArticleDetail, err error) {
+	articleInfo = &model.ArticleDetail{}
+	articleInfo, err = db.ArticleInfo(articleId)
+	return
+}
+
 func getCategoryIds(list []*model.ArticleInfo) (categoryIds []int64) {
 loop:
 	for _, record := range list {

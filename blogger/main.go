@@ -29,4 +29,5 @@ func routing() {
 	router.GET("/", controller.IndexHandler)
 	router.GET("/article/new", controller.ArticleCreate)
 	router.POST("/article/submit", controller.ArticleSubmit)
+	router.GET("/article/detail/", controller.ArticleInfo)
 }

@@ -39,3 +39,22 @@ func ArticleSubmit(c *gin.Context) {
 
 	c.Redirect(http.StatusFound, "/")
 }
+
+func ArticleInfo(c *gin.Context) {
+	articleIdStr := c.Query("article_id")
+	articleId, err := strconv.ParseInt(articleIdStr, 10, 64)
+	if err != nil {
+		fmt.Printf("(0)article info got error:%v\n", err)
+		c.HTML(http.StatusInternalServerError, "views/500.html", nil)
+		return
+	}
+	articleInfo, err := logic.ArticleInfo(articleId)
+	if err != nil {
+		fmt.Printf("(1)article info got error:%v\n", err)
+		c.HTML(http.StatusInternalServerError, "views/500.html", nil)
+		return
+	}
+	category, _ := logic.GetCategoryById(articleInfo.CategoryId)
+	articleInfo.Category = *category
+	c.HTML(http.StatusOK, "views/detail.html", articleInfo)
+}

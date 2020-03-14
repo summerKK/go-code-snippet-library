@@ -42,3 +42,11 @@ func TestArticleList(t *testing.T) {
 	}
 	t.Logf("got item,len:%d", len(list))
 }
+
+func TestArticleInfo(t *testing.T) {
+	articleInfo, err := ArticleInfo(3)
+	if err != nil {
+		t.Errorf("got article info failed,error:%v", err)
+	}
+	t.Logf("got item %+v", articleInfo)
+}

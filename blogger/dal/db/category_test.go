@@ -17,3 +17,11 @@ func TestCategoryList(t *testing.T) {
 	}
 	t.Logf("got items,len:%d", len(list))
 }
+
+func TestCategoryById(t *testing.T) {
+	category, err := CategoryById(1)
+	if err != nil {
+		t.Errorf("got category failed,error:%v", err)
+	}
+	t.Logf("got items %+v", category)
+}

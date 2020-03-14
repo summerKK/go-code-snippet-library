@@ -33,3 +33,10 @@ func ArticleList(page int, pageSize int) (list []*model.ArticleInfo, err error) 
 	}
 	return
 }
+
+func ArticleInfo(articleId int64) (articleInfo *model.ArticleDetail, err error) {
+	articleInfo = &model.ArticleDetail{}
+	sqlStr := "select * from article where  id = ?"
+	err = Db.Unsafe().Get(articleInfo, sqlStr, articleId)
+	return
+}
