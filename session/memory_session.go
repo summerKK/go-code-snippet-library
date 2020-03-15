@@ -40,5 +40,5 @@ func (m *MemSession) Del(key string) (err error) {
 }
 
 func (m *MemSession) Save() (err error) {
-	panic("implement me")
+	return
 }
