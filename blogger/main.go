@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/DeanThompson/ginpprof"
 	"github.com/gin-gonic/gin"
 	"summer/blogger/controller"
 	"summer/blogger/dal/db"
@@ -31,4 +32,6 @@ func routing() {
 	router.POST("/article/submit", controller.ArticleSubmit)
 	router.GET("/article/detail/", controller.ArticleInfo)
 	router.POST("/article/comment/submit/", controller.CommentSubmit)
+
+	ginpprof.Wrap(router)
 }
