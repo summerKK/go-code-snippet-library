@@ -52,7 +52,7 @@
           <a href="mailto:dancesmiling@qq.com">{{.detail.Username}}</a>
         </span><span class="au02">{{.detail.ArticleInfo.CreateTime}}</span>
                     <span class="au03">共<b>
-             <script src="/view/add_count/?article_id={{.detail.ArticleInfo.Id}}}">
+             <script src="/view/add_count/?article_id={{.article_id}}}">
              </script>{{.detail.ViewCount}}</b>人围观</span>
                 </div>
 
@@ -87,6 +87,11 @@
             <div>
                 <hr>
                 <h2>评论列表</h2>
+                <ul>
+                    {{range .comment}}
+                        <li><span>{{.CreateTime}} {{.Username}}</span>:{{.Content}}</li>
+                    {{end}}
+                </ul>
             </div>
             <div class="news_pl">
                 <h2>文章评论</h2>
@@ -101,7 +106,8 @@
 
                                     <div class="row">
                                         <div class="register span6">
-                                            <form action="/comment/submit/" method="post">
+                                            <form action="/article/comment/submit/?article_id={{.article_id}}"
+                                                  method="post">
 
                                                 <p class="comment-notes"><span id="email-notes">电子邮件地址不会被公开。</span>
                                                     必填项已用<span class="required">*</span>标注</p>
@@ -114,7 +120,7 @@
                                                 <div><label for="author">姓名 <span class="required">*</span></label>
                                                 </div>
                                                 <div>
-                                                    <input id="author" name="author" type="text" value="" size="30"
+                                                    <input id="author" name="username" type="text" value="" size="30"
                                                            maxlength="245" required="required">
                                                 </div>
                                                 </p>
@@ -157,6 +163,9 @@
                     <li><a href="#">关于我</a></li>
                     <li><a href="list.html">学无止境</a>
                         <ul>
+                            {{range .categories}}
+                                <li><a href="/?category_id={{.Id}}">{{.CategoryName}}</a></li>
+                            {{end}}
                         </ul>
                     </li>
                 </ul>

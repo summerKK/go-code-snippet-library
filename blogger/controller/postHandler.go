@@ -72,11 +72,24 @@ func ArticleInfo(c *gin.Context) {
 		fmt.Printf("(3) article info got error:%v\n", err)
 	}
 
+	categories, err := logic.GetCategoryList()
+	if err != nil {
+		fmt.Printf("(4) article info got error:%v\n", err)
+	}
+
+	commentList, err := logic.GetArticleCommentList(articleId)
+	if err != nil {
+		fmt.Printf("(5) article info got error:%v\n", err)
+	}
+
 	var data map[string]interface{} = make(map[string]interface{}, 10)
 	data["detail"] = articleInfo
 	data["related_article"] = relatedArticles
 	data["prev_article"] = prevArticle
 	data["next_article"] = nextArticle
+	data["categories"] = categories
+	data["comment"] = commentList
+	data["article_id"] = articleId
 
 	c.HTML(http.StatusOK, "views/detail.html", data)
 }
