@@ -8,8 +8,9 @@ type MemSession struct {
 	sync.RWMutex
 }
 
-func NewMemSession() *MemSession {
+func NewMemSession(id string) *MemSession {
 	return &MemSession{
+		id:      id,
 		data:    make(map[string]interface{}, 8),
 		RWMutex: sync.RWMutex{},
 	}
@@ -27,7 +28,7 @@ func (m *MemSession) Get(key string) (value interface{}, err error) {
 	defer m.RUnlock()
 	value, ok := m.data[key]
 	if !ok {
-		err = keyNotExistsInSession
+		err = errKeyNotExistsInSession
 	}
 	return
 }

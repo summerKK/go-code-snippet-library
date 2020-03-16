@@ -8,12 +8,16 @@ type MemorySessionMgr struct {
 	sync.RWMutex
 }
 
+func (m *MemorySessionMgr) Init(addr string, options ...string) (err error) {
+	return
+}
+
 func (m *MemorySessionMgr) Get(sessionid string) (session ISession, err error) {
 	m.RLock()
 	defer m.RUnlock()
 	session, ok := m.sessionMap[sessionid]
 	if !ok {
-		err = sessionNotExists
+		err = errSessionNotExists
 	}
 	return
 }
@@ -21,7 +25,7 @@ func (m *MemorySessionMgr) Get(sessionid string) (session ISession, err error) {
 func (m *MemorySessionMgr) Create() (session ISession, err error) {
 	u := uuid.NewV4()
 	m.Lock()
-	session = NewMemSession()
+	session = NewMemSession(u.String())
 	m.sessionMap[u.String()] = session
 	m.Unlock()
 	return
