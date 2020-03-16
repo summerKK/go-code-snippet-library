@@ -8,6 +8,15 @@ type MemorySessionMgr struct {
 	sync.RWMutex
 }
 
+func NewMemSessionMgr(addr string, options ...string) (session *MemorySessionMgr, err error) {
+	session = &MemorySessionMgr{
+		sessionMap: make(map[string]ISession, 8),
+		RWMutex:    sync.RWMutex{},
+	}
+	err = session.Init(addr, options...)
+	return
+}
+
 func (m *MemorySessionMgr) Init(addr string, options ...string) (err error) {
 	return
 }

@@ -15,6 +15,15 @@ type RedisSessionMgr struct {
 	sessionMap map[string]ISession
 }
 
+func NewRedisSessionMgr(addr string, options ...string) (session *RedisSessionMgr, err error) {
+	session = &RedisSessionMgr{
+		sessionMap: make(map[string]ISession, 8),
+		RWMutex:    sync.RWMutex{},
+	}
+	err = session.Init(addr, options...)
+	return
+}
+
 func (r *RedisSessionMgr) Init(addr string, options ...string) (err error) {
 	r.addr = addr
 	if len(options) > 0 {

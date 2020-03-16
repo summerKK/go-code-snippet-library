@@ -23,7 +23,7 @@ type RedisSession struct {
 func NewRedisSession(id string, pool *redis.Pool) *RedisSession {
 	return &RedisSession{
 		id:      id,
-		data:    make(map[string]interface{}, 8),
+		buf:     make(map[string]interface{}, 8),
 		RWMutex: sync.RWMutex{},
 		pool:    pool,
 		status:  status_init,
