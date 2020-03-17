@@ -1,4 +1,4 @@
-module summer/session
+module github.com/summerKK/go-code-snippet-library/session
 
 require (
 	github.com/gomodule/redigo v2.0.0+incompatible
