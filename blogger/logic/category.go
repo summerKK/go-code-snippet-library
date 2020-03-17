@@ -1,8 +1,8 @@
 package logic
 
 import (
-	"summer/blogger/dal/db"
-	"summer/blogger/model"
+	"github.com/summerKK/go-code-snippet-library/blogger/dal/db"
+	"github.com/summerKK/go-code-snippet-library/blogger/model"
 )
 
 func GetCategoryList() (list []*model.Category, err error) {

@@ -3,8 +3,8 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/summerKK/go-code-snippet-library/blogger/logic"
 	"net/http"
-	"summer/blogger/logic"
 )
 
 func IndexHandler(c *gin.Context) {

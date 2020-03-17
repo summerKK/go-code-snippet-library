@@ -3,9 +3,9 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/summerKK/go-code-snippet-library/blogger/logic"
 	"net/http"
 	"strconv"
-	"summer/blogger/logic"
 )
 
 func ArticleCreate(c *gin.Context) {

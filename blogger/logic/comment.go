@@ -1,8 +1,8 @@
 package logic
 
 import (
-	"summer/blogger/dal/db"
-	"summer/blogger/model"
+	"github.com/summerKK/go-code-snippet-library/blogger/dal/db"
+	"github.com/summerKK/go-code-snippet-library/blogger/model"
 )
 
 func CommentInsert(content, username string, articleId int64) (commentId int64, err error) {

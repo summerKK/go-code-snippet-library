@@ -1,9 +1,9 @@
 package logic
 
 import (
+	"github.com/summerKK/go-code-snippet-library/blogger/dal/db"
+	"github.com/summerKK/go-code-snippet-library/blogger/model"
 	"math"
-	"summer/blogger/dal/db"
-	"summer/blogger/model"
 )
 
 func GetArticleRecordList(page int, pageSize int) (list []*model.ArticleRecord, err error) {

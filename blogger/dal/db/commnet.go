@@ -1,6 +1,6 @@
 package db
 
-import "summer/blogger/model"
+import "github.com/summerKK/go-code-snippet-library/blogger/model"
 
 func CommentInsert(comment *model.Comment) (commentId int64, err error) {
 	sql := "insert into comment(content,username,article_id) values (?,?,?)"

@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"summer/blogger/model"
+	"github.com/summerKK/go-code-snippet-library/blogger/model"
 	"testing"
 )
 

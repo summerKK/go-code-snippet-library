@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/jmoiron/sqlx"
-	"summer/blogger/model"
+	"github.com/summerKK/go-code-snippet-library/blogger/model"
 )
 
 func CategoryList(ids []int64) (list []*model.Category, err error) {

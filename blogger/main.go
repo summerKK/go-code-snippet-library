@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/DeanThompson/ginpprof"
 	"github.com/gin-gonic/gin"
-	"summer/blogger/controller"
-	"summer/blogger/dal/db"
+	"github.com/summerKK/go-code-snippet-library/blogger/controller"
+	"github.com/summerKK/go-code-snippet-library/blogger/dal/db"
 )
 
 var router *gin.Engine
