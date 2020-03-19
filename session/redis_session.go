@@ -6,11 +6,15 @@ import (
 	"sync"
 )
 
-const (
-	status_init = iota
-	status_loading
-	status_modify
-)
+func NewRedisSession(id string, pool *redis.Pool) *RedisSession {
+	return &RedisSession{
+		id:      id,
+		buf:     make(map[string]interface{}, 8),
+		RWMutex: sync.RWMutex{},
+		pool:    pool,
+		status:  status_init,
+	}
+}
 
 type RedisSession struct {
 	id  string
@@ -20,14 +24,16 @@ type RedisSession struct {
 	status int
 }
 
-func NewRedisSession(id string, pool *redis.Pool) *RedisSession {
-	return &RedisSession{
-		id:      id,
-		buf:     make(map[string]interface{}, 8),
-		RWMutex: sync.RWMutex{},
-		pool:    pool,
-		status:  status_init,
+func (r *RedisSession) IsModify() bool {
+	if r.status == status_modify {
+		return true
 	}
+
+	return false
+}
+
+func (r *RedisSession) Id() string {
+	return r.id
 }
 
 func (r *RedisSession) Set(key string, value interface{}) (err error) {

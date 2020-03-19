@@ -6,6 +6,7 @@ type MemSession struct {
 	id   string
 	data map[string]interface{}
 	sync.RWMutex
+	status int
 }
 
 func NewMemSession(id string) *MemSession {
@@ -14,6 +15,18 @@ func NewMemSession(id string) *MemSession {
 		data:    make(map[string]interface{}, 8),
 		RWMutex: sync.RWMutex{},
 	}
+}
+
+func (m *MemSession) IsModify() bool {
+	if m.status == status_modify {
+		return true
+	}
+
+	return false
+}
+
+func (m *MemSession) Id() string {
+	return m.id
 }
 
 func (m *MemSession) Set(key string, value interface{}) (err error) {
