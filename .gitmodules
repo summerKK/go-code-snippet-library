@@ -1,3 +1,6 @@
 [submodule "log-agent-submodule"]
 	path = log-agent-submodule
 	url = git@github.com:summerKK/logagent.git
+[submodule "spark-client"]
+	path = spark-client
+	url = git@github.com:summerKK/spark-client.git
