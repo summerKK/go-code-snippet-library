@@ -11,7 +11,7 @@ var engine *gin.Engine
 func Init() {
 	engine = gin.Default()
 	router()
-	engine.Run(":9090")
+	engine.Run("127.0.0.1:9080")
 }
 
 func router() {
