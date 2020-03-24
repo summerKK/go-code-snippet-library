@@ -6,9 +6,9 @@ import (
 )
 
 type response struct {
-	Code int                    `json:"code"`
-	Msg  string                 `json:"msg"`
-	Data map[string]interface{} `json:"data"`
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
 }
 
 type CodeInfo struct {
@@ -20,7 +20,6 @@ func ResponseErr(c *gin.Context, code *CodeInfo) {
 	c.JSON(http.StatusOK, &response{
 		Code: code.Code,
 		Msg:  codeMsg(code),
-		Data: make(map[string]interface{}),
 	})
 }
 
@@ -33,9 +32,8 @@ func ResponseSuc(c *gin.Context, data interface{}, code *CodeInfo) {
 	resp := &response{
 		Code: code.Code,
 		Msg:  codeMsg(code),
-		Data: make(map[string]interface{}),
+		Data: data,
 	}
-	resp.Data["data"] = data
 	c.JSON(http.StatusOK, resp)
 }
 
