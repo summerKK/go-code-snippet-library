@@ -6,6 +6,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/summerKK/go-code-snippet-library/spark/common"
 	dbaccount "github.com/summerKK/go-code-snippet-library/spark/dal/db/account"
+	middlewareAccount "github.com/summerKK/go-code-snippet-library/spark/middleware/account"
 	"github.com/summerKK/go-code-snippet-library/spark/service/account"
 	"github.com/summerKK/go-code-snippet-library/spark/util"
 )
@@ -46,6 +47,8 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
+	// 加载请求中间件
+	middlewareAccount.ProcessRequest(c)
 	var userInfo common.UserInfo
 	err := c.BindJSON(&userInfo)
 	if err != nil {
@@ -76,5 +79,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// 把用户id存入session
+	_ = middlewareAccount.SetUserId(c, int64(info.UserId))
+	// 设置cookie
+	middlewareAccount.ProcessResponse(c)
 	util.ResponseSuc(c, info, nil)
 }

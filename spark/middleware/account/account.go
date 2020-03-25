@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func processRequest(c *gin.Context) {
+func ProcessRequest(c *gin.Context) {
 	var redisSession session.ISession
 	defer func() {
 		if redisSession == nil {
@@ -38,7 +38,7 @@ func processRequest(c *gin.Context) {
 	c.Set(sparkLoginStatus, 1)
 }
 
-func processResponse(c *gin.Context) {
+func ProcessResponse(c *gin.Context) {
 	Isession, exists := c.Get(sparkSessionName)
 	if !exists {
 		return
@@ -80,6 +80,20 @@ func GetUserId(c *gin.Context) (userId int64, err error) {
 		return
 	}
 
+	return
+}
+
+func SetUserId(c *gin.Context, userId int64) (err error) {
+	Isession, exists := c.Get(sparkSessionName)
+	if !exists {
+		return
+	}
+	redisSession, ok := Isession.(session.ISession)
+	if !ok {
+		return
+	}
+	err = redisSession.Set(sparkUserId, userId)
+	err = redisSession.Set(sparkLoginStatus, 1)
 	return
 }
 

@@ -4,6 +4,7 @@ import (
 	"github.com/summerKK/go-code-snippet-library/spark/dal/db"
 	"github.com/summerKK/go-code-snippet-library/spark/gin"
 	idgen "github.com/summerKK/go-code-snippet-library/spark/id-gen"
+	"github.com/summerKK/go-code-snippet-library/spark/middleware/account"
 )
 
 func init() {
@@ -15,6 +16,11 @@ func init() {
 	}
 	// 初始化id生成器
 	idgen.Init(0)
+	// 初始化session
+	err = account.InitSession()
+	if err != nil {
+		panic(err)
+	}
 	// 初始化gin框架
 	gin.Init()
 }

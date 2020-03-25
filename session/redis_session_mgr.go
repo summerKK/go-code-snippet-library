@@ -56,13 +56,8 @@ func (r *RedisSessionMgr) newPool() {
 	r.pool = &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", r.addr)
-			if _, err := c.Do("AUTH", r.password); err != nil {
-				c.Close()
-				return nil, err
-			}
-			return c, err
+		Dial: func() (c redis.Conn, err error) {
+			return redis.Dial("tcp", r.addr)
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if time.Since(t) < time.Minute {
