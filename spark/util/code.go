@@ -1,9 +1,10 @@
 package util
 
 const (
-	ErrParameters  = 1001
-	ErrUserExists  = 1002
-	ErrServiceBusy = 1003
+	ErrParameters = 1000 + iota
+	ErrUserExists
+	ErrUserLoginFailed
+	ErrServiceBusy
 )
 
 const (
@@ -20,6 +21,8 @@ func GetCodeMsg(code int) (msg string) {
 		msg = "用户已经存在"
 	case ErrServiceBusy:
 		msg = "服务器繁忙"
+	case ErrUserLoginFailed:
+		msg = "用户名或者密码错误"
 	default:
 		msg = "未知错误"
 	}

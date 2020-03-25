@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/summerKK/go-code-snippet-library/spark/dal/db"
 	"github.com/summerKK/go-code-snippet-library/spark/gin"
-	id_gen "github.com/summerKK/go-code-snippet-library/spark/id-gen"
+	idgen "github.com/summerKK/go-code-snippet-library/spark/id-gen"
 )
 
 func init() {
@@ -14,7 +14,7 @@ func init() {
 		panic(err)
 	}
 	// 初始化id生成器
-	id_gen.Init(0)
+	idgen.Init(0)
 	// 初始化gin框架
 	gin.Init()
 }

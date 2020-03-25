@@ -23,3 +23,9 @@ func Register(user *common.UserInfo) (err error) {
 	err = account.RegisterUser(user)
 	return
 }
+
+func Login(user *common.UserInfo) (userInfo *common.UserInfo, err error) {
+	user.Password = util.Slat([]byte(user.Password + UserSlat))
+	userInfo, err = account.Login(user)
+	return
+}

@@ -25,3 +25,18 @@ func RegisterUser(user *common.UserInfo) (err error) {
 	}
 	return
 }
+
+func Login(user *common.UserInfo) (userRow *common.UserInfo, err error) {
+	userRow = &common.UserInfo{}
+	sql := "select * from user where username = ?"
+	err = db.Db.Get(userRow, sql, user.User)
+	if err != nil {
+		log.Printf("select user,got error:%v\n", err)
+		return
+	}
+	if userRow.Password == user.Password {
+		return
+	}
+	err = DbUserLoginFialed
+	return
+}

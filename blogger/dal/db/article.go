@@ -43,13 +43,13 @@ func ArticleInfo(articleId int64) (articleInfo *model.ArticleDetail, err error) 
 
 func RelatedArticleList(articleId int64) (list []*model.RelatedArticle, err error) {
 	sql := "select category_id from article where id = ?"
-	var categortId int64
-	err = Db.Get(&categortId, sql, articleId)
+	var categoryId int64
+	err = Db.Get(&categoryId, sql, articleId)
 	if err != nil {
 		return
 	}
 	sql = "select id,title from article where category_id = ? and id != ?"
-	err = Db.Select(&list, sql, categortId, articleId)
+	err = Db.Select(&list, sql, categoryId, articleId)
 	return
 }
 

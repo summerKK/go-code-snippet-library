@@ -18,4 +18,5 @@ func router() {
 	engine.Use(middleware.Cors())
 	api := engine.Group("/api")
 	api.POST("/user/register", account.Register)
+	api.POST("/user/login", account.Login)
 }
