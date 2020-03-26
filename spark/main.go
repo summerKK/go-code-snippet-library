@@ -28,7 +28,10 @@ func init() {
 		panic(err)
 	}
 	// 初始化gin框架
-	gin.Init()
+	err = gin.Init()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
