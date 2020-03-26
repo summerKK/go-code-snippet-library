@@ -16,7 +16,7 @@ type node struct {
 	childs map[rune]*node
 }
 
-type trie struct {
+type Trie struct {
 	// 根节点
 	root *node
 	// 叶子节点总数
@@ -29,14 +29,14 @@ func newNode() *node {
 	}
 }
 
-func NewTrie() *trie {
-	return &trie{
+func NewTrie() *Trie {
+	return &Trie{
 		root: newNode(),
 		size: 0,
 	}
 }
 
-func (t *trie) Add(key string, data interface{}) (err error) {
+func (t *Trie) Add(key string, data interface{}) (err error) {
 	char := []rune(strings.TrimSpace(key))
 	node := t.root
 	for _, r := range char {
@@ -64,7 +64,7 @@ func (t *trie) Add(key string, data interface{}) (err error) {
 }
 
 // 查找节点
-func (t *trie) findNode(text string) (result *node) {
+func (t *Trie) findNode(text string) (result *node) {
 	char := []rune(text)
 	node := t.root
 	for _, r := range char {
@@ -79,7 +79,7 @@ func (t *trie) findNode(text string) (result *node) {
 }
 
 // 给一个节点,然后手机该节点的所有子节点(包含自己)
-func (t *trie) collectionNode(n *node) (result []*node) {
+func (t *Trie) collectionNode(n *node) (result []*node) {
 	if n == nil {
 		return
 	}
@@ -107,7 +107,7 @@ func (t *trie) collectionNode(n *node) (result []*node) {
 }
 
 // 根据前缀查找子节点
-func (t *trie) prefixSearch(key string) (result []*node) {
+func (t *Trie) prefixSearch(key string) (result []*node) {
 	node := t.findNode(key)
 	if node == nil {
 		return
@@ -116,7 +116,7 @@ func (t *trie) prefixSearch(key string) (result []*node) {
 	return
 }
 
-func (t *trie) Check(text string, replace string) (rtext string, hit bool) {
+func (t *Trie) Check(text string, replace string) (rtext string, hit bool) {
 	chars := []rune(strings.TrimSpace(text))
 	if t.root == nil {
 		return

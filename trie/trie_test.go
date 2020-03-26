@@ -28,13 +28,13 @@ func TestTrie_Check(t *testing.T) {
 		}
 		err = trie.Add(str, nil)
 		if err != nil {
-			t.Errorf("trie add failed")
+			t.Errorf("Trie add failed")
 			return
 		}
 	}
 	check, hit := trie.Check(checkStr, "***")
 	if !hit || check != "hello,world***hello,world***" {
-		t.Errorf("trie check failed")
+		t.Errorf("Trie check failed")
 		return
 	}
 	log.Printf("%v\n", check)
