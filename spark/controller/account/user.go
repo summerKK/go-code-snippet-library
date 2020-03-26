@@ -47,10 +47,22 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
+	var err error
+	var info *common.UserInfo
+	defer func() {
+		if err != nil || info == nil {
+			return
+		}
+		// 把用户id存入session
+		_ = middlewareAccount.SetUserId(c, int64(info.UserId))
+		// 设置cookie
+		middlewareAccount.ProcessResponse(c)
+		util.ResponseSuc(c, info, nil)
+	}()
 	// 加载请求中间件
 	middlewareAccount.ProcessRequest(c)
 	var userInfo common.UserInfo
-	err := c.BindJSON(&userInfo)
+	err = c.BindJSON(&userInfo)
 	if err != nil {
 		util.ResponseErr(c, &util.CodeInfo{Code: util.ErrParameters})
 		return
@@ -69,7 +81,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	info, err := account.Login(&userInfo)
+	info, err = account.Login(&userInfo)
 	if err != nil {
 		if err == dbaccount.DbUserLoginFialed {
 			util.ResponseErr(c, &util.CodeInfo{Code: util.ErrUserLoginFailed})
@@ -78,10 +90,4 @@ func Login(c *gin.Context) {
 		}
 		return
 	}
-
-	// 把用户id存入session
-	_ = middlewareAccount.SetUserId(c, int64(info.UserId))
-	// 设置cookie
-	middlewareAccount.ProcessResponse(c)
-	util.ResponseSuc(c, info, nil)
 }

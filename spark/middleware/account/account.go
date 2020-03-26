@@ -59,7 +59,6 @@ func ProcessResponse(c *gin.Context) {
 		Name:     cookieSessionId,
 		Value:    sessionId,
 		Path:     "/",
-		Domain:   "127.0.0.1:8080",
 		MaxAge:   cookieMaxAge,
 		HttpOnly: true,
 	}
