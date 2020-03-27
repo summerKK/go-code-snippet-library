@@ -52,6 +52,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/summerKK/go-code-snippet-library/logger v0.0.0-20200326150655-f4da5ed4b7a7 h1:u3pC9OE6+Q/x1yg3IjWD3ramwVQjwtrY3BMEKbTxMmg=
+github.com/summerKK/go-code-snippet-library/logger v0.0.0-20200326150655-f4da5ed4b7a7/go.mod h1:1XrO9EpxtdsBLcTpXDD7xKc0aMSCxHwt/xw7wmfU5ew=
 github.com/summerKK/go-code-snippet-library/session v0.0.0-20200317154156-d88f1090bde7 h1:JI2bBchk0OpVkKQmundfj3OOc9ey0DDg+soexGZ2y2c=
 github.com/summerKK/go-code-snippet-library/session v0.0.0-20200317154156-d88f1090bde7/go.mod h1:aUwwkjGCopLUMBB/rq3T8A7rfv+XvYmm0CIlw3sMYo8=
 github.com/summerKK/go-code-snippet-library/trie v0.0.0-20200326134259-84a0e7c2f30c h1:MyIdXns1jlGExIzQ9aCjDQhfdvZs270IwzcoyyWFUq4=

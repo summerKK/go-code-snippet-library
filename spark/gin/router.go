@@ -4,7 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/summerKK/go-code-snippet-library/spark/controller/account"
 	"github.com/summerKK/go-code-snippet-library/spark/controller/category"
+	"github.com/summerKK/go-code-snippet-library/spark/controller/question"
 	"github.com/summerKK/go-code-snippet-library/spark/middleware"
+	middlewareAccount "github.com/summerKK/go-code-snippet-library/spark/middleware/account"
 )
 
 var engine *gin.Engine
@@ -20,5 +22,9 @@ func router() {
 	api := engine.Group("/api")
 	api.POST("/user/register", account.Register)
 	api.POST("/user/login", account.Login)
-	api.GET("/category/list", category.List)
+
+	group := api.Group("")
+	group.Use(middlewareAccount.Auth())
+	group.POST("/question/submit", question.Save)
+	group.GET("/category/list", category.List)
 }

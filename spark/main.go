@@ -5,6 +5,7 @@ import (
 	"github.com/summerKK/go-code-snippet-library/spark/filter"
 	"github.com/summerKK/go-code-snippet-library/spark/gin"
 	idgen "github.com/summerKK/go-code-snippet-library/spark/id-gen"
+	"github.com/summerKK/go-code-snippet-library/spark/logger"
 	"github.com/summerKK/go-code-snippet-library/spark/middleware/account"
 )
 
@@ -24,6 +25,11 @@ func init() {
 	}
 	// 初始化敏感词过滤组件
 	err = filter.Init("./data/filter.dat")
+	if err != nil {
+		panic(err)
+	}
+	// 初始化日志组件
+	err = logger.Init()
 	if err != nil {
 		panic(err)
 	}

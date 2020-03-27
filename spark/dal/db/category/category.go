@@ -7,6 +7,6 @@ import (
 
 func List() (list []*common.Category, err error) {
 	sql := "select * from spark.category"
-	err = db.Db.Select(list, sql)
+	err = db.Db.Select(&list, sql)
 	return
 }

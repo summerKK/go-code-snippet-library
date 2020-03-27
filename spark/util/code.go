@@ -5,10 +5,12 @@ const (
 	ErrUserExists
 	ErrUserLoginFailed
 	ErrServiceBusy
+	ErrSensitiveWord
 )
 
 const (
-	SucDefault = 0
+	SucDefault      = 0
+	ErrUserNotLogin = -1
 )
 
 func GetCodeMsg(code int) (msg string) {
@@ -23,6 +25,10 @@ func GetCodeMsg(code int) (msg string) {
 		msg = "服务器繁忙"
 	case ErrUserLoginFailed:
 		msg = "用户名或者密码错误"
+	case ErrSensitiveWord:
+		msg = "提交的内容含有敏感词"
+	case ErrUserNotLogin:
+		msg = "用户未登录"
 	default:
 		msg = "未知错误"
 	}
