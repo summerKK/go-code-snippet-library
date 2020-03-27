@@ -1,6 +1,7 @@
 package logger
 
 type LogLevelType int
+type LogModType int
 
 const (
 	LogDebug LogLevelType = iota
@@ -9,6 +10,11 @@ const (
 	LogWarn
 	LogError
 	LogFatal
+)
+
+const (
+	FileMod LogModType = iota
+	ConsoleMod
 )
 
 func GetLevelText(level LogLevelType) string {
