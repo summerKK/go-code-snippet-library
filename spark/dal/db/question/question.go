@@ -14,3 +14,12 @@ func Save(question *common.Question) (err error) {
 	}
 	return
 }
+
+func List(categoryId, perPage, pageSize int64) (list []*common.QuestionDetail, err error) {
+	sql := "select question.*,user.username as author_name from question left join user on question.author_id = user.user_id  where category_id = ? and status = 1 limit ?,?"
+	err = db.Db.Select(&list, sql, categoryId, (pageSize-1)*perPage, perPage)
+	if err != nil {
+		logger.Logger.Debug("select qestion row get error:%v", err)
+	}
+	return
+}

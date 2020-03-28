@@ -26,3 +26,8 @@ func Save(c *gin.Context, q *common.Question) (err error) {
 	err = question.Save(q)
 	return
 }
+
+func List(categoryId, perPage, pageSize int64) (list []*common.QuestionDetail, err error) {
+	list, err = question.List(categoryId, perPage, pageSize)
+	return
+}

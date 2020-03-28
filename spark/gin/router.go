@@ -26,5 +26,6 @@ func router() {
 	group := api.Group("")
 	group.Use(middlewareAccount.Auth())
 	group.POST("/question/submit", question.Save)
+	group.GET("/question/list", question.List)
 	group.GET("/category/list", category.List)
 }

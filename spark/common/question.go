@@ -1,6 +1,8 @@
 package common
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	QuestionStatusPending = iota + 1
@@ -16,4 +18,9 @@ type Question struct {
 	CreateTime time.Time `json:"create_time" db:"create_time"`
 	UpdateTime time.Time `json:"update_time" db:"update_time"`
 	Status     int       `json:"status" db:"status"`
+}
+
+type QuestionDetail struct {
+	Question
+	AuthorName string `json:"author_name" db:"author_name"`
 }
