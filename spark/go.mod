@@ -16,3 +16,5 @@ replace (
 	github.com/summerKK/go-code-snippet-library/session => ../session
 	github.com/summerKK/go-code-snippet-library/trie => ../trie
 )
+
+go 1.13
