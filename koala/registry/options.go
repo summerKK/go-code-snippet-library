@@ -26,3 +26,15 @@ func WithTimeout(time time.Duration) Option {
 		o.Timeout = time
 	}
 }
+
+func WithHeartBet(t int64) Option {
+	return func(o *Options) {
+		o.HeartBet = t
+	}
+}
+
+func WithRegistryPath(path string) Option {
+	return func(o *Options) {
+		o.RegistryPath = path
+	}
+}

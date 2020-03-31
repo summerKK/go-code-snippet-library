@@ -36,6 +36,7 @@ var (
 	}
 )
 
+// 自动注册到注册中心组建
 func init() {
 	registry.RegisterRegistry(&etcdRegistryEntry)
 	go etcdRegistryEntry.run()
@@ -77,25 +78,29 @@ func (e *etcdRegistry) Init(ctx context.Context, options ...registry.Option) (er
 }
 
 func (e *etcdRegistry) run() {
-	select {
-	case service := <-e.serviceCh:
-		// 查看服务是否已经注册过
-		_, ok := e.registerServiceMap[service.Name]
-		if !ok {
-			rs := &registerService{
-				service: service,
+	for {
+		select {
+		case service := <-e.serviceCh:
+			// 查看服务是否已经注册过
+			_, ok := e.registerServiceMap[service.Name]
+			if !ok {
+				rs := &registerService{
+					service: service,
+				}
+				// 添加到map,然后在`registerOrKeepAlive`统一注册
+				e.registerServiceMap[service.Name] = rs
 			}
-
-			e.registerServiceMap[service.Name] = rs
+		default:
+			e.registerOrKeepAlive()
+			time.Sleep(time.Millisecond * 500)
 		}
-	default:
-		e.registerOrKeepAlive()
-		time.Sleep(time.Millisecond * 500)
 	}
+
 }
 
 func (e *etcdRegistry) registerOrKeepAlive() {
 	for _, rs := range e.registerServiceMap {
+		// 已经注册过,检查服务是否有异常
 		if rs.registered {
 			err := e.serviceKeepAlive(rs)
 			if err != nil {
@@ -138,6 +143,7 @@ func (e *etcdRegistry) registerService(rs *registerService) (err error) {
 		}
 	}
 
+	// key永久保持
 	alive, err := e.client.KeepAlive(context.TODO(), resp.ID)
 	if err != nil {
 		return
@@ -150,15 +156,18 @@ func (e *etcdRegistry) registerService(rs *registerService) (err error) {
 }
 
 func (e *etcdRegistry) serviceKeepAlive(rs *registerService) (err error) {
-	ch, err := e.client.KeepAlive(context.TODO(), rs.id)
-	if err != nil {
-		return
+	select {
+	case resp := <-rs.keepAliveCh:
+		if resp == nil {
+			rs.registered = false
+			return
+		}
+		logger.Logger.Infof("service:%s, ttl:%v", rs.service.Name, resp.TTL)
 	}
-	rs.keepAliveCh = ch
 	return
 }
 
 func (e *etcdRegistry) serviceNodePath(service *registry.Service) string {
-	nodeIp := fmt.Sprintf("%d:%d", service.Nodes[0].Id, service.Nodes[0].Port)
+	nodeIp := fmt.Sprintf("%s:%d", service.Nodes[0].Ip, service.Nodes[0].Port)
 	return path.Join(e.options.RegistryPath, service.Name, nodeIp)
 }
