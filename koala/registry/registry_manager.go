@@ -38,7 +38,7 @@ func (p *Mgr) initRegistry(ctx context.Context, name string, options ...Option) 
 	if !ok {
 		return nil, fmt.Errorf("%v 注册中心不存在", name)
 	}
-	err = registry.Init(ctx, name, options...)
+	err = registry.Init(ctx, options...)
 	return
 }
 
