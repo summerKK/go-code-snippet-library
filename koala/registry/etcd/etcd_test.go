@@ -18,12 +18,11 @@ func TestEtcdRegistry(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	serviceName := "comment_service"
-	service := &registry.Service{
-		Name: serviceName,
+	serviceName0 := "comment_service_0"
+	service0 := &registry.Service{
+		Name: serviceName0,
 		Nodes: []*registry.Node{
 			{
 				Id:   0,
@@ -38,24 +37,80 @@ func TestEtcdRegistry(t *testing.T) {
 		},
 	}
 	// 注册服务
-	err = initRegistry.Register(context.TODO(), service)
+	err = initRegistry.Register(context.TODO(), service0)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
+	// 在 `comment_service` 增加一个新节点
+	go func() {
+		time.Sleep(time.Second * 5)
+
+		serviceName1 := "comment_service_0"
+		service1 := &registry.Service{
+			Name: serviceName1,
+			Nodes: []*registry.Node{
+				{
+					Id:   0,
+					Ip:   "127.0.0.1",
+					Port: 10086,
+				},
+				{
+					Id:   1,
+					Ip:   "127.0.0.2",
+					Port: 10086,
+				},
+				{
+					Id:   2,
+					Ip:   "127.0.0.3",
+					Port: 10086,
+				},
+			},
+		}
+		err = initRegistry.Register(context.TODO(), service1)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	// 增加一个新服务
+	go func() {
+		time.Sleep(time.Second * 10)
+		serviceName3 := "comment_service_1"
+		service3 := &registry.Service{
+			Name: serviceName3,
+			Nodes: []*registry.Node{
+				{
+					Id:   0,
+					Ip:   "127.0.0.1",
+					Port: 68001,
+				},
+				{
+					Id:   1,
+					Ip:   "127.0.0.2",
+					Port: 68001,
+				},
+			},
+		}
+		err = initRegistry.Register(context.TODO(), service3)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+
 	time.Sleep(time.Second)
-	ticker := time.After(time.Second * 10)
+	ticker := time.After(time.Second * 100)
 	for {
 		select {
 		case <-ticker:
 			goto end
 		default:
-			getService, err := initRegistry.GetService(context.TODO(), serviceName)
+			getService, err := initRegistry.GetService(context.TODO(), serviceName0)
 			if err != nil {
 				t.Fatal(err)
 			}
 			for i, node := range getService.Nodes {
-				fmt.Printf("service:%s node:%d,%+v ", getService.Name, i, node)
+				fmt.Printf("service0:%s node:%d,%+v ", getService.Name, i, node)
 			}
 			fmt.Println()
 			time.Sleep(time.Second)

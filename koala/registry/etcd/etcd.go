@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	maxServiceNum = 8
+	maxServiceNum     = 8
+	syncCacheIntervel = 5
 )
 
 type etcdRegistry struct {
@@ -91,18 +92,44 @@ func (e *etcdRegistry) Init(ctx context.Context, options ...registry.Option) (er
 }
 
 func (e *etcdRegistry) run() {
+	ticker := time.Tick(time.Second * syncCacheIntervel)
 	for {
 		select {
 		case service := <-e.serviceCh:
 			// 查看服务是否已经注册过
-			_, ok := e.registerServiceMap[service.Name]
+			rds, ok := e.registerServiceMap[service.Name]
 			if !ok {
 				rs := &registerService{
 					service: service,
 				}
 				// 添加到map,然后在`registerOrKeepAlive`统一注册
 				e.registerServiceMap[service.Name] = rs
+			} else {
+				// service.Name已经存在,注册进来该服务的一个节点(需要考虑重复注册)
+				reset := false
+				for _, node0 := range service.Nodes {
+					// 查看是否已经注册过了
+					for _, node1 := range rds.service.Nodes {
+						if fmt.Sprintf("%s_%d", node0.Ip, node0.Port) == fmt.Sprintf("%s_%d", node1.Ip, node1.Port) {
+							goto dumplicate
+						}
+					}
+					reset = true
+					rds.service.Nodes = append(rds.service.Nodes, &registry.Node{
+						Id:   len(rds.service.Nodes) + 1,
+						Ip:   node0.Ip,
+						Port: node0.Port,
+					})
+					logger.Logger.Infof("service:%s add new node %s:%d", rds.service.Name, node0.Ip, node0.Port)
+				dumplicate:
+				}
+				if reset {
+					// 服务增加新节点,重新注册
+					rds.registered = false
+				}
 			}
+		case <-ticker:
+			e.syncServiceCache()
 		default:
 			e.registerOrKeepAlive()
 			time.Sleep(time.Millisecond * 500)
@@ -176,7 +203,7 @@ func (e *etcdRegistry) serviceKeepAlive(rs *registerService) (err error) {
 			rs.registered = false
 			return
 		}
-		logger.Logger.Infof("service:%s, ttl:%v", rs.service.Name, resp.TTL)
+		//logger.Logger.Infof("service:%s, ttl:%v", rs.service.Name, resp.TTL)
 	}
 	return
 }
@@ -222,16 +249,16 @@ func (e *etcdRegistry) GetService(ctx context.Context, name string) (service *re
 		return nil, fmt.Errorf("service: %s , empty node\n", name)
 	}
 
-	service = &registry.Service{}
+	service = &registry.Service{
+		Name: name,
+	}
 
 	for _, kv := range response.Kvs {
 		var s registry.Service
 		err = json.Unmarshal(kv.Value, &s)
 		if err != nil {
-			return
+			continue
 		}
-
-		service.Name = s.Name
 
 		for i, node := range s.Nodes {
 			service.Nodes = append(service.Nodes, &registry.Node{
@@ -248,4 +275,36 @@ func (e *etcdRegistry) GetService(ctx context.Context, name string) (service *re
 	}
 
 	return
+}
+
+// 更新服务缓存信息,可能有新的服务注册.要把它们加到缓存里面去
+func (e *etcdRegistry) syncServiceCache() {
+	ctx := context.TODO()
+	serviceCache := e.value.Load().(*allService)
+	for name := range e.registerServiceMap {
+		name = e.servicePath(name)
+		response, err := e.client.Get(ctx, name, clientv3.WithPrefix())
+		if err != nil {
+			continue
+		}
+
+		var s registry.Service
+		s.Name = name
+		for _, kv := range response.Kvs {
+			var tmp registry.Service
+			err := json.Unmarshal(kv.Value, &tmp)
+			if err != nil {
+				continue
+			}
+			for i, node := range tmp.Nodes {
+				s.Nodes = append(s.Nodes, &registry.Node{
+					Id:   i,
+					Ip:   node.Ip,
+					Port: node.Port,
+				})
+			}
+		}
+		serviceCache.serviceMap[name] = &s
+		e.value.Store(serviceCache)
+	}
 }
