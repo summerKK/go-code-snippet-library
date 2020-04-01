@@ -8,11 +8,13 @@ import (
 	"github.com/summerKK/go-code-snippet-library/koala/registry"
 	"go.etcd.io/etcd/clientv3"
 	"path"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
 const (
-	maxServiceLen = 8
+	maxServiceNum = 8
 )
 
 type etcdRegistry struct {
@@ -20,6 +22,9 @@ type etcdRegistry struct {
 	client             *clientv3.Client
 	serviceCh          chan *registry.Service
 	registerServiceMap map[string]*registerService
+	//  原子操作,添加value
+	value atomic.Value
+	sync.Mutex
 }
 
 type registerService struct {
@@ -29,15 +34,23 @@ type registerService struct {
 	keepAliveCh <-chan *clientv3.LeaseKeepAliveResponse
 }
 
+type allService struct {
+	serviceMap map[string]*registry.Service
+}
+
 var (
 	etcdRegistryEntry = etcdRegistry{
-		serviceCh:          make(chan *registry.Service, maxServiceLen),
-		registerServiceMap: make(map[string]*registerService, 8),
+		serviceCh:          make(chan *registry.Service, maxServiceNum),
+		registerServiceMap: make(map[string]*registerService, maxServiceNum),
 	}
 )
 
 // 自动注册到注册中心组建
 func init() {
+	// 服务缓存
+	s := &allService{serviceMap: make(map[string]*registry.Service, maxServiceNum)}
+	etcdRegistryEntry.value.Store(s)
+
 	registry.RegisterRegistry(&etcdRegistryEntry)
 	go etcdRegistryEntry.run()
 }
@@ -138,6 +151,7 @@ func (e *etcdRegistry) registerService(rs *registerService) (err error) {
 			continue
 		}
 		_, err = e.client.Put(context.TODO(), key, string(data), clientv3.WithLease(resp.ID))
+		logger.Logger.Infof("registry service key:%s", key)
 		if err != nil {
 			continue
 		}
@@ -170,4 +184,68 @@ func (e *etcdRegistry) serviceKeepAlive(rs *registerService) (err error) {
 func (e *etcdRegistry) serviceNodePath(service *registry.Service) string {
 	nodeIp := fmt.Sprintf("%s:%d", service.Nodes[0].Ip, service.Nodes[0].Port)
 	return path.Join(e.options.RegistryPath, service.Name, nodeIp)
+}
+
+func (e *etcdRegistry) servicePath(name string) string {
+	return path.Join(e.options.RegistryPath, name)
+}
+
+func (e *etcdRegistry) getServiceFromCache(name string) (service *registry.Service, exist bool) {
+	// 这里是原子操作,不用加锁
+	services := e.value.Load().(*allService)
+	service, exist = services.serviceMap[name]
+	return
+}
+
+func (e *etcdRegistry) GetService(ctx context.Context, name string) (service *registry.Service, err error) {
+	name = e.servicePath(name)
+	service, exist := e.getServiceFromCache(name)
+	if exist {
+		return
+	}
+
+	// 这里加锁,只允许一个线程从etcd加载配置.防止大量线程都从etcd里面拿数据造成雪崩
+	e.Lock()
+	defer e.Unlock()
+	// 再次查看是否已经把配置信息加载到缓存里面去了
+	service, exist = e.getServiceFromCache(name)
+	if exist {
+		return
+	}
+
+	response, err := e.client.Get(ctx, name, clientv3.WithPrefix())
+	if err != nil {
+		return
+	}
+
+	if response.Kvs == nil {
+		return nil, fmt.Errorf("service: %s , empty node\n", name)
+	}
+
+	service = &registry.Service{}
+
+	for _, kv := range response.Kvs {
+		var s registry.Service
+		err = json.Unmarshal(kv.Value, &s)
+		if err != nil {
+			return
+		}
+
+		service.Name = s.Name
+
+		for i, node := range s.Nodes {
+			service.Nodes = append(service.Nodes, &registry.Node{
+				Id:   i,
+				Ip:   node.Ip,
+				Port: node.Port,
+			})
+		}
+
+		// 把服务保存在缓存中
+		as := e.value.Load().(*allService)
+		as.serviceMap[name] = service
+		e.value.Store(as)
+	}
+
+	return
 }

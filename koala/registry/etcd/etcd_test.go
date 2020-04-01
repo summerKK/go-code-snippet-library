@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"github.com/summerKK/go-code-snippet-library/koala/registry"
 	"testing"
 	"time"
@@ -20,8 +21,9 @@ func TestEtcdRegistry(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	serviceName := "comment_service"
 	service := &registry.Service{
-		Name: "comment_service",
+		Name: serviceName,
 		Nodes: []*registry.Node{
 			{
 				Id:   0,
@@ -35,10 +37,29 @@ func TestEtcdRegistry(t *testing.T) {
 			},
 		},
 	}
+	// 注册服务
 	err = initRegistry.Register(context.TODO(), service)
 	if err != nil {
 		t.Error(err)
 	}
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second)
+	ticker := time.After(time.Second * 10)
+	for {
+		select {
+		case <-ticker:
+			goto end
+		default:
+			getService, err := initRegistry.GetService(context.TODO(), serviceName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for i, node := range getService.Nodes {
+				fmt.Printf("service:%s node:%d,%+v ", getService.Name, i, node)
+			}
+			fmt.Println()
+			time.Sleep(time.Second)
+		}
+	}
+end:
 }
