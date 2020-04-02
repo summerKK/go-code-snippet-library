@@ -33,6 +33,7 @@ type registerService struct {
 	service     *registry.Service
 	registered  bool
 	keepAliveCh <-chan *clientv3.LeaseKeepAliveResponse
+	looping     bool
 }
 
 type allService struct {
@@ -129,7 +130,7 @@ func (e *etcdRegistry) run() {
 				}
 			}
 		case <-ticker:
-			e.syncServiceCache()
+			e.syncServiceFromCache()
 		default:
 			e.registerOrKeepAlive()
 			time.Sleep(time.Millisecond * 500)
@@ -142,11 +143,17 @@ func (e *etcdRegistry) registerOrKeepAlive() {
 	for _, rs := range e.registerServiceMap {
 		// 已经注册过,检查服务是否有异常
 		if rs.registered {
-			err := e.serviceKeepAlive(rs)
+			e.serviceKeepAlive(rs)
+			continue
+		}
+
+		// 当 rs.registered = false 可能是服务节点更新.这时候要把原来的keepAliveCh 关掉
+		if rs.keepAliveCh != nil {
+			_, err := e.client.Revoke(context.TODO(), rs.id)
+			logger.Logger.Infof("service update,revoke leaseId:%v", rs.id)
 			if err != nil {
 				logger.Logger.Warn(err)
 			}
-			continue
 		}
 
 		err := e.registerService(rs)
@@ -157,12 +164,14 @@ func (e *etcdRegistry) registerOrKeepAlive() {
 }
 
 func (e *etcdRegistry) registerService(rs *registerService) (err error) {
-	// 续期
-	resp, err := e.client.Grant(context.TODO(), e.options.HeartBet)
+
+	var resp *clientv3.LeaseGrantResponse
+	resp, err = e.client.Grant(context.TODO(), e.options.HeartBet)
 	if err != nil {
 		return
 	}
 	rs.id = resp.ID
+	logger.Logger.Infof("service leaseId:%v", resp.ID)
 
 	for _, node := range rs.service.Nodes {
 		tmp := &registry.Service{
@@ -177,7 +186,7 @@ func (e *etcdRegistry) registerService(rs *registerService) (err error) {
 		if err != nil {
 			continue
 		}
-		_, err = e.client.Put(context.TODO(), key, string(data), clientv3.WithLease(resp.ID))
+		_, err = e.client.Put(context.TODO(), key, string(data), clientv3.WithLease(rs.id))
 		logger.Logger.Infof("registry service key:%s", key)
 		if err != nil {
 			continue
@@ -185,7 +194,7 @@ func (e *etcdRegistry) registerService(rs *registerService) (err error) {
 	}
 
 	// key永久保持
-	alive, err := e.client.KeepAlive(context.TODO(), resp.ID)
+	alive, err := e.client.KeepAlive(context.TODO(), rs.id)
 	if err != nil {
 		return
 	}
@@ -196,16 +205,17 @@ func (e *etcdRegistry) registerService(rs *registerService) (err error) {
 	return
 }
 
-func (e *etcdRegistry) serviceKeepAlive(rs *registerService) (err error) {
+func (e *etcdRegistry) serviceKeepAlive(rs *registerService) {
+
 	select {
-	case resp := <-rs.keepAliveCh:
-		if resp == nil {
+	case _, ok := <-rs.keepAliveCh:
+		//logger.Logger.Infof("service leaseId:%v,resp:%+v", rs.id, resp)
+		// 重新注册
+		if !ok {
 			rs.registered = false
-			return
 		}
-		//logger.Logger.Infof("service:%s, ttl:%v", rs.service.Name, resp.TTL)
 	}
-	return
+
 }
 
 func (e *etcdRegistry) serviceNodePath(service *registry.Service) string {
@@ -278,7 +288,7 @@ func (e *etcdRegistry) GetService(ctx context.Context, name string) (service *re
 }
 
 // 更新服务缓存信息,可能有新的服务注册.要把它们加到缓存里面去
-func (e *etcdRegistry) syncServiceCache() {
+func (e *etcdRegistry) syncServiceFromCache() {
 	ctx := context.TODO()
 	serviceCache := e.value.Load().(*allService)
 	for name := range e.registerServiceMap {
@@ -304,7 +314,11 @@ func (e *etcdRegistry) syncServiceCache() {
 				})
 			}
 		}
+
+		e.Lock()
 		serviceCache.serviceMap[name] = &s
-		e.value.Store(serviceCache)
+		e.Unlock()
 	}
+
+	e.value.Store(serviceCache)
 }

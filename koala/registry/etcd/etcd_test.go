@@ -98,7 +98,8 @@ func TestEtcdRegistry(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second)
+	// 等待服务全部注册完成
+	time.Sleep(time.Second * 5)
 	ticker := time.After(time.Second * 100)
 	for {
 		select {
