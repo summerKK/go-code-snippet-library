@@ -8,9 +8,15 @@ import (
 	"time"
 )
 
-func TestEtcdRegistry(t *testing.T) {
+var (
+	initRegistry registry.IRegistry
+	serviceName0 = "comment_service_0"
+)
+
+func init() {
+	var err error
 	// 初始化注册中心
-	initRegistry, err := registry.InitRegistry(context.TODO(), "etcd",
+	initRegistry, err = registry.InitRegistry(context.TODO(), "etcd",
 		registry.WithTimeout(5*time.Second),
 		registry.WithAddrs([]string{"127.0.0.1:2379"}),
 		registry.WithHeartBet(5),
@@ -18,9 +24,8 @@ func TestEtcdRegistry(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
-	serviceName0 := "comment_service_0"
 	service0 := &registry.Service{
 		Name: serviceName0,
 		Nodes: []*registry.Node{
@@ -39,9 +44,13 @@ func TestEtcdRegistry(t *testing.T) {
 	// 注册服务
 	err = initRegistry.Register(context.TODO(), service0)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
+}
 
+func TestEtcdRegistry(t *testing.T) {
+
+	var err error
 	// 在 `comment_service` 增加一个新节点
 	go func() {
 		time.Sleep(time.Second * 5)
@@ -118,4 +127,10 @@ func TestEtcdRegistry(t *testing.T) {
 		}
 	}
 end:
+}
+
+func BenchmarkEtcdRegistry_GetService(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = initRegistry.GetService(context.TODO(), serviceName0)
+	}
 }

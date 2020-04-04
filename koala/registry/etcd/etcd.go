@@ -291,6 +291,13 @@ func (e *etcdRegistry) GetService(ctx context.Context, name string) (service *re
 func (e *etcdRegistry) syncServiceFromCache() {
 	ctx := context.TODO()
 	serviceCache := e.value.Load().(*allService)
+
+	// 创建一个新对象并复制serviceCahce.serviceMap 避免数据竞争
+	var newServiceMap = make(map[string]*registry.Service, 4)
+	for k, service := range serviceCache.serviceMap {
+		newServiceMap[k] = service
+	}
+
 	for name := range e.registerServiceMap {
 		name = e.servicePath(name)
 		response, err := e.client.Get(ctx, name, clientv3.WithPrefix())
@@ -315,10 +322,8 @@ func (e *etcdRegistry) syncServiceFromCache() {
 			}
 		}
 
-		e.Lock()
-		serviceCache.serviceMap[name] = &s
-		e.Unlock()
+		newServiceMap[name] = &s
 	}
 
-	e.value.Store(serviceCache)
+	e.value.Store(newServiceMap)
 }
