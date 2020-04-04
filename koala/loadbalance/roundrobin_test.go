@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestRandom_Select(t *testing.T) {
-	random := NewRandom()
+func TestRoundrobin_Select(t *testing.T) {
+	random := NewRoundrobin()
 	var nodes []*registry.Node
 	nodeWeight := [3]int{50, 100, 150}
 	for i := 0; i < 4; i++ {

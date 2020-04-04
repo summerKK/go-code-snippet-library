@@ -7,10 +7,15 @@ import (
 )
 
 type Random struct {
+	name string
 }
 
-func (r *Random) Name() string {
-	return "radom"
+func NewRandom() *Random {
+	return &Random{name: "random"}
+}
+
+func (r *Random) GetName() string {
+	return r.name
 }
 
 func (r *Random) Select(ctx context.Context, nodes []*registry.Node) (selectedNode *registry.Node, err error) {

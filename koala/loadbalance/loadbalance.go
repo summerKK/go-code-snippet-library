@@ -11,6 +11,6 @@ var (
 )
 
 type ILoadbalance interface {
-	Name() string
+	GetName() string
 	Select(ctx context.Context, nodes []*registry.Node) (node *registry.Node, err error)
 }
