@@ -13,7 +13,7 @@ func main() {
 		cli.StringFlag{
 			Name:        "f",
 			Usage:       "idl filename",
-			Value:       "./test.proto",
+			Value:       "./example/hello.proto",
 			Destination: &opt.Proto3FileName,
 		},
 		cli.BoolFlag{

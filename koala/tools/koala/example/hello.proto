@@ -1,0 +1,17 @@
+syntax = "proto3";
+package tutorial;
+
+import "google/protobuf/timestamp.proto";
+
+message response{
+  string data = 1;
+  int32 code = 2;
+}
+
+message request{
+  string params = 1;
+}
+
+service hello{
+  rpc sayHello(request) returns (response);
+}
