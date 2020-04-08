@@ -1,5 +1,5 @@
 package main
 
 type iGenerator interface {
-	Run(opt *option) (err error)
+	Run(opt *option, meta *metaDataService) (err error)
 }

@@ -22,8 +22,12 @@ type dirGenerator struct {
 	dirList []string
 }
 
-func init() {
-	_ = genMgr.Register("dir", &dirGenerator{dirList: dirList})
+func CreateDir(opt *option) (err error) {
+	generator := &dirGenerator{
+		dirList,
+	}
+	err = generator.Run(opt)
+	return
 }
 
 func (d *dirGenerator) Run(opt *option) (err error) {

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package tutorial;
+package hello;
 
 import "google/protobuf/timestamp.proto";
 
@@ -12,6 +12,6 @@ message request{
   string params = 1;
 }
 
-service hello{
-  rpc sayHello(request) returns (response);
+service Hello{
+  rpc SayHello(request) returns (response);
 }

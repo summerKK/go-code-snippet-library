@@ -23,7 +23,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:        "s",
-			Usage:       "generate grpc service code",
+			Usage:       "generate grpc Service code",
 			Destination: &opt.GenServiceCode,
 		},
 		cli.StringFlag{

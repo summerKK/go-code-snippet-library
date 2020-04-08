@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/summerKK/go-code-snippet-library/koala/logger"
+	"html/template"
 	"os"
 	"path"
 )
@@ -14,27 +14,23 @@ func init() {
 	_ = genMgr.Register("main", &mainGenerator{})
 }
 
-func (m *mainGenerator) Run(opt *option) (err error) {
+func (m *mainGenerator) Run(opt *option, metaData *metaDataService) (err error) {
 	filePath := path.Join(opt.Output, "main/main.go")
 	writer, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		logger.Logger.Infof("main generator [Run] open file %s failed:%v", filePath, err)
 	}
-	_, _ = fmt.Fprint(writer,
-		`
-package main
 
-func main() {
-	lis, err := net.Listen("tcp", port)
+	parse, err := template.New("main").Parse(main_template)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Logger.Infof("main generator [Run] parse template file failed:%v", err)
+		return
 	}
-	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	err = parse.Execute(writer, metaData)
+	if err != nil {
+		logger.Logger.Infof("main generator [Run] parse Execute failed:%v", err)
+		return
 	}
-}
-`)
+
 	return
 }
