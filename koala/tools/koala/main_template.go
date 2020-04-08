@@ -10,7 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 	"github.com/summerKK/go-code-snippet-library/koala/tools/koala/output/controller"
-	hello "github.com/summerKK/go-code-snippet-library/koala/tools/koala/output/generate/example"
+	hello "github.com/summerKK/go-code-snippet-library/koala/tools/koala/output/generate/{{.ProtoFileDir}}"
 )
 
 const (

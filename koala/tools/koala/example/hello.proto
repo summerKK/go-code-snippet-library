@@ -3,15 +3,15 @@ package hello;
 
 import "google/protobuf/timestamp.proto";
 
-message response{
+message Response{
   string data = 1;
   int32 code = 2;
 }
 
-message request{
+message Request{
   string params = 1;
 }
 
 service Hello{
-  rpc SayHello(request) returns (response);
+  rpc SayHello(Request) returns (Response);
 }

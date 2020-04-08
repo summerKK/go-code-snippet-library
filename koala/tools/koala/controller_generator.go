@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/summerKK/go-code-snippet-library/koala/logger"
+	"html/template"
 	"os"
 	"path"
 )
@@ -56,13 +57,24 @@ func (c *controllerGenerator) parseController(opt *option, metaData *metaDataSer
 			return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 		}
 	*/
-	_, _ = fmt.Fprintf(writer, "package controller\n")
-	_, _ = fmt.Fprint(writer, "import (\n")
-	_, _ = fmt.Fprint(writer, "\"context\"\n)\n\n")
-	_, _ = fmt.Fprintf(writer, "type %s struct {\n}\n\n", metaData.Service.Name)
-	for _, rpc := range metaData.Rpc {
-		_, _ = fmt.Fprintf(writer, "func (s *%s) %s(ctx context.Context,in %s) (%s,error) {\nreturn}", metaData.Service.Name, rpc.Name, rpc.RequestType, rpc.ReturnsType)
+	//_, _ = fmt.Fprintf(writer, "package controller\n")
+	//_, _ = fmt.Fprint(writer, "import (\n")
+	//_, _ = fmt.Fprint(writer, "\"context\"\n)\n\n")
+	//_, _ = fmt.Fprintf(writer, "type %s struct {\n}\n\n", metaData.Service.Name)
+	//for _, rpc := range metaData.Rpc {
+	//	_, _ = fmt.Fprintf(writer, "func (s *%s) %s(ctx context.Context,in %s) (%s,error) {\nreturn}", metaData.Service.Name, rpc.Name, rpc.RequestType, rpc.ReturnsType)
+	//}
+	//_, _ = fmt.Fprintln(writer)
+	//return
+	parse, err := template.New("grpc").Parse(controller_template)
+	if err != nil {
+		logger.Logger.Errorf("controller generator [parseController] parse template failed:%v", err)
+		return
 	}
-	_, _ = fmt.Fprintln(writer)
+	err = parse.Execute(writer, metaData)
+	if err != nil {
+		logger.Logger.Errorf("controller generator [parseController] parse execute failed:%v", err)
+		return
+	}
 	return
 }

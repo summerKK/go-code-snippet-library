@@ -5,6 +5,7 @@ import (
 	"github.com/emicklei/proto"
 	"github.com/summerKK/go-code-snippet-library/koala/logger"
 	"os"
+	"path"
 )
 
 var (
@@ -20,10 +21,11 @@ type generatorMgr struct {
 }
 
 type metaDataService struct {
-	Service *proto.Service
-	Message []*proto.Message
-	Rpc     []*proto.RPC
-	Pkg     string
+	Service      *proto.Service
+	Message      []*proto.Message
+	Rpc          []*proto.RPC
+	Pkg          string
+	ProtoFileDir string
 }
 
 func (g *generatorMgr) Register(name string, gen iGenerator) (err error) {
@@ -54,6 +56,8 @@ func (g *generatorMgr) parseService(opt *option) (err error) {
 		proto.WithRPC(g.handleRpc),
 		proto.WithPackage(g.handlePackage),
 	)
+
+	g.metaData.ProtoFileDir = path.Dir(opt.Proto3FileName)
 
 	return
 }
