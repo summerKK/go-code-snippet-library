@@ -3,12 +3,17 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	"runtime"
 )
 
 type CrawlerError struct {
 	errType    ErrorType
 	errMsg     string
 	fullErrMsg string
+}
+
+func NewCrawlerError(errType ErrorType, errMsg string) *CrawlerError {
+	return &CrawlerError{errType: errType, errMsg: errMsg}
 }
 
 func (c *CrawlerError) Type() ErrorType {
@@ -31,6 +36,13 @@ func (c *CrawlerError) genFullErrMsg() {
 		buf.WriteString(": ")
 	}
 	buf.WriteString(c.errMsg)
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		buf.WriteByte('\n')
+		buf.WriteString(fmt.Sprintf("     file:%s ", file))
+		buf.WriteString(fmt.Sprintf(" line:%d ", line))
+	}
+
 	c.fullErrMsg = fmt.Sprintf("%s", buf.String())
 	return
 }
