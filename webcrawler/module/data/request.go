@@ -2,23 +2,23 @@ package data
 
 import "net/http"
 
-type request struct {
+type Request struct {
 	req   *http.Request
 	depth uint32
 }
 
-func (r *request) Valid() bool {
+func (r *Request) Valid() bool {
 	return r.req != nil && r.req.URL != nil
 }
 
-func (r *request) Depth() uint32 {
+func (r *Request) Depth() uint32 {
 	return r.depth
 }
 
-func (r *request) Req() *http.Request {
+func (r *Request) Req() *http.Request {
 	return r.req
 }
 
-func NewRequest(req *http.Request, depth uint32) *request {
-	return &request{req: req, depth: depth}
+func NewRequest(req *http.Request, depth uint32) *Request {
+	return &Request{req: req, depth: depth}
 }

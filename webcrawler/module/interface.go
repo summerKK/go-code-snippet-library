@@ -37,7 +37,7 @@ var legalletterMap = map[Type]string{
 	TYPE_PIPLINE:    "P",
 }
 
-type Module interface {
+type IModule interface {
 	// 当前组件的ID
 	ID() MID
 	// 当前组件的网络地址
@@ -59,12 +59,12 @@ type Module interface {
 	Summary() SummaryStruct
 }
 
-type Registrar interface {
-	Register(module Module) (bool, error)
+type IRegistrar interface {
+	Register(module IModule) (bool, error)
 	UnRegister(mid MID) (bool, error)
-	Get(moduleType Type) (Module, error)
-	GetAllTypeBy(moduleType Type) (map[MID]Module, error)
-	GetAll() map[MID]Module
+	Get(moduleType Type) (IModule, error)
+	GetAllTypeBy(moduleType Type) (map[MID]IModule, error)
+	GetAll() map[MID]IModule
 	// 清除所有组件
 	Clear()
 }
