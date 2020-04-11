@@ -28,13 +28,13 @@ type Counts struct {
 const (
 	TYPE_DOWNLOADER Type = "downloader"
 	TYPE_ANALYZER   Type = "analyzer"
-	TYPE_PIPLINE    Type = "pipline"
+	TYPE_PIPELINE   Type = "pipeline"
 )
 
 var legalletterMap = map[Type]string{
 	TYPE_DOWNLOADER: "D",
 	TYPE_ANALYZER:   "A",
-	TYPE_PIPLINE:    "P",
+	TYPE_PIPELINE:   "P",
 }
 
 type IModule interface {

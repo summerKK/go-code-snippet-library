@@ -5,7 +5,7 @@ type ErrorType string
 const (
 	ERROR_TYPE_DOWNLOADER ErrorType = "downloader error"
 	ERROR_TYPE_ANALYZER   ErrorType = "analyzer error"
-	ERROR_TYPE_PIPLINE    ErrorType = "pipline error"
+	ERROR_TYPE_PIPELINE   ErrorType = "pipeline error"
 	ERROR_TYPE_SCHEDULER  ErrorType = "scheduler error"
 )
 
