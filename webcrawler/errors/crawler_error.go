@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 type CrawlerError struct {
@@ -14,6 +15,23 @@ type CrawlerError struct {
 
 func NewCrawlerError(errType ErrorType, errMsg string) *CrawlerError {
 	return &CrawlerError{errType: errType, errMsg: errMsg}
+}
+
+// IllegalParameterError 代表非法的参数的错误类型。
+type IllegalParameterError struct {
+	msg string
+}
+
+func (i IllegalParameterError) Error() string {
+	return i.msg
+}
+
+// NewIllegalParamsError 会创建一个IllegalParameterError类型的实例。
+func NewIllegalParamsError(errMsg string) IllegalParameterError {
+	return IllegalParameterError{
+		msg: fmt.Sprintf("illegal parameter: %s",
+			strings.TrimSpace(errMsg)),
+	}
 }
 
 func (c *CrawlerError) Type() ErrorType {
