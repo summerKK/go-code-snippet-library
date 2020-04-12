@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 )
 
-// hello,world
 type Buffer struct {
 	ch chan interface{}
 	// 0 未关闭 1关闭
