@@ -68,3 +68,14 @@ type IRegistrar interface {
 	// 清除所有组件
 	Clear()
 }
+
+type IModuleInternal interface {
+	IModule
+	IncrCalledCount()
+	IncrAcceptedCount()
+	IncrCompletedCount()
+	IncrHandlingNum()
+	DecrHandlingNum()
+	// 清空所有计数
+	Clear()
+}
