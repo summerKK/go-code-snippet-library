@@ -37,6 +37,12 @@ var legalletterMap = map[MType]string{
 	TYPE_PIPELINE:   "P",
 }
 
+var legalletterTypeMap = map[string]MType{
+	"D": TYPE_DOWNLOADER,
+	"A": TYPE_ANALYZER,
+	"P": TYPE_PIPELINE,
+}
+
 type IModule interface {
 	// 当前组件的ID
 	ID() MID

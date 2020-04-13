@@ -11,7 +11,7 @@ import (
 
 var DefaultSNGen = sn.NewGenerator(1, 0)
 
-// 包名+Sn|host:port
+// 包名+Sn[|host:port]
 var midTemplate = "%s%d|%s"
 
 func GenMid(mtype MType, sn uint64, addr net.Addr) (mid MID, err error) {
