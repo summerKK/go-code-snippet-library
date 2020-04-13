@@ -1,7 +1,7 @@
 package module
 
 type MID string
-type Type string
+type MType string
 type CalculateScore func(counts Counts) uint64
 
 type SummaryStruct struct {
@@ -26,12 +26,12 @@ type Counts struct {
 }
 
 const (
-	TYPE_DOWNLOADER Type = "downloader"
-	TYPE_ANALYZER   Type = "analyzer"
-	TYPE_PIPELINE   Type = "pipeline"
+	TYPE_DOWNLOADER MType = "downloader"
+	TYPE_ANALYZER   MType = "analyzer"
+	TYPE_PIPELINE   MType = "pipeline"
 )
 
-var legalletterMap = map[Type]string{
+var legalletterMap = map[MType]string{
 	TYPE_DOWNLOADER: "D",
 	TYPE_ANALYZER:   "A",
 	TYPE_PIPELINE:   "P",
@@ -62,8 +62,8 @@ type IModule interface {
 type IRegistrar interface {
 	Register(module IModule) (bool, error)
 	UnRegister(mid MID) (bool, error)
-	Get(moduleType Type) (IModule, error)
-	GetAllTypeBy(moduleType Type) (map[MID]IModule, error)
+	Get(moduleType MType) (IModule, error)
+	GetAllTypeBy(moduleType MType) (map[MID]IModule, error)
 	GetAll() map[MID]IModule
 	// 清除所有组件
 	Clear()
