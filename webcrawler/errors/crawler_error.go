@@ -34,6 +34,11 @@ func NewIllegalParamsError(errMsg string) IllegalParameterError {
 	}
 }
 
+// NewCrawlerErrorBy 用于根据给定的错误值创建一个新的爬虫错误值。
+func NewCrawlerErrorBy(errType ErrorType, err error) *CrawlerError {
+	return NewCrawlerError(errType, err.Error())
+}
+
 func (c *CrawlerError) Type() ErrorType {
 	return c.errType
 }

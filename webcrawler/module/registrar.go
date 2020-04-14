@@ -12,6 +12,12 @@ type Registrar struct {
 	locker     sync.RWMutex
 }
 
+func NewRegistrar() *Registrar {
+	return &Registrar{
+		ModulesMap: make(map[MType]map[MID]IModule, 4),
+	}
+}
+
 func (r *Registrar) Register(module IModule) (succ bool, err error) {
 	if module == nil {
 		err = errors.NewIllegalParamsError("nil module instance")
@@ -81,6 +87,8 @@ func (r *Registrar) UnRegister(mid MID) (succ bool, err error) {
 	return
 }
 
+// Get 用户获取一个指定类型的组件实例
+// 本函数会通过负载均衡的方式返回¬
 func (r *Registrar) Get(mType MType) (selectedModule IModule, err error) {
 	moduels, err := r.GetAllTypeBy(mType)
 	if err != nil {
@@ -88,6 +96,7 @@ func (r *Registrar) Get(mType MType) (selectedModule IModule, err error) {
 	}
 	minScore := uint64(0)
 	for _, module := range moduels {
+		// 计算score分值
 		SetScore(module)
 		score := module.Score()
 		if score < minScore || minScore == 0 {
