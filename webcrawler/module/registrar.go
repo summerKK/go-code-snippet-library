@@ -81,18 +81,62 @@ func (r *Registrar) UnRegister(mid MID) (succ bool, err error) {
 	return
 }
 
-func (r *Registrar) Get(moduleType MType) (IModule, error) {
-	panic("implement me")
+func (r *Registrar) Get(mType MType) (selectedModule IModule, err error) {
+	moduels, err := r.GetAllTypeBy(mType)
+	if err != nil {
+		return
+	}
+	minScore := uint64(0)
+	for _, module := range moduels {
+		SetScore(module)
+		score := module.Score()
+		if score < minScore || minScore == 0 {
+			minScore = score
+			selectedModule = module
+		}
+	}
+
+	return
 }
 
-func (r *Registrar) GetAllTypeBy(moduleType MType) (map[MID]IModule, error) {
-	panic("implement me")
+func (r *Registrar) GetAllTypeBy(mType MType) (result map[MID]IModule, err error) {
+	if !Legalletter(mType) {
+		errMsg := fmt.Sprintf("incorrect module type:%s", mType)
+		err = errors.NewIllegalParamsError(errMsg)
+		return
+	}
+
+	r.locker.RLock()
+	defer r.locker.RUnlock()
+	modules := r.ModulesMap[mType]
+	if modules == nil {
+		err = ErrModuleNotFoundInstance
+		return
+	}
+	// 这里要给变量重新赋值,因为modules也是一个map.避免引发数据竞争
+	result = map[MID]IModule{}
+	for i, i2 := range modules {
+		result[i] = i2
+	}
+
+	return
 }
 
-func (r *Registrar) GetAll() map[MID]IModule {
-	panic("implement me")
+func (r *Registrar) GetAll() (result map[MID]IModule) {
+	result = map[MID]IModule{}
+	r.locker.RLock()
+	defer r.locker.RUnlock()
+	for _, moduels := range r.ModulesMap {
+		for mid, module := range moduels {
+			result[mid] = module
+		}
+	}
+
+	return
 }
 
 func (r *Registrar) Clear() {
-	panic("implement me")
+	r.locker.Lock()
+	defer r.locker.Unlock()
+	r.ModulesMap = map[MType]map[MID]IModule{}
 }
