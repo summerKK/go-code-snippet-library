@@ -3,6 +3,7 @@ package module
 import (
 	"fmt"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/errors"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/toolkit/sn"
 	"net"
 	"strconv"
@@ -14,12 +15,12 @@ var DefaultSNGen = sn.NewGenerator(1, 0)
 // 包名+Sn[|host:port]
 var midTemplate = "%s%d|%s"
 
-func GenMid(mtype MType, sn uint64, addr net.Addr) (mid MID, err error) {
+func GenMid(mtype base.MType, sn uint64, addr net.Addr) (mid base.MID, err error) {
 	if !Legalletter(mtype) {
 		err = fmt.Errorf("illegal module letter:%v\n", err)
 		return
 	}
-	letter := legalletterMap[mtype]
+	letter := base.LegalletterMap[mtype]
 	var midStr string
 	if addr == nil {
 		midStr = fmt.Sprintf(midTemplate, letter, sn, "")
@@ -28,19 +29,19 @@ func GenMid(mtype MType, sn uint64, addr net.Addr) (mid MID, err error) {
 		midStr = fmt.Sprintf(midTemplate, letter, sn, addr.String())
 	}
 
-	mid = MID(midStr)
+	mid = base.MID(midStr)
 	return
 }
 
-func SplitMid(mid MID) (s []string, err error) {
+func SplitMid(mid base.MID) (s []string, err error) {
 	midStr := string(mid)
 	if len(midStr) <= 1 {
 		err = errors.NewIllegalParamsError("insufficient MID")
 		return
 	}
 
-	letter := MType(midStr[:1])
-	if _, ok := legalletterMap[letter]; !ok {
+	letter := base.MType(midStr[:1])
+	if _, ok := base.LegalletterMap[letter]; !ok {
 		err = errors.NewIllegalParamsError(
 			fmt.Sprintf("illegal module type letter: %s", letter))
 		return

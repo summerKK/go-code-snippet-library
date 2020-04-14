@@ -1,16 +1,16 @@
 package downloader
 
 import (
-	"bufio"
-	"fmt"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module/data"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
 
 func TestDownloader_Download(t *testing.T) {
-	genMid, err := module.GenMid(module.TYPE_DOWNLOADER, module.DefaultSNGen.Next(), nil)
+	genMid, err := module.GenMid(base.TYPE_DOWNLOADER, module.DefaultSNGen.Next(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,11 +32,10 @@ func TestDownloader_Download(t *testing.T) {
 	if body == nil {
 		t.Fatal(err)
 	}
-	reader := bufio.NewReader(body)
-	line, _, err := reader.ReadLine()
+	defer body.Close()
+	bytes, err := ioutil.ReadAll(body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(string(line))
-
+	t.Log(string(bytes))
 }

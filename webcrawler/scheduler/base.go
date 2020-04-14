@@ -1,10 +1,7 @@
 package scheduler
 
 import (
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/analyzer"
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/downloader"
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/pipeline"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
 	"net/http"
 )
 
@@ -49,9 +46,9 @@ type DataArgs struct {
 
 // module 模块
 type ModuleArgs struct {
-	Downloaders []downloader.IDownloader
-	Analyzers   []analyzer.IAnalyzer
-	Pipelines   []pipeline.IPipeline
+	Downloaders []base.IDownloader
+	Analyzers   []base.IAnalyzer
+	Pipelines   []base.IPipeline
 }
 
 // ModuleArgsSummary 代表组件相关的参数容器的摘要类型。
@@ -70,18 +67,18 @@ type BufPoolSummaryStruct struct {
 }
 
 type SummaryStruct struct {
-	RequestArgs RequestArgs            `json:"request_args"`
-	DataArgs    DataArgs               `json:"data_args"`
-	ModuleArgs  ModuleArgsSummary      `json:"module_args"`
-	Status      string                 `json:"status"`
-	Downloaders []module.SummaryStruct `json:"downloaders"`
-	Analyzers   []module.SummaryStruct `json:"analyzers"`
-	Pipelines   []module.SummaryStruct `json:"pipelines"`
-	ReqBufPool  BufPoolSummaryStruct   `json:"req_buf_pool"`
-	RespBufPool BufPoolSummaryStruct   `json:"resp_buf_pool"`
-	ItemBufPool BufPoolSummaryStruct   `json:"item_buf_pool"`
-	ErrBufPool  BufPoolSummaryStruct   `json:"err_buf_pool"`
-	NumUrl      uint64                 `json:"num_url"`
+	RequestArgs RequestArgs          `json:"request_args"`
+	DataArgs    DataArgs             `json:"data_args"`
+	ModuleArgs  ModuleArgsSummary    `json:"module_args"`
+	Status      string               `json:"status"`
+	Downloaders []base.SummaryStruct `json:"downloaders"`
+	Analyzers   []base.SummaryStruct `json:"analyzers"`
+	Pipelines   []base.SummaryStruct `json:"pipelines"`
+	ReqBufPool  BufPoolSummaryStruct `json:"req_buf_pool"`
+	RespBufPool BufPoolSummaryStruct `json:"resp_buf_pool"`
+	ItemBufPool BufPoolSummaryStruct `json:"item_buf_pool"`
+	ErrBufPool  BufPoolSummaryStruct `json:"err_buf_pool"`
+	NumUrl      uint64               `json:"num_url"`
 }
 
 type IArgs interface {

@@ -3,6 +3,7 @@ package downloader
 import (
 	"github.com/summerKK/go-code-snippet-library/webcrawler/logger"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module/data"
 	"net/http"
 )
@@ -13,7 +14,7 @@ type Downloader struct {
 	httpClient *http.Client
 }
 
-func New(mid module.MID, scoreCalc module.CalculateScore, httpClient *http.Client) (downloader *Downloader, err error) {
+func New(mid base.MID, scoreCalc base.CalculateScore, httpClient *http.Client) (downloader *Downloader, err error) {
 
 	m, err := module.NewModule(mid, scoreCalc)
 	if err != nil {

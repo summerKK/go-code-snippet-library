@@ -1,4 +1,4 @@
-package module
+package base
 
 type MID string
 type MType string
@@ -31,13 +31,13 @@ const (
 	TYPE_PIPELINE   MType = "pipeline"
 )
 
-var legalletterMap = map[MType]string{
+var LegalletterMap = map[MType]string{
 	TYPE_DOWNLOADER: "D",
 	TYPE_ANALYZER:   "A",
 	TYPE_PIPELINE:   "P",
 }
 
-var legalletterTypeMap = map[string]MType{
+var LegalletterTypeMap = map[string]MType{
 	"D": TYPE_DOWNLOADER,
 	"A": TYPE_ANALYZER,
 	"P": TYPE_PIPELINE,

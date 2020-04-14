@@ -3,22 +3,23 @@ package module
 import (
 	"fmt"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/errors"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
 	"sync"
 )
 
 // 组件注册器
 type Registrar struct {
-	ModulesMap map[MType]map[MID]IModule
+	ModulesMap map[base.MType]map[base.MID]base.IModule
 	locker     sync.RWMutex
 }
 
 func NewRegistrar() *Registrar {
 	return &Registrar{
-		ModulesMap: make(map[MType]map[MID]IModule, 4),
+		ModulesMap: make(map[base.MType]map[base.MID]base.IModule, 4),
 	}
 }
 
-func (r *Registrar) Register(module IModule) (succ bool, err error) {
+func (r *Registrar) Register(module base.IModule) (succ bool, err error) {
 	if module == nil {
 		err = errors.NewIllegalParamsError("nil module instance")
 		return
@@ -28,7 +29,7 @@ func (r *Registrar) Register(module IModule) (succ bool, err error) {
 	if err != nil {
 		return
 	}
-	mType := legalletterTypeMap[parts[0]]
+	mType := base.LegalletterTypeMap[parts[0]]
 	if !CheckType(mType, module) {
 		errMsg := fmt.Sprintf("incorrect module type:%s", mType)
 		err = errors.NewIllegalParamsError(errMsg)
@@ -39,7 +40,7 @@ func (r *Registrar) Register(module IModule) (succ bool, err error) {
 	defer r.locker.Unlock()
 	modules := r.ModulesMap[mType]
 	if modules == nil {
-		modules = map[MID]IModule{}
+		modules = map[base.MID]base.IModule{}
 	}
 	// 已经注册过
 	if _, ok := modules[mid]; ok {
@@ -56,7 +57,7 @@ func (r *Registrar) Register(module IModule) (succ bool, err error) {
 	return
 }
 
-func (r *Registrar) UnRegister(mid MID) (succ bool, err error) {
+func (r *Registrar) UnRegister(mid base.MID) (succ bool, err error) {
 	if mid == "" {
 		err = errors.NewIllegalParamsError(
 			fmt.Sprintf("illegal mid:%s", mid),
@@ -67,7 +68,7 @@ func (r *Registrar) UnRegister(mid MID) (succ bool, err error) {
 	if err != nil {
 		return
 	}
-	mType := legalletterTypeMap[parts[0]]
+	mType := base.LegalletterTypeMap[parts[0]]
 	if !Legalletter(mType) {
 		errMsg := fmt.Sprintf("incorrect module type:%s", mType)
 		err = errors.NewIllegalParamsError(errMsg)
@@ -89,7 +90,7 @@ func (r *Registrar) UnRegister(mid MID) (succ bool, err error) {
 
 // Get 用户获取一个指定类型的组件实例
 // 本函数会通过负载均衡的方式返回¬
-func (r *Registrar) Get(mType MType) (selectedModule IModule, err error) {
+func (r *Registrar) Get(mType base.MType) (selectedModule base.IModule, err error) {
 	moduels, err := r.GetAllTypeBy(mType)
 	if err != nil {
 		return
@@ -108,7 +109,7 @@ func (r *Registrar) Get(mType MType) (selectedModule IModule, err error) {
 	return
 }
 
-func (r *Registrar) GetAllTypeBy(mType MType) (result map[MID]IModule, err error) {
+func (r *Registrar) GetAllTypeBy(mType base.MType) (result map[base.MID]base.IModule, err error) {
 	if !Legalletter(mType) {
 		errMsg := fmt.Sprintf("incorrect module type:%s", mType)
 		err = errors.NewIllegalParamsError(errMsg)
@@ -123,7 +124,7 @@ func (r *Registrar) GetAllTypeBy(mType MType) (result map[MID]IModule, err error
 		return
 	}
 	// 这里要给变量重新赋值,因为modules也是一个map.避免引发数据竞争
-	result = map[MID]IModule{}
+	result = map[base.MID]base.IModule{}
 	for i, i2 := range modules {
 		result[i] = i2
 	}
@@ -131,8 +132,8 @@ func (r *Registrar) GetAllTypeBy(mType MType) (result map[MID]IModule, err error
 	return
 }
 
-func (r *Registrar) GetAll() (result map[MID]IModule) {
-	result = map[MID]IModule{}
+func (r *Registrar) GetAll() (result map[base.MID]base.IModule) {
+	result = map[base.MID]base.IModule{}
 	r.locker.RLock()
 	defer r.locker.RUnlock()
 	for _, moduels := range r.ModulesMap {
@@ -147,5 +148,5 @@ func (r *Registrar) GetAll() (result map[MID]IModule) {
 func (r *Registrar) Clear() {
 	r.locker.Lock()
 	defer r.locker.Unlock()
-	r.ModulesMap = map[MType]map[MID]IModule{}
+	r.ModulesMap = map[base.MType]map[base.MID]base.IModule{}
 }

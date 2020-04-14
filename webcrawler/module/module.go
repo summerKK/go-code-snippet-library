@@ -1,14 +1,17 @@
 package module
 
-import "sync/atomic"
+import (
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
+	"sync/atomic"
+)
 
 type Module struct {
-	mid  MID
+	mid  base.MID
 	addr string
 	// 评分
 	score uint64
 	// 评分计算器
-	scoreCalc CalculateScore
+	scoreCalc base.CalculateScore
 	// 调用次数
 	calledCount uint64
 	// j接收次数
@@ -20,12 +23,12 @@ type Module struct {
 	counts      uint64
 }
 
-func NewModule(mid MID, scoreCalc CalculateScore) (*Module, error) {
+func NewModule(mid base.MID, scoreCalc base.CalculateScore) (*Module, error) {
 
 	return &Module{mid: mid, scoreCalc: scoreCalc}, nil
 }
 
-func (m *Module) ID() MID {
+func (m *Module) ID() base.MID {
 	return m.mid
 }
 
@@ -41,7 +44,7 @@ func (m *Module) SetScore(score uint64) {
 	atomic.CompareAndSwapUint64(&m.score, m.score, score)
 }
 
-func (m *Module) ScoreCalculator() CalculateScore {
+func (m *Module) ScoreCalculator() base.CalculateScore {
 	return m.scoreCalc
 }
 
@@ -61,8 +64,8 @@ func (m *Module) HandlingNum() uint64 {
 	return atomic.LoadUint64(&m.handlingNum)
 }
 
-func (m *Module) Counts() Counts {
-	return Counts{
+func (m *Module) Counts() base.Counts {
+	return base.Counts{
 		CalledCount:    atomic.LoadUint64(&m.calledCount),
 		AcceptedCount:  atomic.LoadUint64(&m.acceptedCount),
 		CompletedCount: atomic.LoadUint64(&m.completedCount),
@@ -70,9 +73,9 @@ func (m *Module) Counts() Counts {
 	}
 }
 
-func (m *Module) Summary() SummaryStruct {
+func (m *Module) Summary() base.SummaryStruct {
 	counts := m.Counts()
-	return SummaryStruct{
+	return base.SummaryStruct{
 		ID:        m.ID(),
 		Called:    counts.CalledCount,
 		Accepted:  counts.AcceptedCount,
