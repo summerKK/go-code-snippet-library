@@ -23,7 +23,7 @@ type Module struct {
 	counts      uint64
 }
 
-func NewModule(mid base.MID, scoreCalc base.CalculateScore) (*Module, error) {
+func NewModuleInternal(mid base.MID, scoreCalc base.CalculateScore) (*Module, error) {
 
 	return &Module{mid: mid, scoreCalc: scoreCalc}, nil
 }
