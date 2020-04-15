@@ -3,7 +3,6 @@ package downloader
 import (
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/data"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -23,7 +22,7 @@ func TestDownloader_Download(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req := data.NewRequest(request, 0)
+	req := module.NewRequest(request, 0)
 	response, err := downloader.Download(req)
 	if err != nil {
 		t.Fatal(err)

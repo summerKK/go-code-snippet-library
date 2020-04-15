@@ -1,10 +1,10 @@
 package base
 
 import (
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/data"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
 )
 
-type ProcessItem func(item data.Item) (result data.Item, err error)
+type ProcessItem func(item module.Item) (result module.Item, err error)
 
 type IPipeline interface {
 	IModule

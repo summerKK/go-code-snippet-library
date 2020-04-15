@@ -4,7 +4,6 @@ import (
 	"github.com/summerKK/go-code-snippet-library/webcrawler/logger"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/data"
 	"net/http"
 )
 
@@ -30,7 +29,7 @@ func New(mid base.MID, scoreCalc base.CalculateScore, httpClient *http.Client) (
 	}, nil
 }
 
-func (d *Downloader) Download(req *data.Request) (resp *data.Response, err error) {
+func (d *Downloader) Download(req *module.Request) (resp *module.Response, err error) {
 	d.Module.IncrHandlingNum()
 	defer d.Module.DecrHandlingNum()
 	d.Module.IncrCalledCount()
@@ -50,7 +49,7 @@ func (d *Downloader) Download(req *data.Request) (resp *data.Response, err error
 		return
 	}
 	d.Module.IncrCompletedCount()
-	resp = data.NewResponse(response, req.Depth())
+	resp = module.NewResponse(response, req.Depth())
 
 	return
 }

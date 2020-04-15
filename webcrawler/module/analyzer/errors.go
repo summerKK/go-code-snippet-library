@@ -9,3 +9,7 @@ func genParameterError(errMsg string) error {
 		errors.NewIllegalParamsError(errMsg),
 	)
 }
+
+func genError(errMsg string) error {
+	return errors.NewCrawlerError(errors.ERROR_TYPE_ANALYZER, errMsg)
+}

@@ -2,9 +2,10 @@ package analyzer
 
 import (
 	"fmt"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/logger"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
-	"github.com/summerKK/go-code-snippet-library/webcrawler/module/data"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/toolkit/reader"
 )
 
 type Analyzer struct {
@@ -45,6 +46,85 @@ func (a *Analyzer) RespParsers() []base.ParseResponse {
 	return a.respParsers
 }
 
-func (a *Analyzer) Analyze(resp *data.Response) ([]base.IData, error) {
-	panic(nil)
+func (a *Analyzer) Analyze(resp *module.Response) (datalist []base.IData, errlist []error) {
+	a.Module.IncrHandlingNum()
+	defer a.Module.DecrHandlingNum()
+	a.Module.IncrCalledCount()
+	if resp == nil {
+		errlist = append(errlist, genParameterError("nil resp"))
+		return
+	}
+	httpResp := resp.Resp()
+	if httpResp == nil {
+		errlist = append(errlist, genParameterError("nil http response"))
+		return
+	}
+	httpReq := httpResp.Request
+	if httpReq == nil {
+		errlist = append(errlist, genParameterError("nil http request"))
+		return
+	}
+	reqUrl := httpReq.URL
+	if reqUrl == nil {
+		errlist = append(errlist, genParameterError("nil http request url"))
+		return
+	}
+	a.Module.IncrAcceptedCount()
+	respDepth := resp.Depth()
+	logger.Logger.Infof("Parse the response (URL:%s,depth:%d)", reqUrl, respDepth)
+
+	// 解析http响应
+	if httpResp.Body != nil {
+		defer httpResp.Body.Close()
+	}
+	// 这个reader不会关闭`reader`,意思就是可以重复被读取
+	multipleReader, err := reader.NewReader(httpResp.Body)
+	if err != nil {
+		errlist = append(errlist, genError(err.Error()))
+		return
+	}
+
+	for _, parser := range a.respParsers {
+		httpResp.Body = multipleReader.Reader()
+		pDatalist, pErrlist := parser(httpResp, respDepth)
+		if pDatalist != nil {
+			for _, pdata := range pDatalist {
+				if pdata == nil {
+					continue
+				}
+				datalist = appendDataList(datalist, pdata, respDepth)
+			}
+		}
+		if pErrlist != nil {
+			for _, pErr := range pErrlist {
+				if pErr == nil {
+					continue
+				}
+				errlist = append(errlist, pErr)
+			}
+		}
+		if len(pErrlist) == 0 {
+			a.Module.IncrCompletedCount()
+		}
+	}
+
+	return
+}
+
+// appendDataList 用于添加请求值或条目值到列表。
+func appendDataList(datalist []base.IData, data base.IData, respDepth uint32) []base.IData {
+	if data == nil {
+		return datalist
+	}
+	req, ok := data.(*module.Request)
+	if !ok {
+		datalist = append(datalist, data)
+		return datalist
+	}
+	newDepth := respDepth + 1
+	if newDepth != req.Depth() {
+		req = module.NewRequest(req.Req(), newDepth)
+	}
+
+	return append(datalist, req)
 }
