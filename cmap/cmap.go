@@ -18,11 +18,11 @@ type IConcurrentMap interface {
 
 type concurrentMap struct {
 	concurrency int
-	segments    []Segment
+	segments    []ISegment
 	total       uint64
 }
 
-func NewConcurrentMap(concurrency int, pairRedistrubitor PairRedistrubitor) (*concurrentMap, error) {
+func NewConcurrentMap(concurrency int, pairRedistrubitor IPairRedistributor) (*concurrentMap, error) {
 	if concurrency <= 0 {
 		return nil, newIllegalParameterError("concurrency to small")
 	}
@@ -31,7 +31,7 @@ func NewConcurrentMap(concurrency int, pairRedistrubitor PairRedistrubitor) (*co
 	}
 	cmap := &concurrentMap{}
 	cmap.concurrency = concurrency
-	cmap.segments = make([]Segment, concurrency)
+	cmap.segments = make([]ISegment, concurrency)
 	for i := 0; i < concurrency; i++ {
 		cmap.segments[i] = newSegment(DEFAULT_BUCKET_NUMBER, pairRedistrubitor)
 	}
@@ -49,6 +49,12 @@ func (c *concurrentMap) Put(key string, elem interface{}) (ok bool, err error) {
 		return
 	}
 	segment := c.findSegment(p.Hash())
+	ok, err = segment.Put(p)
+	if ok {
+		atomic.AddUint64(&c.total, 1)
+	}
+
+	return
 }
 
 func (c *concurrentMap) Get(key string) interface{} {
@@ -59,7 +65,7 @@ func (c *concurrentMap) Len() uint64 {
 	return atomic.LoadUint64(&c.total)
 }
 
-func (c *concurrentMap) findSegment(keyHash uint64) Segment {
+func (c *concurrentMap) findSegment(keyHash uint64) ISegment {
 	if c.concurrency == 1 {
 		return c.segments[0]
 	}
