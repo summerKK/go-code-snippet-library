@@ -117,32 +117,33 @@ func (b *bucket) Delete(key string, lock sync.Locker) bool {
 	if firstPair == nil {
 		return false
 	}
-	var prevPairs []IPair
+	var prePairs []IPair
 	var target IPair
-	var breakpoint IPair
+	var breakPoint IPair
 	for v := firstPair; v != nil; v = v.Next() {
 		if v.Key() == key {
 			target = v
-			breakpoint = v.Next()
-			break
+			breakPoint = v.Next()
 		}
-		prevPairs = append(prevPairs, v)
+		prePairs = append(prePairs, v)
 	}
 	if target == nil {
 		return false
 	}
-	newFirstPair := breakpoint
-	for i := len(prevPairs) - 1; i >= 0; i-- {
-		pairCopy := prevPairs[i].Copy()
-		_ = pairCopy.SetNext(newFirstPair)
-		newFirstPair = pairCopy
+	newFirstPair := breakPoint
+	for i := len(prePairs) - 1; i >= 0; i-- {
+		iPair := prePairs[i].Copy()
+		_ = iPair.SetNext(newFirstPair)
+		newFirstPair = iPair
 	}
+
 	if newFirstPair != nil {
 		b.firstValue.Store(newFirstPair)
 	} else {
 		b.firstValue.Store(placeholder)
 	}
 	atomic.AddUint64(&b.size, ^uint64(0))
+
 	return true
 }
 
