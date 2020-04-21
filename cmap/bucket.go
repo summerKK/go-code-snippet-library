@@ -48,13 +48,14 @@ func newBucket() IBucket {
 
 func (b *bucket) Put(p IPair, lock sync.Locker) (bool, error) {
 	if p == nil {
-		return false, newIllegalParameterError("pair is nil")
+		return false, newIllegalParameterError("nil pair")
 	}
 	if lock != nil {
 		lock.Lock()
 		defer lock.Unlock()
 	}
 	firstPair := b.GetFirstPair()
+	// 第一个元素为空,就把当前元素插入到第一个元素
 	if firstPair == nil {
 		b.firstValue.Store(p)
 		atomic.AddUint64(&b.size, 1)
@@ -69,12 +70,17 @@ func (b *bucket) Put(p IPair, lock sync.Locker) (bool, error) {
 		}
 	}
 	if target != nil {
-		_ = target.SetElement(p.Element())
+		// 这里的添加是原子操作
+		_ = target.SetElement(p)
+		// false代表更新元素
 		return false, nil
 	}
+
+	// 把p插入到链表表头
 	_ = p.SetNext(firstPair)
 	b.firstValue.Store(p)
 	atomic.AddUint64(&b.size, 1)
+
 	return true, nil
 }
 
@@ -88,6 +94,7 @@ func (b *bucket) Get(key string) IPair {
 			return v
 		}
 	}
+
 	return nil
 }
 
