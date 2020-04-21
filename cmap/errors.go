@@ -33,3 +33,19 @@ func newIllegalPairTypeError(pair IPair) IllegalPairTypeError {
 		msg: fmt.Sprintf("concurrent map: illegal pair type: %T", pair),
 	}
 }
+
+// PairRedistributorError 代表无法再分布键-元素对的错误类型。
+type PairRedistributorError struct {
+	msg string
+}
+
+// newPairRedistributorError 会创建一个PairRedistributorError类型的实例。
+func newPairRedistributorError(errMsg string) PairRedistributorError {
+	return PairRedistributorError{
+		msg: fmt.Sprintf("concurrent map: failing pair redistribution: %s", errMsg),
+	}
+}
+
+func (p PairRedistributorError) Error() string {
+	return p.msg
+}

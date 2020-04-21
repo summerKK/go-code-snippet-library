@@ -106,8 +106,7 @@ func (p *pariRedistributor) Redistrie(bucketStatus BucketStatus, buckets []IBuck
 		}
 		newNumber = currentNumber << 1
 	case BUCKET_STATUS_UNDERWEIGHT:
-		if currentNumber < 100 ||
-			atomic.LoadUint64(&p.emptyBucketCount)*4 < currentNumber {
+		if currentNumber < 100 || atomic.LoadUint64(&p.emptyBucketCount)*4 < currentNumber {
 			return nil, false
 		}
 		newNumber = currentNumber >> 1
