@@ -43,6 +43,7 @@ func newSegment(bucketNum int, pairRedistributor IPairRedistributor) ISegment {
 }
 
 func (s *segment) Put(p IPair) (ok bool, err error) {
+	// 这里需要原子操作.因为涉及到bucket的重新分配
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	b := s.buckets[int(p.Hash()%uint64(s.bucketsLen))]
@@ -53,10 +54,11 @@ func (s *segment) Put(p IPair) (ok bool, err error) {
 	}
 
 	return
-
 }
 
-func (s *segment) redistrubite(pairTotal uint64, bucketSize uint64) (err error) {
+func (s *segment) redistrubite(pairTotal, bucketSize uint64) (err error) {
+	// 这里添加defer的原因是保证程序的健壮.因为这个`pairRedistributor`可能是外部传进来的
+	// 当然也可以用默认的.因为可能是外部传入的,所以不可控.加defer.是程序更加健壮
 	defer func() {
 		if p := recover(); p != nil {
 			if pErr, ok := p.(error); ok {
@@ -66,8 +68,11 @@ func (s *segment) redistrubite(pairTotal uint64, bucketSize uint64) (err error) 
 			}
 		}
 	}()
+	// 更新阀值
 	s.pairRedistributor.UpdateThreshold(pairTotal, s.bucketsLen)
+	// 查看bucket的状态(是否超重)
 	bucketStatus := s.pairRedistributor.CheckBucketStatus(pairTotal, bucketSize)
+	// 重新分配bucket
 	newBuckets, changed := s.pairRedistributor.Redistrie(bucketStatus, s.buckets)
 	if changed {
 		s.buckets = newBuckets

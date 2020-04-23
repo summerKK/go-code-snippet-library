@@ -91,6 +91,7 @@ var redistributionTemplate = `Redistributing:
 `
 
 func (p *pariRedistributor) Redistrie(bucketStatus BucketStatus, buckets []IBucket) (newBuckets []IBucket, changed bool) {
+	// 当前痛的总数量
 	currentNumber := uint64(len(buckets))
 	newNumber := currentNumber
 	// defer func() {
@@ -101,14 +102,17 @@ func (p *pariRedistributor) Redistrie(bucketStatus BucketStatus, buckets []IBuck
 	// }()
 	switch bucketStatus {
 	case BUCKET_STATUS_OVERWEIGHT:
+		// 当过载的bucket < 4 可以忽略
 		if atomic.LoadUint64(&p.overweightBucketCount)*4 < currentNumber {
 			return nil, false
 		}
+		// buckets扩大一倍
 		newNumber = currentNumber << 1
 	case BUCKET_STATUS_UNDERWEIGHT:
 		if currentNumber < 100 || atomic.LoadUint64(&p.emptyBucketCount)*4 < currentNumber {
 			return nil, false
 		}
+		// buckets缩小1倍
 		newNumber = currentNumber >> 1
 		if newNumber < 2 {
 			newNumber = 2
@@ -116,30 +120,38 @@ func (p *pariRedistributor) Redistrie(bucketStatus BucketStatus, buckets []IBuck
 	default:
 		return nil, false
 	}
+	// 没有扩容
 	if newNumber == currentNumber {
+		// 参数置零
 		atomic.StoreUint64(&p.overweightBucketCount, 0)
 		atomic.StoreUint64(&p.emptyBucketCount, 0)
 		return nil, false
 	}
 	var pairs []IPair
+	// 取出所有bucket的pair.重新分配bucket
 	for _, b := range buckets {
 		for e := b.GetFirstPair(); e != nil; e = e.Next() {
 			pairs = append(pairs, e)
 		}
 	}
+	// 需要新增bucket
 	if newNumber > currentNumber {
+		// 新增bucket的时候要情况所有bucket里面的pair,因为要重新分配
 		for i := uint64(0); i < currentNumber; i++ {
 			buckets[i].Clear(nil)
 		}
+		// 创建新增的bucket
 		for j := newNumber - currentNumber; j > 0; j-- {
 			buckets = append(buckets, newBucket())
 		}
 	} else {
+		// 需要缩小bucket
 		buckets = make([]IBucket, newNumber)
 		for i := uint64(0); i < newNumber; i++ {
 			buckets[i] = newBucket()
 		}
 	}
+	// 重新把元素分配到bucket里面去
 	var count int
 	for _, p := range pairs {
 		index := int(p.Hash() % newNumber)

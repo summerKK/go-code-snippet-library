@@ -40,6 +40,7 @@ func NewConcurrentMap(concurrency int, pairRedistrubitor IPairRedistributor) (*c
 	return cmap, nil
 }
 
+// cmap支持的最大并发量
 func (c *concurrentMap) Concurrency() int {
 	return c.concurrency
 }

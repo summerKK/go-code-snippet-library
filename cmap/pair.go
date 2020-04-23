@@ -43,6 +43,7 @@ func newPair(key string, element interface{}) (*pair, error) {
 		key:  key,
 		hash: hash(key),
 	}
+	// element
 	newPair.element = unsafe.Pointer(&element)
 
 	return newPair, nil
