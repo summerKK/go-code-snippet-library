@@ -13,6 +13,7 @@ type IConcurrentMap interface {
 	Put(key string, elem interface{}) (bool, error)
 	// 获取一个元素,如果值不存在返回nil
 	Get(key string) interface{}
+	Delete(key string) bool
 	Len() uint64
 }
 
@@ -58,11 +59,28 @@ func (c *concurrentMap) Put(key string, elem interface{}) (ok bool, err error) {
 }
 
 func (c *concurrentMap) Get(key string) interface{} {
-	panic("implement me")
+	hashKey := hash(key)
+	segment := c.findSegment(hashKey)
+	pair := segment.GetWithHash(key, hashKey)
+	if pair == nil {
+		return nil
+	}
+
+	return pair.Element()
 }
 
 func (c *concurrentMap) Len() uint64 {
 	return atomic.LoadUint64(&c.total)
+}
+
+func (c *concurrentMap) Delete(key string) bool {
+	segment := c.findSegment(hash(key))
+	if segment.Delete(key) {
+		atomic.AddUint64(&c.total, ^uint64(0))
+		return true
+	}
+
+	return false
 }
 
 func (c *concurrentMap) findSegment(keyHash uint64) ISegment {
