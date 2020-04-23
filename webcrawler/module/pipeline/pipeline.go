@@ -23,15 +23,18 @@ func New(mid base.MID, scoreCalc base.CalculateScore, itemProcessors []base.Proc
 	if len(itemProcessors) == 0 {
 		return nil, genParameterError("empty itemProcessors")
 	}
+	// 主要是为了防止在分析器创建后外界再对解析器列表进行更改.所以赋值给新的变量
+	var innerItemProcessors []base.ProcessItem
 	for i, processor := range itemProcessors {
 		if processor == nil {
 			return nil, genParameterError(fmt.Sprintf("nil item processor [%d]", i))
 		}
+		innerItemProcessors = append(innerItemProcessors, processor)
 	}
 
 	return &Pipeline{
 		Module:         m,
-		itemProcessors: itemProcessors,
+		itemProcessors: innerItemProcessors,
 	}, nil
 }
 

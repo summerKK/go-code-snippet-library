@@ -27,6 +27,7 @@ func New(mid base.MID, scoreCalc base.CalculateScore, respParsers []base.ParseRe
 		return
 	}
 
+	// 主要是为了防止在分析器创建后外界再对解析器列表进行更改.所以赋值给新的变量
 	var innerParsers []base.ParseResponse
 	for i, parser := range respParsers {
 		if parser == nil {
