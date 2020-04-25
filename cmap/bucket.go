@@ -124,6 +124,7 @@ func (b *bucket) Delete(key string, lock sync.Locker) bool {
 		if v.Key() == key {
 			target = v
 			breakPoint = v.Next()
+			break
 		}
 		prePairs = append(prePairs, v)
 	}

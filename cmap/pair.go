@@ -112,7 +112,7 @@ func (p *pair) genString(nextDetail bool) string {
 	buf.WriteString("pair{key:")
 	buf.WriteString(p.Key())
 	buf.WriteString(", hash:")
-	buf.WriteString(fmt.Sprintf("%s", p.Hash()))
+	buf.WriteString(fmt.Sprintf("%d", p.Hash()))
 	buf.WriteString(", element:")
 	buf.WriteString(fmt.Sprintf("%+v", p.Element()))
 	if nextDetail {

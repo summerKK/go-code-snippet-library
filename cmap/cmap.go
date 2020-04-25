@@ -96,5 +96,5 @@ func (c *concurrentMap) findSegment(keyHash uint64) ISegment {
 		keyHash32 = uint32(keyHash)
 	}
 	// keyHash >> 16 右移16位保留高位,通过高位取模.这样hash值可以更均匀的分布在Segment中(~_~)
-	return c.segments[int(keyHash32>>16)%(c.Concurrency()-1)]
+	return c.segments[int(keyHash32>>16)%(c.Concurrency())]
 }
