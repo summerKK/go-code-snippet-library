@@ -1,6 +1,8 @@
 package buffer
 
 import (
+	"fmt"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/errors"
 	"sync"
 	"sync/atomic"
 )
@@ -20,6 +22,27 @@ type Pool struct {
 	// 缓冲池的关闭状态 0未关闭 1关闭
 	closed uint32
 	rwlock sync.RWMutex
+}
+
+func NewPool(bufCap uint32, maxBufNum uint32) (IPool, error) {
+	if bufCap == 0 {
+		errMsg := fmt.Sprintf("illegal buffer cap for buffer pool:%d", bufCap)
+		return nil, errors.NewIllegalParamsError(errMsg)
+	}
+	if maxBufNum == 0 {
+		errMsg := fmt.Sprintf("illegal max buffer num for buffer pool:%d", maxBufNum)
+		return nil, errors.NewIllegalParamsError(errMsg)
+	}
+	bufChan := make(chan IBuf, maxBufNum)
+	buf, _ := NewBuffer(bufCap)
+	bufChan <- buf
+
+	return &Pool{
+		bufCap:    bufCap,
+		maxBufNum: maxBufNum,
+		bufChan:   bufChan,
+		bufNum:    1,
+	}, nil
 }
 
 func (p *Pool) BufCap() uint32 {

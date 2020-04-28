@@ -8,5 +8,7 @@ github.com/sirupsen/logrus v1.5.0 h1:1N5EYkVAPEywqZRJd7cwnRtCb6xJx7NH3T3WUTF980Q
 github.com/sirupsen/logrus v1.5.0/go.mod h1:+F7Ogzej0PZc/94MaYx/nvG9jOFMD2osvC3s+Squfpo=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
+github.com/summerKK/go-code-snippet-library/cmap v0.0.0-20200428030534-5e157162fdbe h1:VHz6eIaPqItHPb0y+lzWF1jmXKnL/WuARqYApxBhRmI=
+github.com/summerKK/go-code-snippet-library/cmap v0.0.0-20200428030534-5e157162fdbe/go.mod h1:H3yRHh+PvB4W1fOJhr4hWdhNLy1BXwdoAEPZTMABrEA=
 golang.org/x/sys v0.0.0-20190422165155-953cdadca894 h1:Cz4ceDQGXuKRnVBDTS23GTn/pU5OE2C0WrNTOYK1Uuc=
 golang.org/x/sys v0.0.0-20190422165155-953cdadca894/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

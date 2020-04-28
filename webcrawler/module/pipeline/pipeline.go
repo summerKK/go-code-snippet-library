@@ -52,7 +52,7 @@ func (p *Pipeline) Send(item module.Item) (errlist []error) {
 	}
 	p.Module.IncrAcceptedCount()
 	currentItem := item
-	// item 经过管道把结果输出.(没上一层的处理结果作为下一层的参数.linux的管道概念)
+	// item 经过管道把结果输出.(每上一层的处理结果作为下一层的参数.linux的管道概念)
 	for _, processor := range p.itemProcessors {
 		m, err := processor(currentItem)
 		if err != nil {

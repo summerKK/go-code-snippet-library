@@ -7,23 +7,6 @@ import (
 
 type Status uint8
 
-const (
-	// 未初始化
-	SCHED_STATUS_UINIT = iota
-	// 初始化中
-	SCHED_STATUS_INITING
-	// 已初始化
-	SCHED_STATUS_INITED
-	//  启动中
-	SCHED_STATUS_STARTING
-	// 已启动
-	SCHED_STATUS_STARTED
-	// 停止中
-	SCHED_STATUS_STOPPING
-	// 已停止
-	SCHED_STATUS_STOPPED
-)
-
 // 请求参数
 type RequestArgs struct {
 	// 代表可以接受的URL的主域名的列表,不在该列表的URL都会被忽略(限定爬虫爬取的范围)

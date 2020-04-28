@@ -14,6 +14,16 @@ type Buffer struct {
 	closingLock sync.RWMutex
 }
 
+func NewBuffer(size uint32) (*Buffer, error) {
+	if size == 0 {
+		errMsg := fmt.Sprintf("illegal size for buffer:%d", size)
+		return nil, errors.NewIllegalParamsError(errMsg)
+	}
+	return &Buffer{
+		ch: make(chan interface{}, size),
+	}, nil
+}
+
 func (b *Buffer) Cap() uint32 {
 	return uint32(cap(b.ch))
 }
@@ -70,14 +80,4 @@ func (b *Buffer) Closed() bool {
 		return false
 	}
 	return true
-}
-
-func NewBuffer(size uint32) (*Buffer, error) {
-	if size == 0 {
-		errMsg := fmt.Sprintf("illegal size for buffer:%d", size)
-		return nil, errors.NewIllegalParamsError(errMsg)
-	}
-	return &Buffer{
-		ch: make(chan interface{}, size),
-	}, nil
 }
