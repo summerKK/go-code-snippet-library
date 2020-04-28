@@ -74,9 +74,10 @@ func (a *Analyzer) Analyze(resp *module.Response) (datalist []base.IData, errlis
 	respDepth := resp.Depth()
 	logger.Logger.Infof("Parse the response (URL:%s,depth:%d)", reqUrl, respDepth)
 
-	// 解析http响应
-	if httpResp.Body != nil {
-		defer httpResp.Body.Close()
+	// 这里要把原生的httpResponse.Body保存起来
+	originalRespBody := httpResp.Body
+	if originalRespBody != nil {
+		defer originalRespBody.Close()
 	}
 	// 这个reader不会关闭`reader`,意思就是可以重复被读取
 	multipleReader, err := reader.NewReader(httpResp.Body)
@@ -86,6 +87,7 @@ func (a *Analyzer) Analyze(resp *module.Response) (datalist []base.IData, errlis
 	}
 
 	for _, parser := range a.respParsers {
+		// 创建一个NoCloser().
 		httpResp.Body = multipleReader.Reader()
 		pDatalist, pErrlist := parser(httpResp, respDepth)
 		if pDatalist != nil {
