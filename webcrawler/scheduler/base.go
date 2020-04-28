@@ -7,40 +7,6 @@ import (
 
 type Status uint8
 
-// 请求参数
-type RequestArgs struct {
-	// 代表可以接受的URL的主域名的列表,不在该列表的URL都会被忽略(限定爬虫爬取的范围)
-	AcceptedDomains []string `json:"accepted_primary_domains"`
-	// 爬取的最大深度
-	MaxDepth uint32 `json:"max_depth"`
-}
-
-// 定义数据缓冲池容量
-type DataArgs struct {
-	ReqBufCap     uint32 `json:"req_buf_cap"`
-	ReqMaxBufNum  uint32 `json:"req_max_buf_num"`
-	RespBufCap    uint32 `json:"resp_buf_cap"`
-	RespMaxBufNum uint32 `json:"resp_max_buf_num"`
-	ItemBufCap    uint32 `json:"item_buf_cap"`
-	ItemMaxBufNum uint32 `json:"item_max_buf_num"`
-	ErrBufCap     uint32 `json:"err_buf_cap"`
-	ErrMaxBufNum  uint32 `json:"err_max_buf_num"`
-}
-
-// module 模块
-type ModuleArgs struct {
-	Downloaders []base.IDownloader
-	Analyzers   []base.IAnalyzer
-	Pipelines   []base.IPipeline
-}
-
-// ModuleArgsSummary 代表组件相关的参数容器的摘要类型。
-type ModuleArgsSummary struct {
-	DownloaderListSize int `json:"downloader_list_size"`
-	AnalyzerListSize   int `json:"analyzer_list_size"`
-	PipelineListSize   int `json:"pipeline_list_size"`
-}
-
 // BufferPoolSummaryStruct 代表缓冲池的摘要类型。
 type BufPoolSummaryStruct struct {
 	BufferCap       uint32 `json:"buffer_cap"`
@@ -66,7 +32,7 @@ type SummaryStruct struct {
 
 type IArgs interface {
 	// 检查参数有效性
-	Check()
+	Check() error
 }
 
 type IScheduler interface {

@@ -44,12 +44,8 @@ func NewScheduler() IScheduler {
 }
 
 func (s *Scheduler) Init(requestArgs RequestArgs, dataArgs DataArgs, moduleArgs ModuleArgs) (err error) {
-	logger.Logger.Info("Check status for initialization...")
 	var oldStatus Status
-	oldStatus, err = s.checkAndSetStatus(SCHED_STATUS_INITING)
-	if err != nil {
-		return
-	}
+
 	defer func() {
 		s.statusLock.Lock()
 		if err != nil {
@@ -57,7 +53,18 @@ func (s *Scheduler) Init(requestArgs RequestArgs, dataArgs DataArgs, moduleArgs 
 		} else {
 			s.status = SCHED_STATUS_INITED
 		}
+		s.statusLock.Unlock()
 	}()
+
+	logger.Logger.Info("Check status for initialization...")
+	oldStatus, err = s.checkAndSetStatus(SCHED_STATUS_INITING)
+	if err != nil {
+		return
+	}
+
+	logger.Logger.Info("Check data arguments...")
+
+	return
 }
 
 func (s *Scheduler) Start(request *http.Request) (err error) {
