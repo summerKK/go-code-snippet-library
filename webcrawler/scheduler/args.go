@@ -18,6 +18,29 @@ func (r *RequestArgs) Check() error {
 	return nil
 }
 
+// Same 用于判断两个请求相关的参数容器是否相同。
+func (r *RequestArgs) Same(another *RequestArgs) bool {
+	if another == nil {
+		return false
+	}
+	if another.MaxDepth != r.MaxDepth {
+		return false
+	}
+	anotherDomains := another.AcceptedDomains
+	anotherDomainsLen := len(anotherDomains)
+	if anotherDomainsLen != len(r.AcceptedDomains) {
+		return false
+	}
+	if anotherDomainsLen > 0 {
+		for i, domain := range anotherDomains {
+			if domain != r.AcceptedDomains[i] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // 定义数据缓冲池容量
 type DataArgs struct {
 	ReqBufCap     uint32 `json:"req_buf_cap"`
