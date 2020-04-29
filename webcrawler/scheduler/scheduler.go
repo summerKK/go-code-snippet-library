@@ -16,7 +16,7 @@ type Scheduler struct {
 	// 可以接受的URL的主域名的字典(申明爬虫可以爬取到域名,避免爬取无关紧要的数据)
 	acceptDomainMap cmap.IConcurrentMap
 	// 组件注册器
-	registrar module.Registrar
+	registrar *module.Registrar
 	//  请求的缓冲池
 	reqBufferPool buffer.IPool
 	// 响应的缓冲池
@@ -62,7 +62,27 @@ func (s *Scheduler) Init(requestArgs RequestArgs, dataArgs DataArgs, moduleArgs 
 		return
 	}
 
+	logger.Logger.Info("Check request arguments...")
+	if err = requestArgs.Check(); err != nil {
+		return
+	}
+	logger.Logger.Info("request arguemtns are valid.")
+
 	logger.Logger.Info("Check data arguments...")
+	if err = dataArgs.Check(); err != nil {
+		return
+	}
+	logger.Logger.Info("data arguments are valid.")
+
+	logger.Logger.Info("check module arguments...")
+	if err = moduleArgs.Check(); err != nil {
+		return
+	}
+	logger.Logger.Info("module arguments are valid.")
+
+	if s.registrar == nil {
+		s.registrar = module.NewRegistrar()
+	}
 
 	return
 }
