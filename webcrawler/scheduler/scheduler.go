@@ -113,7 +113,58 @@ func (s *Scheduler) Init(requestArgs RequestArgs, dataArgs DataArgs, moduleArgs 
 }
 
 func (s *Scheduler) Start(request *http.Request) (err error) {
-	panic("implement me")
+	defer func() {
+		if p := recover(); p != nil {
+			errMsg := fmt.Sprintf("fatal scheduler error:%v", p)
+			logger.Logger.Fatal(errMsg)
+			err = genError(errMsg)
+		}
+	}()
+
+	logger.Logger.Info("start scheduler...")
+	logger.Logger.Info("check status for start...")
+
+	var oldStatus Status
+	oldStatus, err = s.checkAndSetStatus(SCHED_STATUS_STARTING)
+	defer func() {
+		s.statusLock.Lock()
+		if err != nil {
+			s.status = oldStatus
+		} else {
+			s.status = SCHED_STATUS_STARTED
+		}
+		s.statusLock.Unlock()
+	}()
+
+	if err != nil {
+		return
+	}
+
+	logger.Logger.Info("check http request...")
+	if request == nil {
+		err = genError("nil http request")
+		return
+	}
+	logger.Logger.Info("the http request is valid.")
+
+	logger.Logger.Info("get the primary domain...")
+	var primaryDomain string
+	primaryDomain, err = getPrimaryDomain(request.Host)
+	if err != nil {
+		return
+	}
+	logger.Logger.Infof("-- primary domain:%s", primaryDomain)
+	_, err = s.acceptDomainMap.Put(primaryDomain, struct{}{})
+	if err != nil {
+		return
+	}
+
+	// 检查缓冲池是否已经初始化好
+	if err := s.checkBufferPoolForStart(); err != nil {
+		return err
+	}
+
+	return
 }
 
 func (s *Scheduler) Stop() (err error) {
@@ -235,4 +286,55 @@ func (s *Scheduler) registerModules(moduleArgs ModuleArgs) error {
 	logger.Logger.Infof("All pipelines have been registered. (number: %d)", len(moduleArgs.Pipelines))
 
 	return nil
+}
+
+// checkBufferPoolForStart 会检查缓冲池是否已为调度器的启动准备就绪。
+// 如果某个缓冲池不可用，就直接返回错误值报告此情况。
+// 如果某个缓冲池已关闭，就按照原先的参数重新初始化它。
+func (s *Scheduler) checkBufferPoolForStart() (err error) {
+	if s.reqBufferPool == nil {
+		err = genError("nul request buffer pool")
+		return
+	}
+	if s.reqBufferPool != nil && s.reqBufferPool.Closed() {
+		s.reqBufferPool, err = buffer.NewPool(s.reqBufferPool.BufCap(), s.reqBufferPool.MaxBufNum())
+		if err != nil {
+			return
+		}
+	}
+
+	if s.respBufferPool == nil {
+		err = genError("nul response buffer pool")
+		return
+	}
+	if s.respBufferPool != nil && s.respBufferPool.Closed() {
+		s.respBufferPool, err = buffer.NewPool(s.respBufferPool.BufCap(), s.respBufferPool.MaxBufNum())
+		if err != nil {
+			return
+		}
+	}
+
+	if s.itemBufferPool == nil {
+		err = genError("nul item buffer pool")
+		return
+	}
+	if s.itemBufferPool != nil && s.itemBufferPool.Closed() {
+		s.itemBufferPool, err = buffer.NewPool(s.itemBufferPool.BufCap(), s.itemBufferPool.MaxBufNum())
+		if err != nil {
+			return
+		}
+	}
+
+	if s.errorBufferPool == nil {
+		err = genError("nul error buffer pool")
+		return
+	}
+	if s.errorBufferPool != nil && s.errorBufferPool.Closed() {
+		s.errorBufferPool, err = buffer.NewPool(s.errorBufferPool.BufCap(), s.errorBufferPool.MaxBufNum())
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
