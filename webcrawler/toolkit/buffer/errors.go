@@ -1,6 +1,8 @@
 package buffer
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// 缓冲池关闭

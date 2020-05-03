@@ -32,3 +32,15 @@ func CheckType(mType base.MType, module base.IModule) bool {
 
 	return false
 }
+
+// GetType 用于获取组件的类型。
+// 若给定的组件ID不合法则第一个结果值会是false。
+func GetType(mid base.MID) (bool, base.MType) {
+	parts, err := SplitMid(mid)
+	if err != nil {
+		return false, ""
+	}
+	mt, ok := base.LegalletterTypeMap[parts[0]]
+
+	return ok, mt
+}

@@ -2,12 +2,15 @@ package scheduler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/summerKK/go-code-snippet-library/cmap"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/logger"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/module"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/module/base"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/toolkit/buffer"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -337,4 +340,121 @@ func (s *Scheduler) checkBufferPoolForStart() (err error) {
 	}
 
 	return
+}
+
+func (s *Scheduler) download() {
+	for {
+		if s.canceled() {
+			break
+		}
+		datum, err := s.reqBufferPool.Get()
+		if err != nil {
+			logger.Logger.Warn("the request buffer pool was closed.break request reception")
+			break
+		}
+		request, ok := datum.(*module.Request)
+		if !ok {
+			errMsg := fmt.Sprintf("incorrect request type:%T", datum)
+			sendError(errors.New(errMsg), "", s.errorBufferPool)
+		}
+
+		s.downloadOne(request)
+	}
+}
+
+func (s *Scheduler) downloadOne(request *module.Request) {
+	if request == nil {
+		return
+	}
+	if s.canceled() {
+		return
+	}
+	m, err := s.registrar.Get(base.TYPE_ANALYZER)
+	if err != nil || m == nil {
+		errMsg := fmt.Sprintf("couldn't get a downloader:%s", err)
+		sendError(errors.New(errMsg), "", s.errorBufferPool)
+		s.sendReq(request)
+		return
+	}
+	downloader, ok := m.(base.IDownloader)
+	if !ok {
+		errMsg := fmt.Sprintf("incorrect downloader type: %T (MID: %s)", m, m.ID())
+		sendError(errors.New(errMsg), m.ID(), s.errorBufferPool)
+		s.sendReq(request)
+		return
+	}
+	response, err := downloader.Download(request)
+	if response != nil {
+		s.sendResp(response)
+	}
+	if err != nil {
+		sendError(err, m.ID(), s.errorBufferPool)
+	}
+}
+
+func (s *Scheduler) sendReq(request *module.Request) bool {
+	if request == nil {
+		return false
+	}
+	if s.canceled() {
+		return false
+	}
+	httpReq := request.Req()
+	if httpReq == nil {
+		logger.Logger.Warn("ignore the request! its http request is invalid!")
+		return false
+	}
+	url := httpReq.URL
+	if url == nil {
+		logger.Logger.Warn("ignore the rquest! its http request url is invalid!")
+		return false
+	}
+	scheme := strings.ToLower(url.Scheme)
+	if scheme != "http" && scheme != "https" {
+		logger.Logger.Warnf("Ignore the request! Its URL scheme is %q, but should be %q or %q. (URL: %s)\n", scheme, "http", "https", url)
+		return false
+	}
+	if v := s.urlMap.Get(url.String()); v != nil {
+		logger.Logger.Warnf("Ignore the request! Its URL is repeated. (URL: %s)\n", url)
+		return false
+	}
+	pd, _ := getPrimaryDomain(url.Host)
+	if s.acceptDomainMap.Get(pd) == nil {
+		if pd == "bing.net" {
+			panic(httpReq.URL)
+		}
+		logger.Logger.Warnf("Ignore the request! Its host %q is not in accepted primary domain map. (URL: %s)\n", httpReq.Host, url)
+		return false
+	}
+	if request.Depth() > s.maxDepth {
+		logger.Logger.Warnf("Ignore the request! Its depth %d is greater than %d. (URL: %s)\n", request.Depth(), s.maxDepth, url)
+		return false
+	}
+
+	go func(req *module.Request) {
+		if err := s.reqBufferPool.Put(req); err != nil {
+			logger.Logger.Warnln("The request buffer pool was closed. Ignore request sending.")
+		}
+	}(request)
+
+	_, _ = s.urlMap.Put(url.String(), struct{}{})
+
+	return true
+}
+
+func (s *Scheduler) sendResp(resp *module.Response) bool {
+	if resp == nil {
+		return false
+	}
+	if s.respBufferPool.Closed() || s.canceled() {
+		return false
+	}
+
+	go func(resp *module.Response) {
+		if err := s.respBufferPool.Put(resp); err != nil {
+			logger.Logger.Warnln("The response buffer pool was closed. Ignore response sending.")
+		}
+	}(resp)
+
+	return true
 }
