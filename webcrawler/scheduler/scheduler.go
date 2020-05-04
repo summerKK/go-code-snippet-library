@@ -368,12 +368,10 @@ func (s *Scheduler) download() {
 }
 
 func (s *Scheduler) downloadOne(request *module.Request) {
-	if request == nil {
+	if request == nil || s.canceled() {
 		return
 	}
-	if s.canceled() {
-		return
-	}
+
 	m, err := s.registrar.Get(base.TYPE_ANALYZER)
 	if err != nil || m == nil {
 		errMsg := fmt.Sprintf("couldn't get a downloader:%s", err)
@@ -406,7 +404,7 @@ func (s *Scheduler) analyze() {
 			datum, err := s.respBufferPool.Get()
 			if err != nil {
 				logger.Logger.Warn("the response buffer pool was closed. break response reception")
-				return
+				break
 			}
 			response, ok := datum.(*module.Response)
 			if !ok {
@@ -420,12 +418,10 @@ func (s *Scheduler) analyze() {
 }
 
 func (s *Scheduler) analyzeOne(response *module.Response) {
-	if response == nil {
+	if response == nil || s.canceled() {
 		return
 	}
-	if s.canceled() {
-		return
-	}
+
 	m, err := s.registrar.Get(base.TYPE_ANALYZER)
 	if err != nil || m == nil {
 		errMsg := fmt.Sprintf("couldn't get an analyzer:%s ", err)
@@ -459,6 +455,56 @@ func (s *Scheduler) analyzeOne(response *module.Response) {
 	}
 	if errlist != nil {
 		for _, err := range errlist {
+			sendError(err, m.ID(), s.errorBufferPool)
+		}
+	}
+}
+
+func (s *Scheduler) pick() {
+	go func() {
+		for {
+			if s.canceled() {
+				break
+			}
+			datum, err := s.itemBufferPool.Get()
+			if err != nil {
+				logger.Logger.Warn("the item buffer pool was closed. break item reception")
+				break
+			}
+			item, ok := datum.(*module.Item)
+			if !ok {
+				errMsg := fmt.Sprintf("incorrect item type:%T", datum)
+				sendError(errors.New(errMsg), "", s.errorBufferPool)
+			}
+
+			s.pickOne(item)
+		}
+	}()
+}
+
+func (s *Scheduler) pickOne(item *module.Item) {
+	if item == nil || s.canceled() {
+		return
+	}
+
+	m, err := s.registrar.Get(base.TYPE_PIPELINE)
+	if err != nil || m == nil {
+		errMsg := fmt.Sprintf("couldn't get a pipeline: %s", err)
+		sendError(errors.New(errMsg), "", s.errorBufferPool)
+		s.sendItem(item)
+		return
+	}
+
+	pipeline, ok := m.(base.IPipeline)
+	if !ok {
+		errMsg := fmt.Sprintf("incorrect pipeline type:%T (MID:%s)", m, m.ID())
+		sendError(errors.New(errMsg), m.ID(), s.errorBufferPool)
+		s.sendItem(item)
+		return
+	}
+	errs := pipeline.Send(item)
+	if errs != nil {
+		for _, err := range errs {
 			sendError(err, m.ID(), s.errorBufferPool)
 		}
 	}
