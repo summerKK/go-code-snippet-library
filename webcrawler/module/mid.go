@@ -40,8 +40,8 @@ func SplitMid(mid base.MID) (s []string, err error) {
 		return
 	}
 
-	letter := base.MType(midStr[:1])
-	if _, ok := base.LegalletterMap[letter]; !ok {
+	letter := midStr[:1]
+	if _, ok := base.LegalletterTypeMap[letter]; !ok {
 		err = errors.NewIllegalParamsError(
 			fmt.Sprintf("illegal module type letter: %s", letter))
 		return

@@ -4,11 +4,13 @@ import (
 	"flag"
 	"fmt"
 	lib "github.com/summerKK/go-code-snippet-library/webcrawler/example/finder/internal"
+	"github.com/summerKK/go-code-snippet-library/webcrawler/example/finder/monitor"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/logger"
 	"github.com/summerKK/go-code-snippet-library/webcrawler/scheduler"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -19,7 +21,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&firstUrl, "first", "http://zhihu.sogou.com/zhihu?query=golang+logo", "the first url which you want to access")
+	flag.StringVar(&firstUrl, "first", "http://pic.sogou.com/pics?query=golang+logo", "the first url which you want to access")
 	flag.StringVar(&domains, "domains", "zhihu.com", "the primary domains which you accepted. please using comma-separated multiple domains")
 	flag.UintVar(&depth, "depth", 3, "the depth for crawling")
 	flag.StringVar(&dirPath, "dir", "./pictures", "the path which you want to save the image files.")
@@ -83,6 +85,14 @@ func main() {
 	if err != nil {
 		logger.Logger.Fatalf("an error occurs when initializing scheduler:%s", err)
 	}
+
+	// 准备监控参数
+	checkInterval := time.Second
+	summarizeInterval := 100 * time.Microsecond
+	maxIdleCount := uint(5)
+	// 开始监控
+	checkCountChan := monitor.Monitor(sched, checkInterval, summarizeInterval, maxIdleCount, true, lib.Record)
+
 	firstHttpReq, err := http.NewRequest("GET", firstUrl, nil)
 	if err != nil {
 		logger.Logger.Fatalln(err)
@@ -91,5 +101,7 @@ func main() {
 	if err != nil {
 		logger.Logger.Fatalf("an error occurs when starting scheduler:%s", err)
 	}
+
+	<-checkCountChan
 
 }
