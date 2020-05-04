@@ -169,28 +169,105 @@ func (s *Scheduler) Start(request *http.Request) (err error) {
 
 	// 启动下载器
 	s.download()
+	// 启动分析器
+	s.analyze()
+	// 启动条目处理管道
+	s.pick()
+	logger.Logger.Info("scheduler has been started.")
+	firstreq := module.NewRequest(request, 0)
+	s.sendReq(firstreq)
 
 	return
 }
 
 func (s *Scheduler) Stop() (err error) {
-	panic("implement me")
+	logger.Logger.Info("stop scheduler...")
+	logger.Logger.Info("check status for stop...")
+	var oldStatus Status
+	oldStatus, err = s.checkAndSetStatus(SCHED_STATUS_STOPPING)
+	defer func() {
+		s.statusLock.Lock()
+		if err == nil {
+			s.status = SCHED_STATUS_STOPPED
+		} else {
+			s.status = oldStatus
+		}
+		s.statusLock.Unlock()
+	}()
+	if err != nil {
+		return
+	}
+
+	// 通知所有context停止
+	s.cancelFunc()
+	s.reqBufferPool.Close()
+	s.respBufferPool.Close()
+	s.itemBufferPool.Close()
+	s.errorBufferPool.Close()
+
+	logger.Logger.Info("scheduelr has benn stopped.")
+
+	return nil
 }
 
 func (s *Scheduler) Status() Status {
-	panic("implement me")
+	var status Status
+	s.statusLock.Lock()
+	status = s.status
+	s.statusLock.Unlock()
+
+	return status
 }
 
 func (s *Scheduler) ErrChan() <-chan error {
-	panic("implement me")
+	errBuffer := s.errorBufferPool
+	errCh := make(chan error, errBuffer.BufCap())
+	go func(errBuffer buffer.IPool, errch chan error) {
+		for {
+			if s.canceled() {
+				close(errch)
+				break
+			}
+			datum, err := errBuffer.Get()
+			if err != nil {
+				logger.Logger.Warn("the error buffer pool was closed. break error reception.")
+				break
+			}
+			err, ok := datum.(error)
+			if !ok {
+				errMsg := fmt.Sprintf("incorrect error type:%T", datum)
+				sendError(errors.New(errMsg), "", s.errorBufferPool)
+				continue
+			}
+			if s.canceled() {
+				close(errch)
+				break
+			}
+			errch <- err
+		}
+	}(errBuffer, errCh)
+
+	return errCh
 }
 
 func (s *Scheduler) Idle() bool {
-	panic("implement me")
+	moduleMap := s.registrar.GetAll()
+	for _, m := range moduleMap {
+		if m.HandlingNum() > 0 {
+			return false
+		}
+	}
+	if s.reqBufferPool.Total() > 0 ||
+		s.respBufferPool.Total() > 0 ||
+		s.itemBufferPool.Total() > 0 {
+		return false
+	}
+
+	return true
 }
 
 func (s *Scheduler) Summary() ISchedSummary {
-	panic("implement me")
+	return s.summary
 }
 
 func (s *Scheduler) checkAndSetStatus(status Status) (oldStatus Status, err error) {
