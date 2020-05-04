@@ -22,7 +22,7 @@ func TestDownloader_Download(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req := module.NewRequest(request, 0)
+	req := base.NewRequest(request, 0)
 	response, err := downloader.Download(req)
 	if err != nil {
 		t.Fatal(err)

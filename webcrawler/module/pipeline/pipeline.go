@@ -42,7 +42,7 @@ func (p *Pipeline) ItemProcessors() []base.ProcessItem {
 	return p.itemProcessors
 }
 
-func (p *Pipeline) Send(item *module.Item) (errlist []error) {
+func (p *Pipeline) Send(item base.Item) (errlist []error) {
 	p.Module.IncrHandlingNum()
 	defer p.Module.DecrHandlingNum()
 	p.Module.IncrCalledCount()

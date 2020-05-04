@@ -174,7 +174,7 @@ func (s *Scheduler) Start(request *http.Request) (err error) {
 	// 启动条目处理管道
 	s.pick()
 	logger.Logger.Info("scheduler has been started.")
-	firstreq := module.NewRequest(request, 0)
+	firstreq := base.NewRequest(request, 0)
 	s.sendReq(firstreq)
 
 	return
@@ -433,7 +433,7 @@ func (s *Scheduler) download() {
 				logger.Logger.Warn("the request buffer pool was closed. break request reception")
 				break
 			}
-			request, ok := datum.(*module.Request)
+			request, ok := datum.(*base.Request)
 			if !ok {
 				errMsg := fmt.Sprintf("incorrect request type:%T", datum)
 				sendError(errors.New(errMsg), "", s.errorBufferPool)
@@ -444,7 +444,7 @@ func (s *Scheduler) download() {
 	}()
 }
 
-func (s *Scheduler) downloadOne(request *module.Request) {
+func (s *Scheduler) downloadOne(request *base.Request) {
 	if request == nil || s.canceled() {
 		return
 	}
@@ -483,7 +483,7 @@ func (s *Scheduler) analyze() {
 				logger.Logger.Warn("the response buffer pool was closed. break response reception")
 				break
 			}
-			response, ok := datum.(*module.Response)
+			response, ok := datum.(*base.Response)
 			if !ok {
 				errMsg := fmt.Sprintf("incorrect response type:%T", datum)
 				sendError(errors.New(errMsg), "", s.errorBufferPool)
@@ -494,7 +494,7 @@ func (s *Scheduler) analyze() {
 	}()
 }
 
-func (s *Scheduler) analyzeOne(response *module.Response) {
+func (s *Scheduler) analyzeOne(response *base.Response) {
 	if response == nil || s.canceled() {
 		return
 	}
@@ -520,9 +520,9 @@ func (s *Scheduler) analyzeOne(response *module.Response) {
 				continue
 			}
 			switch d := data.(type) {
-			case *module.Request:
+			case *base.Request:
 				s.sendReq(d)
-			case *module.Item:
+			case base.Item:
 				s.sendItem(d)
 			default:
 				errMsg := fmt.Sprintf("unsupported data type:%T!(data:%#v)", d, d)
@@ -548,7 +548,7 @@ func (s *Scheduler) pick() {
 				logger.Logger.Warn("the item buffer pool was closed. break item reception")
 				break
 			}
-			item, ok := datum.(*module.Item)
+			item, ok := datum.(base.Item)
 			if !ok {
 				errMsg := fmt.Sprintf("incorrect item type:%T", datum)
 				sendError(errors.New(errMsg), "", s.errorBufferPool)
@@ -559,7 +559,7 @@ func (s *Scheduler) pick() {
 	}()
 }
 
-func (s *Scheduler) pickOne(item *module.Item) {
+func (s *Scheduler) pickOne(item base.Item) {
 	if item == nil || s.canceled() {
 		return
 	}
@@ -587,7 +587,7 @@ func (s *Scheduler) pickOne(item *module.Item) {
 	}
 }
 
-func (s *Scheduler) sendReq(request *module.Request) bool {
+func (s *Scheduler) sendReq(request *base.Request) bool {
 	if request == nil {
 		return false
 	}
@@ -626,7 +626,7 @@ func (s *Scheduler) sendReq(request *module.Request) bool {
 		return false
 	}
 
-	go func(req *module.Request) {
+	go func(req *base.Request) {
 		if err := s.reqBufferPool.Put(req); err != nil {
 			logger.Logger.Warnln("The request buffer pool was closed. Ignore request sending.")
 		}
@@ -637,7 +637,7 @@ func (s *Scheduler) sendReq(request *module.Request) bool {
 	return true
 }
 
-func (s *Scheduler) sendResp(resp *module.Response) bool {
+func (s *Scheduler) sendResp(resp *base.Response) bool {
 	if resp == nil {
 		return false
 	}
@@ -645,7 +645,7 @@ func (s *Scheduler) sendResp(resp *module.Response) bool {
 		return false
 	}
 
-	go func(resp *module.Response) {
+	go func(resp *base.Response) {
 		if err := s.respBufferPool.Put(resp); err != nil {
 			logger.Logger.Warnln("The response buffer pool was closed. Ignore response sending.")
 		}
@@ -654,7 +654,7 @@ func (s *Scheduler) sendResp(resp *module.Response) bool {
 	return true
 }
 
-func (s *Scheduler) sendItem(item *module.Item) bool {
+func (s *Scheduler) sendItem(item base.Item) bool {
 	if item == nil {
 		return false
 	}
@@ -662,7 +662,7 @@ func (s *Scheduler) sendItem(item *module.Item) bool {
 		return false
 	}
 
-	go func(item *module.Item) {
+	go func(item base.Item) {
 		if err := s.itemBufferPool.Put(item); err != nil {
 			logger.Logger.Warnln("The item buffer pool was closed. Igonre item sending.")
 		}

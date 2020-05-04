@@ -29,7 +29,7 @@ func New(mid base.MID, scoreCalc base.CalculateScore, httpClient *http.Client) (
 	}, nil
 }
 
-func (d *Downloader) Download(req *module.Request) (resp *module.Response, err error) {
+func (d *Downloader) Download(req *base.Request) (resp *base.Response, err error) {
 	d.Module.IncrHandlingNum()
 	defer d.Module.DecrHandlingNum()
 	d.Module.IncrCalledCount()
@@ -49,7 +49,7 @@ func (d *Downloader) Download(req *module.Request) (resp *module.Response, err e
 		return
 	}
 	d.Module.IncrCompletedCount()
-	resp = module.NewResponse(response, req.Depth())
+	resp = base.NewResponse(response, req.Depth())
 
 	return
 }

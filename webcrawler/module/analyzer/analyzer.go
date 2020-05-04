@@ -47,7 +47,7 @@ func (a *Analyzer) RespParsers() []base.ParseResponse {
 	return a.respParsers
 }
 
-func (a *Analyzer) Analyze(resp *module.Response) (datalist []base.IData, errlist []error) {
+func (a *Analyzer) Analyze(resp *base.Response) (datalist []base.IData, errlist []error) {
 	a.Module.IncrHandlingNum()
 	defer a.Module.DecrHandlingNum()
 	a.Module.IncrCalledCount()
@@ -119,14 +119,14 @@ func appendDataList(datalist []base.IData, data base.IData, respDepth uint32) []
 	if data == nil {
 		return datalist
 	}
-	req, ok := data.(*module.Request)
+	req, ok := data.(*base.Request)
 	if !ok {
 		datalist = append(datalist, data)
 		return datalist
 	}
 	newDepth := respDepth + 1
 	if newDepth != req.Depth() {
-		req = module.NewRequest(req.Req(), newDepth)
+		req = base.NewRequest(req.Req(), newDepth)
 	}
 
 	return append(datalist, req)

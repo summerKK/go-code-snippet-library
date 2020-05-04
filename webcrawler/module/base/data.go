@@ -1,6 +1,11 @@
-package module
+package base
 
 import "net/http"
+
+type IData interface {
+	// 判断数据是否有效
+	Valid() bool
+}
 
 type Response struct {
 	resp  *http.Response
@@ -46,6 +51,6 @@ func NewRequest(req *http.Request, depth uint32) *Request {
 
 type Item map[string]interface{}
 
-func (i *Item) Valid() bool {
+func (i Item) Valid() bool {
 	return i != nil
 }
