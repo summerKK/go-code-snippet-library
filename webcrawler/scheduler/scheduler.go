@@ -167,6 +167,9 @@ func (s *Scheduler) Start(request *http.Request) (err error) {
 		return err
 	}
 
+	// 启动下载器
+	s.download()
+
 	return
 }
 
@@ -343,23 +346,25 @@ func (s *Scheduler) checkBufferPoolForStart() (err error) {
 }
 
 func (s *Scheduler) download() {
-	for {
-		if s.canceled() {
-			break
-		}
-		datum, err := s.reqBufferPool.Get()
-		if err != nil {
-			logger.Logger.Warn("the request buffer pool was closed.break request reception")
-			break
-		}
-		request, ok := datum.(*module.Request)
-		if !ok {
-			errMsg := fmt.Sprintf("incorrect request type:%T", datum)
-			sendError(errors.New(errMsg), "", s.errorBufferPool)
-		}
+	go func() {
+		for {
+			if s.canceled() {
+				break
+			}
+			datum, err := s.reqBufferPool.Get()
+			if err != nil {
+				logger.Logger.Warn("the request buffer pool was closed. break request reception")
+				break
+			}
+			request, ok := datum.(*module.Request)
+			if !ok {
+				errMsg := fmt.Sprintf("incorrect request type:%T", datum)
+				sendError(errors.New(errMsg), "", s.errorBufferPool)
+			}
 
-		s.downloadOne(request)
-	}
+			s.downloadOne(request)
+		}
+	}()
 }
 
 func (s *Scheduler) downloadOne(request *module.Request) {
@@ -389,6 +394,73 @@ func (s *Scheduler) downloadOne(request *module.Request) {
 	}
 	if err != nil {
 		sendError(err, m.ID(), s.errorBufferPool)
+	}
+}
+
+func (s *Scheduler) analyze() {
+	go func() {
+		for {
+			if s.canceled() {
+				break
+			}
+			datum, err := s.respBufferPool.Get()
+			if err != nil {
+				logger.Logger.Warn("the response buffer pool was closed. break response reception")
+				return
+			}
+			response, ok := datum.(*module.Response)
+			if !ok {
+				errMsg := fmt.Sprintf("incorrect response type:%T", datum)
+				sendError(errors.New(errMsg), "", s.errorBufferPool)
+			}
+
+			s.analyzeOne(response)
+		}
+	}()
+}
+
+func (s *Scheduler) analyzeOne(response *module.Response) {
+	if response == nil {
+		return
+	}
+	if s.canceled() {
+		return
+	}
+	m, err := s.registrar.Get(base.TYPE_ANALYZER)
+	if err != nil || m == nil {
+		errMsg := fmt.Sprintf("couldn't get an analyzer:%s ", err)
+		sendError(errors.New(errMsg), "", s.errorBufferPool)
+		s.sendResp(response)
+		return
+	}
+	analyzer, ok := m.(base.IAnalyzer)
+	if !ok {
+		errMsg := fmt.Sprintf("incorrect analyzer type:%T (MID: %s)", m, m.ID())
+		sendError(errors.New(errMsg), "", s.errorBufferPool)
+		s.sendResp(response)
+		return
+	}
+	dataList, errlist := analyzer.Analyze(response)
+	if dataList != nil {
+		for _, data := range dataList {
+			if data == nil {
+				continue
+			}
+			switch d := data.(type) {
+			case *module.Request:
+				s.sendReq(d)
+			case *module.Item:
+				s.sendItem(d)
+			default:
+				errMsg := fmt.Sprintf("unsupported data type:%T!(data:%#v)", d, d)
+				sendError(errors.New(errMsg), m.ID(), s.errorBufferPool)
+			}
+		}
+	}
+	if errlist != nil {
+		for _, err := range errlist {
+			sendError(err, m.ID(), s.errorBufferPool)
+		}
 	}
 }
 
@@ -455,6 +527,23 @@ func (s *Scheduler) sendResp(resp *module.Response) bool {
 			logger.Logger.Warnln("The response buffer pool was closed. Ignore response sending.")
 		}
 	}(resp)
+
+	return true
+}
+
+func (s *Scheduler) sendItem(item *module.Item) bool {
+	if item == nil {
+		return false
+	}
+	if s.itemBufferPool.Closed() || s.canceled() {
+		return false
+	}
+
+	go func(item *module.Item) {
+		if err := s.itemBufferPool.Put(item); err != nil {
+			logger.Logger.Warnln("The item buffer pool was closed. Igonre item sending.")
+		}
+	}(item)
 
 	return true
 }
