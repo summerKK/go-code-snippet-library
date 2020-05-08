@@ -150,8 +150,7 @@ func recordSummary(sched scheduler.IScheduler, summarizeInterval time.Duration, 
 			currNumGoroutine := runtime.NumGoroutine()
 			currSchedSummaryStruct := sched.Summary().Struct()
 			// 比对前后两份摘要信息的一致性。只有不一致时才会记录。
-			if currNumGoroutine != prevNumGoroutine ||
-				!currSchedSummaryStruct.Same(prevSchedSummaryStruct) {
+			if currNumGoroutine != prevNumGoroutine || !currSchedSummaryStruct.Same(prevSchedSummaryStruct) {
 				// 记录摘要信息。
 				summay := summary{
 					NumGoroutine: runtime.NumGoroutine(),

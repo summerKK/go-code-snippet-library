@@ -21,8 +21,8 @@ var (
 )
 
 func init() {
-	flag.StringVar(&firstUrl, "first", "http://pic.sogou.com/pics?query=golang+logo", "the first url which you want to access")
-	flag.StringVar(&domains, "domains", "zhihu.com", "the primary domains which you accepted. please using comma-separated multiple domains")
+	flag.StringVar(&firstUrl, "first", "https://huaban.com/favorite/illustration", "the first url which you want to access")
+	flag.StringVar(&domains, "domains", "huaban.com", "the primary domains which you accepted. please using comma-separated multiple domains")
 	flag.UintVar(&depth, "depth", 3, "the depth for crawling")
 	flag.StringVar(&dirPath, "dir", "./pictures", "the path which you want to save the image files.")
 }

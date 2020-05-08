@@ -33,11 +33,11 @@ type Scheduler struct {
 	urlMap cmap.IConcurrentMap
 	// 上下文.用于感知调度器的停止
 	ctx context.Context
-	//  取消函数,用于停止调度器
+	// 取消函数,用于停止调度器
 	cancelFunc context.CancelFunc
-	//  状态
+	// 状态
 	status Status
-	//  专用于状态的读写锁
+	// 专用于状态的读写锁
 	statusLock sync.Mutex
 	// 摘要信息
 	summary ISchedSummary
@@ -449,7 +449,7 @@ func (s *Scheduler) downloadOne(request *base.Request) {
 		return
 	}
 
-	m, err := s.registrar.Get(base.TYPE_ANALYZER)
+	m, err := s.registrar.Get(base.TYPE_DOWNLOADER)
 	if err != nil || m == nil {
 		errMsg := fmt.Sprintf("couldn't get a downloader:%s", err)
 		sendError(errors.New(errMsg), "", s.errorBufferPool)
