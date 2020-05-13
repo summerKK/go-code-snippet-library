@@ -109,41 +109,100 @@ func (b *bucket) GetFirstPair() IPair {
 }
 
 func (b *bucket) Delete(key string, lock sync.Locker) bool {
-	if lock != nil {
-		lock.Lock()
-		defer lock.Unlock()
+	var result bool
+	if lock == nil {
+		// 不加锁的方法
+		result = b.deleteWithoutLock(key)
+	} else {
+		result, _ = b.deleteWithLock(key, lock)
 	}
+
+	return result
+}
+
+// 使用锁删除
+func (b *bucket) deleteWithLock(key string, lock sync.Locker) (bool, error) {
+	if lock == nil {
+		return false, newIllegalParameterError("nil lock")
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	firstPair := b.GetFirstPair()
+	if firstPair == nil {
+		return false, nil
+	}
+
+	// 保存删除节点的之前节点
+	var prePairs []IPair
+	// 目标值
+	var target IPair
+	// 目标值的下个节点
+	var breakPoint IPair
+	for v := firstPair; v != nil; v = firstPair.Next() {
+		if v.Key() == key {
+			target = v
+			breakPoint = v.Next()
+		}
+		prePairs = append(prePairs, v)
+	}
+
+	// 没有找到对应的值
+	if target == nil {
+		return false, nil
+	}
+
+	// 删除当前节点
+	newFirstpair := breakPoint
+	for i := len(prePairs) - 1; i > 0; i-- {
+		iPair := prePairs[i].Copy()
+		_ = iPair.SetNext(newFirstpair)
+		newFirstpair = iPair
+	}
+
+	if newFirstpair != nil {
+		b.firstValue.Store(newFirstpair)
+		atomic.AddUint64(&b.size, ^uint64(0))
+	} else {
+		b.firstValue.Store(placeholder)
+		atomic.AddUint64(&b.size, 0)
+	}
+
+	return true, nil
+}
+
+// 不用锁删除(删除更高效)
+func (b *bucket) deleteWithoutLock(key string) bool {
 	firstPair := b.GetFirstPair()
 	if firstPair == nil {
 		return false
 	}
-	var prePairs []IPair
+
+	var prePair IPair
 	var target IPair
-	var breakPoint IPair
+	var nextPair IPair
 	for v := firstPair; v != nil; v = v.Next() {
 		if v.Key() == key {
 			target = v
-			breakPoint = v.Next()
+			nextPair = v.Next()
 			break
 		}
-		prePairs = append(prePairs, v)
+		prePair = v
 	}
+
 	if target == nil {
 		return false
 	}
-	newFirstPair := breakPoint
-	for i := len(prePairs) - 1; i >= 0; i-- {
-		iPair := prePairs[i].Copy()
-		_ = iPair.SetNext(newFirstPair)
-		newFirstPair = iPair
-	}
 
-	if newFirstPair != nil {
-		b.firstValue.Store(newFirstPair)
-	} else {
+	// bucket只存在一个元素
+	if prePair == nil {
 		b.firstValue.Store(placeholder)
+		atomic.AddUint64(&b.size, 0)
+	} else {
+		_ = prePair.SetNext(nextPair)
+		atomic.AddUint64(&b.size, ^uint64(0))
 	}
-	atomic.AddUint64(&b.size, ^uint64(0))
 
 	return true
 }
