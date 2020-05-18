@@ -21,9 +21,9 @@ var (
 )
 
 func init() {
-	flag.StringVar(&firstUrl, "first", "https://huaban.com/favorite/illustration", "the first url which you want to access")
-	flag.StringVar(&domains, "domains", "huaban.com", "the primary domains which you accepted. please using comma-separated multiple domains")
-	flag.UintVar(&depth, "depth", 3, "the depth for crawling")
+	flag.StringVar(&firstUrl, "first", "https://www.jdlingyu.mobi/collection/meizitu", "the first url which you want to access")
+	flag.StringVar(&domains, "domains", "jdlingyu.mobi,jdlingyu.net,sinaimg.cn", "the primary domains which you accepted. please using comma-separated multiple domains")
+	flag.UintVar(&depth, "depth", 10, "the depth for crawling")
 	flag.StringVar(&dirPath, "dir", "./pictures", "the path which you want to save the image files.")
 }
 
