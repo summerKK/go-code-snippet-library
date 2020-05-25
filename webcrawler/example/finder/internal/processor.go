@@ -33,6 +33,18 @@ func genItemProcessors(dirPath string) []base.ProcessItem {
 		if !ok {
 			return nil, fmt.Errorf("incorrect name type:%T", v)
 		}
+		v = item["imgDirName"]
+		imgDirName, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf("incorrect imgDirName type:%T", v)
+		}
+		if imgDirName != "" {
+			absDirPath = filepath.Join(absDirPath, imgDirName)
+			if _, err := os.Stat(absDirPath); !os.IsExist(err) {
+				_ = os.Mkdir(absDirPath, 0755)
+			}
+		}
+
 		fileName := name
 		filePath := filepath.Join(absDirPath, fileName)
 		file, err := os.Create(filePath)

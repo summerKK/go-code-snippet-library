@@ -73,6 +73,10 @@ func genResponseParsers() []base.ParseResponse {
 				aUrl = reqUrl.ResolveReference(aUrl)
 			}
 			httpReq, err := http.NewRequest("GET", aUrl.String(), nil)
+
+			// 获取下一页信息
+			nextPage(&dataList, &errs, reqUrl, respDepth)
+
 			if err != nil {
 				errs = append(errs, err)
 			} else {
@@ -81,8 +85,11 @@ func genResponseParsers() []base.ParseResponse {
 			}
 		})
 
-		// 获取下一页信息
-		nextPage(&dataList, &errs, reqUrl, respDepth)
+		imgDir := ""
+		entryTitleNodes := doc.Find("h1.entry-title")
+		if entryTitleNodes.Length() > 0 {
+			imgDir = entryTitleNodes.Eq(0).Text()
+		}
 
 		// 查找img标签并提取地址。
 		doc.Find("#content-innerText img").Each(func(index int, sel *goquery.Selection) {
@@ -100,7 +107,7 @@ func genResponseParsers() []base.ParseResponse {
 			if !imgURL.IsAbs() {
 				imgURL = reqUrl.ResolveReference(imgURL)
 			}
-			httpReq, err := http.NewRequest("GET", imgURL.String(), nil)
+			httpReq, err := http.NewRequest("GET", imgURL.String()+"?dirName="+imgDir, nil)
 			if err != nil {
 				errs = append(errs, err)
 			} else {
@@ -127,6 +134,7 @@ func genResponseParsers() []base.ParseResponse {
 			return nil, []error{fmt.Errorf("nil HTTP request")}
 		}
 		reqURL := httpReq.URL
+		imgDirName := reqURL.Query().Get("dirName")
 		if httpResp.StatusCode != 200 {
 			err := fmt.Errorf("unsupported status code %d (requestURL: %s)",
 				httpResp.StatusCode, reqURL)
@@ -168,6 +176,7 @@ func genResponseParsers() []base.ParseResponse {
 		item["reader"] = httpRespBody
 		item["name"] = path.Base(reqURL.Path)
 		item["ext"] = pictureFormat
+		item["imgDirName"] = imgDirName
 		dataList = append(dataList, base.Item(item))
 		return dataList, nil
 	}
