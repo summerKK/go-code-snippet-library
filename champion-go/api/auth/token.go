@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -92,5 +93,5 @@ func ExtractTokenId(r *http.Request) (uint32, error) {
 		return uint32(uintUserId), nil
 	}
 
-	return 0, nil
+	return 0, errors.New("Can't handle")
 }

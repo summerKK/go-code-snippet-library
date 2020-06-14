@@ -5,15 +5,16 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/summerKK/go-code-snippet-library/champion-go/api/middlewares"
 	"github.com/summerKK/go-code-snippet-library/champion-go/api/models"
 )
 
 type Server struct {
 	DB     *gorm.DB
-	Router *mux.Router
+	Router *gin.Engine
 }
 
 func (s *Server) Initialize(DbUser, DbPassword, DbPort, DbHost, DbName string) {
@@ -27,8 +28,16 @@ func (s *Server) Initialize(DbUser, DbPassword, DbPort, DbHost, DbName string) {
 		fmt.Println("connected to mysql")
 	}
 
-	s.DB.Debug().AutoMigrate(&models.Post{}, &models.User{})
-	s.Router = mux.NewRouter()
+	s.DB.Debug().AutoMigrate(
+		&models.Post{},
+		&models.User{},
+		&models.Comment{},
+		&models.Like{},
+		&models.ResetPassword{},
+	)
+	s.Router = gin.Default()
+	s.Router.Use(middlewares.CORSMiddleware())
+	s.InitializeRoutes()
 }
 
 func (s *Server) Run(addr string) {
