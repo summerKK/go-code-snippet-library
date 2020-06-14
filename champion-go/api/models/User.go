@@ -33,6 +33,7 @@ const (
 )
 
 func (u *User) BeforeSave() error {
+
 	hashedPassword, err := security.Hash(u.Password)
 	if err != nil {
 		return err
@@ -43,6 +44,7 @@ func (u *User) BeforeSave() error {
 }
 
 func (u *User) AfterFind() error {
+
 	if u.AvatarPath != "" {
 		u.AvatarPath = os.Getenv("DO_SPACES_URL") + u.AvatarPath
 	}
@@ -51,6 +53,7 @@ func (u *User) AfterFind() error {
 }
 
 func (u *User) Prepare() {
+
 	u.Username = html.EscapeString(strings.TrimSpace(u.Username))
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
 	u.CreatedAt = time.Now()
@@ -58,6 +61,7 @@ func (u *User) Prepare() {
 }
 
 func (u *User) Validate(action UserType) map[string]string {
+
 	var err error
 	errMsgList := make(map[string]string)
 
@@ -132,6 +136,7 @@ func (u *User) Validate(action UserType) map[string]string {
 }
 
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
+
 	var err error
 
 	err = u.BeforeSave()
@@ -147,6 +152,7 @@ func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 }
 
 func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
+
 	var err error
 	var users []User
 	err = db.Debug().Model(&User{}).Limit(100).Find(&users).Error
@@ -157,6 +163,7 @@ func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 }
 
 func (u *User) FindUserById(db *gorm.DB, uid uint32) (user *User, err error) {
+
 	user = &User{}
 	err = db.Debug().Model(User{}).Where("id = ?", uid).Take(user).Error
 	if err != nil {
@@ -170,6 +177,7 @@ func (u *User) FindUserById(db *gorm.DB, uid uint32) (user *User, err error) {
 }
 
 func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
+
 	// hash password
 	err = u.BeforeSave()
 	if err != nil {
@@ -194,6 +202,7 @@ func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 }
 
 func (u *User) UpdateAUserAvatar(db *gorm.DB, uid uint32) (user *User, err error) {
+
 	user = &User{}
 	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
@@ -212,6 +221,7 @@ func (u *User) UpdateAUserAvatar(db *gorm.DB, uid uint32) (user *User, err error
 }
 
 func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (rowAffected int64, err error) {
+
 	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(&User{}).Delete(&User{})
 	if db.Error == nil {
 		rowAffected = db.RowsAffected
