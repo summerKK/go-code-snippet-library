@@ -434,22 +434,22 @@ func (s *Server) DeleteUser(c *gin.Context) {
 	}
 
 	err = s.DB.Transaction(func(tx *gorm.DB) error {
-		_, err := user.DeleteAUser(s.DB, userId)
+		_, err := user.DeleteAUser(tx, userId)
 		if err != nil {
 			return err
 		}
 		post := &models.Post{}
-		_, err = post.DelteUserPosts(s.DB, userId)
+		_, err = post.DelteUserPosts(tx, userId)
 		if err != nil {
 			return err
 		}
 		comment := &models.Comment{}
-		_, err = comment.DeleteUserComments(s.DB, userId)
+		_, err = comment.DeleteUserComments(tx, userId)
 		if err != nil {
 			return err
 		}
 		like := &models.Like{}
-		_, err = like.DeleteUserLikes(s.DB, userId)
+		_, err = like.DeleteUserLikes(tx, userId)
 		if err != nil {
 			return err
 		}
