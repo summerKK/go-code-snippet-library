@@ -157,7 +157,7 @@ func (p *Post) FindUserPosts(db *gorm.DB, uid uint32) (posts []*Post, err error)
 	return
 }
 
-func (p *Post) DelteUserPosts(db *gorm.DB, uid int32) (rowAffectd int64, err error) {
+func (p *Post) DelteUserPosts(db *gorm.DB, uid uint32) (rowAffectd int64, err error) {
 
 	db = db.Debug().Model(Post{}).Where("id = ?", uid).Delete(Post{})
 	if db.Error != nil {
