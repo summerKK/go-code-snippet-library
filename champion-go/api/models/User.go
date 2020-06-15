@@ -176,6 +176,20 @@ func (u *User) FindUserById(db *gorm.DB, uid uint32) (user *User, err error) {
 	return
 }
 
+func (u *User) FindUserByEmail(db *gorm.DB, email string) (user *User, err error) {
+
+	user = &User{}
+	err = db.Debug().Model(User{}).Where("email = ?", email).Take(user).Error
+	if err != nil {
+		return
+	}
+	if gorm.IsRecordNotFoundError(err) {
+		return nil, fmt.Errorf("User not found(user_id:%d)", email)
+	}
+
+	return
+}
+
 func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 
 	// hash password
