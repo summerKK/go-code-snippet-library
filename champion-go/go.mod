@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/gorm v1.9.12
-	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/matcornic/hermes/v2 v2.1.0
 	github.com/myesui/uuid v1.0.0 // indirect
 	github.com/sendgrid/rest v2.6.0+incompatible // indirect

@@ -82,7 +82,7 @@ func (c *Comment) GetComments(db *gorm.DB, pid uint64) (commentList []*Comment, 
 	}
 	if len(commentList) > 0 {
 		for _, comment := range commentList {
-			err := db.Debug().Model(User{}).Where("id = ?", comment.UserID).Take(comment.User).Error
+			err = db.Debug().Model(User{}).Where("id = ?", comment.UserID).Take(comment.User).Error
 			if err != nil {
 				return
 			}

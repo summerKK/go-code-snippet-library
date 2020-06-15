@@ -37,7 +37,7 @@ func (s *Server) Initialize(DbUser, DbPassword, DbPort, DbHost, DbName string) {
 	)
 	s.Router = gin.Default()
 	s.Router.Use(middlewares.CORSMiddleware())
-	s.InitializeRoutes()
+	s.initializeRoutes()
 }
 
 func (s *Server) Run(addr string) {
