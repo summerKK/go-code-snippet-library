@@ -71,7 +71,7 @@ func (l *Like) DeleteUserLikes(db *gorm.DB, uid uint32) (rowAffected int64, err 
 	return
 }
 
-func (l *Like) DeletePostLikes(db *gorm.DB, pid uint32) (rowAffected int64, err error) {
+func (l *Like) DeletePostLikes(db *gorm.DB, pid uint64) (rowAffected int64, err error) {
 
 	db = db.Debug().Model(Like{}).Where("post_id = ?", pid).Delete(Like{})
 	if db.Error != nil {

@@ -347,7 +347,7 @@ func (s *Server) UpdateAvatar(c *gin.Context) {
 
 	fileBytes := bytes.NewBuffer(buffer)
 	filePath := fileformat.UniqueFormat(file.Filename)
-	path := "profile-photos/" + filePath
+	path := os.Getenv("AVATAR_FILE_DIR") + filePath
 	dst, err := os.Create(path)
 	if err != nil {
 		errList["Upload_Failed"] = "Create file failed"
