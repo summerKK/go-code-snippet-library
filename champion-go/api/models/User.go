@@ -244,14 +244,14 @@ func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (rowAffected int64, err erro
 	return
 }
 
-func (u *User) UpdateAUserPassword(db *gorm.DB, uid uint32) (err error) {
+func (u *User) UpdateAUserPassword(db *gorm.DB) (err error) {
 
 	err = u.BeforeSave()
 	if err != nil {
 		return
 	}
 
-	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
+	db = db.Debug().Model(User{}).Where("email = ?", u.Email).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
 			"password":  u.Password,
 			"update_at": time.Now(),
