@@ -151,15 +151,10 @@ func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	return u, nil
 }
 
-func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
-
-	var err error
-	var users []User
+func (u *User) FindAllUsers(db *gorm.DB) (users []*User, err error) {
 	err = db.Debug().Model(&User{}).Limit(100).Find(&users).Error
-	if err != nil {
-		return &[]User{}, err
-	}
-	return &users, err
+
+	return
 }
 
 func (u *User) FindUserById(db *gorm.DB, uid uint32) (user *User, err error) {
@@ -168,9 +163,6 @@ func (u *User) FindUserById(db *gorm.DB, uid uint32) (user *User, err error) {
 	err = db.Debug().Model(User{}).Where("id = ?", uid).Take(user).Error
 	if err != nil {
 		return
-	}
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, fmt.Errorf("User not found(user_id:%d)", uid)
 	}
 
 	return
@@ -198,7 +190,7 @@ func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 		return
 	}
 	user = &User{}
-	db = db.Model(User{}).Where("id = ?", uid).Take(user).UpdateColumns(
+	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(user).UpdateColumns(
 		map[string]interface{}{
 			"password":  u.Password,
 			"username":  u.Username,
@@ -244,14 +236,15 @@ func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (rowAffected int64, err erro
 	return
 }
 
-func (u *User) UpdateAUserPassword(db *gorm.DB) (err error) {
+func (u *User) UpdateAUserPassword(db *gorm.DB) (user *User, err error) {
 
 	err = u.BeforeSave()
+	user = &User{}
 	if err != nil {
 		return
 	}
 
-	db = db.Debug().Model(User{}).Where("email = ?", u.Email).Take(&User{}).UpdateColumns(
+	db = db.Debug().Model(User{}).Where("email = ?", u.Email).Take(user).UpdateColumns(
 		map[string]interface{}{
 			"password":  u.Password,
 			"update_at": time.Now(),
@@ -263,5 +256,5 @@ func (u *User) UpdateAUserPassword(db *gorm.DB) (err error) {
 		return
 	}
 
-	return nil
+	return
 }

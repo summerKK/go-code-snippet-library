@@ -158,7 +158,7 @@ func (s *Server) ResetPassword(c *gin.Context) {
 
 		//update the password
 		user.Prepare()
-		err := user.UpdateAUserPassword(s.DB)
+		_, err := user.UpdateAUserPassword(s.DB)
 		if err != nil {
 			fmt.Println("this is the error: ", err)
 			errList["Cannot_save"] = "Cannot Save, Pls try again later"
