@@ -133,9 +133,9 @@ func seedOneUserAndOnePost() (user *models.User, post *models.Post, err error) {
 	return
 }
 
-func seedUsersAndPosts() (user []*models.User, post []*models.Post, err error) {
+func seedUsersAndPosts() (users []*models.User, posts []*models.Post, err error) {
 
-	var users = []*models.User{
+	users = []*models.User{
 		{
 			Username: "Steven",
 			Email:    "steven@example.com",
@@ -147,7 +147,7 @@ func seedUsersAndPosts() (user []*models.User, post []*models.Post, err error) {
 			Password: "password",
 		},
 	}
-	var posts = []*models.Post{
+	posts = []*models.Post{
 		{
 			Title:   "Title 1",
 			Content: "Hello world 1",
@@ -158,7 +158,7 @@ func seedUsersAndPosts() (user []*models.User, post []*models.Post, err error) {
 		},
 	}
 
-	for i, _ := range users {
+	for i := range users {
 		err = server.DB.Model(&models.User{}).Create(&users[i]).Error
 		if err != nil {
 			return

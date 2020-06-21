@@ -54,15 +54,17 @@ func (p *Post) Validate() map[string]string {
 
 func (p *Post) SavePost(db *gorm.DB) (post *Post, err error) {
 
-	post = &Post{}
+	p.Author = &User{}
 	err = db.Debug().Model(Post{}).Create(&p).Error
 	if err != nil {
 		return
 	}
 
 	if p.ID > 0 {
-		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
+		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(p.Author).Error
 	}
+
+	post = p
 
 	return
 }
@@ -75,7 +77,8 @@ func (p *Post) FindAllPosts(db *gorm.DB) (posts []*Post, err error) {
 	}
 	if len(posts) > 0 {
 		for _, post := range posts {
-			err = db.Debug().Model(User{}).Where("id = ?", post.AuthorID).Take(&post.Author).Error
+			post.Author = &User{}
+			err = db.Debug().Model(User{}).Where("id = ?", post.AuthorID).Take(post.Author).Error
 			if err != nil {
 				return
 			}
@@ -87,14 +90,16 @@ func (p *Post) FindAllPosts(db *gorm.DB) (posts []*Post, err error) {
 
 func (p *Post) FindPostById(db *gorm.DB, pid uint64) (post *Post, err error) {
 
-	post = &Post{}
+	post = &Post{
+		Author: &User{},
+	}
 	err = db.Debug().Model(Post{}).Where("id = ?", pid).Take(post).Error
 	if err != nil {
 		return
 	}
 
 	if p.ID > 0 {
-		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(&post.Author).Error
+		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(post.Author).Error
 	}
 
 	return
@@ -102,21 +107,27 @@ func (p *Post) FindPostById(db *gorm.DB, pid uint64) (post *Post, err error) {
 
 func (p *Post) UpdateAPost(db *gorm.DB) (post *Post, err error) {
 
-	err = db.Debug().Model(Post{}).Where("id = ?", p.ID).Updates(
-		Post{
-			Title:     p.Title,
-			Content:   p.Content,
-			UpdatedAt: time.Now(),
-		},
-	).Error
+	err = db.Debug().
+		Model(Post{}).
+		Where("id = ?", p.ID).
+		Updates(
+			Post{
+				Title:     p.Title,
+				Content:   p.Content,
+				UpdatedAt: time.Now(),
+			},
+		).
+		Error
 
 	if err != nil {
 		return
 	}
 
+	p.Author = &User{}
 	if p.ID > 0 {
-		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
+		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(p.Author).Error
 	}
+
 	post = p
 
 	return
@@ -138,7 +149,7 @@ func (p *Post) DeleteAPost(db *gorm.DB, pid uint64, uid uint32) (rowAffected int
 
 func (p *Post) FindUserPosts(db *gorm.DB, uid uint32) (posts []*Post, err error) {
 
-	err = db.Debug().Model(Post{}).Where("author_id = ?").Find(&posts).Error
+	err = db.Debug().Model(Post{}).Where("author_id = ?", uid).Find(&posts).Error
 	if err != nil {
 		return
 	}
