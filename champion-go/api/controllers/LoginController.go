@@ -49,7 +49,7 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
-	userInfo, err := s.signIn(user.Email, user.Password)
+	userInfo, err := s.SignIn(user.Email, user.Password)
 	if err != nil {
 		formattedError := formatError.FormatError(err.Error())
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -65,7 +65,7 @@ func (s *Server) Login(c *gin.Context) {
 	})
 }
 
-func (s *Server) signIn(email, password string) (map[string]interface{}, error) {
+func (s *Server) SignIn(email, password string) (map[string]interface{}, error) {
 
 	userData := make(map[string]interface{})
 
