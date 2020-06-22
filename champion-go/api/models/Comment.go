@@ -15,7 +15,7 @@ type Comment struct {
 	UserID    uint32    `gorm:"not null" json:"user_id"`
 	PostID    uint64    `gorm:"not null" json:"post_id"`
 	Body      string    `gorm:"text;not null;" json:"body"`
-	User      User      `json:"user"`
+	User      *User     `json:"user"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
@@ -30,7 +30,7 @@ const (
 func (c *Comment) Prepare() {
 
 	c.Body = html.EscapeString(strings.TrimSpace(c.Body))
-	c.User = User{}
+	c.User = &User{}
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
 }
@@ -60,16 +60,20 @@ func (c *Comment) Validate(action CommentType) map[string]string {
 func (c *Comment) SaveComment(db *gorm.DB) (comment *Comment, err error) {
 
 	comment = &Comment{}
-	err = db.Debug().Create(comment).Error
-	if err != nil {
+	db = db.Debug().Create(c)
+	if db.Error != nil {
+		err = db.Error
 		return
 	}
+	db.Take(&c)
 	if c.ID > 0 {
-		err = db.Debug().Model(User{}).Where("id = ?", c.UserID).Take(&c.User).Error
+		c.User = &User{}
+		err = db.Debug().Model(User{}).Where("id = ?", c.UserID).Take(c.User).Error
 		if err != nil {
 			return
 		}
 	}
+	comment = c
 
 	return
 }
@@ -82,6 +86,7 @@ func (c *Comment) GetComments(db *gorm.DB, pid uint64) (commentList []*Comment, 
 	}
 	if len(commentList) > 0 {
 		for _, comment := range commentList {
+			comment.User = &User{}
 			err = db.Debug().Model(User{}).Where("id = ?", comment.UserID).Take(comment.User).Error
 			if err != nil {
 				return

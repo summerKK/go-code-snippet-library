@@ -173,7 +173,7 @@ func (s *Server) UnLikePost(c *gin.Context) {
 	}
 
 	// If all the conditions are met, delete the post
-	_, err = like.DelteLike(s.DB)
+	_, err = like.DeleteLike(s.DB)
 	if err != nil {
 		errList["Other_error"] = "Please try again later"
 		c.JSON(http.StatusNotFound, gin.H{

@@ -17,11 +17,12 @@ type Like struct {
 
 func (l *Like) SaveLike(db *gorm.DB) (like *Like, err error) {
 
-	err = db.Debug().Model(Like{}).Where("user_id = ? and post_id = ?", l.UserID, l.PostID).Take(&Like{}).Error
+	like = &Like{}
+	err = db.Debug().Model(Like{}).Where("user_id = ? and post_id = ?", l.UserID, l.PostID).Take(like).Error
 	if err != nil {
 		// 没有记录.给它添加记录
 		if gorm.IsRecordNotFoundError(err) {
-			err = db.Debug().Model(Like{}).Create(l).Error
+			err = db.Debug().Model(Like{}).Create(l).Take(like).Error
 			if err != nil {
 				return
 			}
@@ -35,7 +36,7 @@ func (l *Like) SaveLike(db *gorm.DB) (like *Like, err error) {
 	return
 }
 
-func (l *Like) DelteLike(db *gorm.DB) (deletedLike *Like, err error) {
+func (l *Like) DeleteLike(db *gorm.DB) (deletedLike *Like, err error) {
 
 	deletedLike = &Like{}
 	db = db.Debug().Model(Like{}).Where("id = ?", l.ID).Take(deletedLike).Delete(deletedLike)
@@ -49,9 +50,9 @@ func (l *Like) DelteLike(db *gorm.DB) (deletedLike *Like, err error) {
 	return
 }
 
-func (l *Like) GetLikesInfo(db *gorm.DB, pid uint64) (likeList *[]Like, err error) {
+func (l *Like) GetLikesInfo(db *gorm.DB, pid uint64) (likeList []*Like, err error) {
 
-	err = db.Debug().Model(&Like{}).Where("post_id = ?", pid).Find(&likeList).Error
+	err = db.Debug().Model(Like{}).Where("post_id = ?", pid).Find(&likeList).Error
 
 	return
 }
