@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"github.com/summerKK/go-code-snippet-library/champion-go/api/auth"
 	"github.com/summerKK/go-code-snippet-library/champion-go/api/models"
 	"github.com/summerKK/go-code-snippet-library/champion-go/api/utils/formatError"
@@ -31,17 +32,6 @@ func (s *Server) CreatePost(c *gin.Context) {
 	err = json.Unmarshal(body, post)
 	if err != nil {
 		errList["Unmarshal_error"] = "Cannot unmarshal body"
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"status": http.StatusUnprocessableEntity,
-			"error":  errList,
-		})
-		return
-	}
-
-	post.Prepare()
-	validateErrorMsgList := post.Validate()
-	if len(validateErrorMsgList) > 0 {
-		errList = validateErrorMsgList
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status": http.StatusUnprocessableEntity,
 			"error":  errList,
@@ -73,6 +63,17 @@ func (s *Server) CreatePost(c *gin.Context) {
 
 	post.AuthorID = userId
 
+	post.Prepare()
+	validateErrorMsgList := post.Validate()
+	if len(validateErrorMsgList) > 0 {
+		errList = validateErrorMsgList
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"status": http.StatusUnprocessableEntity,
+			"error":  errList,
+		})
+		return
+	}
+
 	savedPost, err := post.SavePost(s.DB)
 	if err != nil {
 		errList = formatError.FormatError(err.Error())
@@ -83,8 +84,8 @@ func (s *Server) CreatePost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":   http.StatusOK,
+	c.JSON(http.StatusCreated, gin.H{
+		"status":   http.StatusCreated,
 		"response": savedPost,
 	})
 }
@@ -218,6 +219,24 @@ func (s *Server) UpdatePost(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status": http.StatusUnprocessableEntity,
 			"error":  errList,
+		})
+		return
+	}
+
+	postByTitle, err := post.FindPostByTitle(s.DB, post.Title)
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		errList := formatError.FormatError(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  errList,
+		})
+		return
+	}
+
+	if !gorm.IsRecordNotFoundError(err) && postByTitle.ID != post.ID {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  "Repeated Post",
 		})
 		return
 	}

@@ -54,13 +54,14 @@ func (p *Post) Validate() map[string]string {
 
 func (p *Post) SavePost(db *gorm.DB) (post *Post, err error) {
 
-	p.Author = &User{}
-	err = db.Debug().Model(Post{}).Create(&p).Error
+	p.Author = nil
+	err = db.Debug().Model(Post{}).Create(p).Error
 	if err != nil {
 		return
 	}
 
 	if p.ID > 0 {
+		p.Author = &User{}
 		err = db.Debug().Model(User{}).Where("id = ?", p.AuthorID).Take(p.Author).Error
 	}
 
@@ -177,5 +178,11 @@ func (p *Post) DelteUserPosts(db *gorm.DB, uid uint32) (rowAffectd int64, err er
 	}
 	rowAffectd = db.RowsAffected
 
+	return
+}
+
+func (p *Post) FindPostByTitle(db *gorm.DB, title string) (post *Post, err error) {
+	post = &Post{}
+	err = db.Debug().Model(Post{}).Where("title = ?", title).Take(post).Error
 	return
 }
