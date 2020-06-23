@@ -190,19 +190,19 @@ func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 		return
 	}
 	user = &User{}
-	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(user).UpdateColumns(
+	err = db.Debug().Model(User{}).Where("id = ?", uid).UpdateColumns(
 		map[string]interface{}{
 			"password":  u.Password,
 			"username":  u.Username,
 			"email":     u.Email,
 			"update_at": time.Now(),
 		},
-	)
-	if db.Error != nil {
-		err = db.Error
+	).Error
+
+	if err != nil {
 		return
 	}
-	err = db.Debug().Model(&User{}).Where("id = ?", uid).Take(user).Error
+	err = db.Debug().Model(User{}).Where("id = ?", uid).Take(user).Error
 
 	return
 }

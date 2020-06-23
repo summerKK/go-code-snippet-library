@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
+	"github.com/summerKK/go-code-snippet-library/champion-go/api/models"
 )
 
 func TestCreateUser(t *testing.T) {
@@ -191,4 +192,36 @@ func TestGetUser(t *testing.T) {
 	assert.Equal(t, user.ID, uint32(responseInfo["id"].(float64)))
 	assert.Equal(t, user.Username, responseInfo["username"])
 	assert.Equal(t, user.Email, responseInfo["email"])
+}
+
+func TestUpdateUser(t *testing.T) {
+
+	gin.SetMode(gin.TestMode)
+
+	err := refreshUserTable()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	user, err := seedOneUser()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	userUpdate := &models.User{
+		ID:       user.ID,
+		Username: "Summer",
+		Email:    "summer@qq.com",
+		Password: "password",
+	}
+
+	updatedUser, err := userUpdate.UpdateAUser(server.DB, user.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, updatedUser.ID, userUpdate.ID)
+	assert.Equal(t, updatedUser.Username, userUpdate.Username)
+	assert.Equal(t, updatedUser.Email, userUpdate.Email)
 }
