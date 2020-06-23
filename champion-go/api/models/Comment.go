@@ -30,7 +30,6 @@ const (
 func (c *Comment) Prepare() {
 
 	c.Body = html.EscapeString(strings.TrimSpace(c.Body))
-	c.User = &User{}
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
 }
@@ -60,12 +59,13 @@ func (c *Comment) Validate(action CommentType) map[string]string {
 func (c *Comment) SaveComment(db *gorm.DB) (comment *Comment, err error) {
 
 	comment = &Comment{}
+	c.User = nil
 	db = db.Debug().Create(c)
 	if db.Error != nil {
 		err = db.Error
 		return
 	}
-	db.Take(&c)
+	db.Take(c)
 	if c.ID > 0 {
 		c.User = &User{}
 		err = db.Debug().Model(User{}).Where("id = ?", c.UserID).Take(c.User).Error
@@ -106,7 +106,8 @@ func (c *Comment) UpdateAComment(db *gorm.DB) (comment *Comment, err error) {
 
 	fmt.Println("this is the comment body: ", c.Body)
 	if c.ID >= 0 {
-		err = db.Debug().Model(User{}).Where("id = ?", c.UserID).Take(&c.User).Error
+		c.User = &User{}
+		err = db.Debug().Model(User{}).Where("id = ?", c.UserID).Take(c.User).Error
 		if err != nil {
 			return &Comment{}, err
 		}

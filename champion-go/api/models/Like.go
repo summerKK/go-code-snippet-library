@@ -22,7 +22,9 @@ func (l *Like) SaveLike(db *gorm.DB) (like *Like, err error) {
 	if err != nil {
 		// 没有记录.给它添加记录
 		if gorm.IsRecordNotFoundError(err) {
-			err = db.Debug().Model(Like{}).Create(l).Take(like).Error
+			err = db.Debug().Model(Like{}).Create(l).
+				Where("user_id = ? and post_id = ?", l.UserID, l.PostID).
+				Take(like).Error
 			if err != nil {
 				return
 			}
