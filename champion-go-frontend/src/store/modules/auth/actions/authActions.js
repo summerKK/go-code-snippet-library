@@ -35,7 +35,7 @@ export const signIn = (credentials) => {
             setAuthorizationToken(userData.token)
             dispatch({type: LOGIN_SUCCESS, payload: userData})
         } catch (e) {
-            dispatch({type: LOGIN_ERROR, payload: e.response.data.err})
+            dispatch({type: LOGIN_ERROR, payload: e.response.data.error})
         }
     }
 }
@@ -59,7 +59,7 @@ export const signUp = (newUser) => {
             dispatch({type: SIGNUP_SUCCESS})
             history.push("/login")
         } catch (e) {
-            dispatch({type: SIGNUP_ERROR, payload: e.response.data.err})
+            dispatch({type: SIGNUP_ERROR, payload: e.response.data.error})
         }
     }
 }
@@ -80,7 +80,7 @@ export const updateUserAvatar = (updateUserAvatar) => {
 
             dispatch({type: UPDATE_USER_AVATAR, payload: updateUser})
         } catch (e) {
-            dispatch({type: UPDATE_USER_AVATAR_ERROR, payload: e.response.data.err})
+            dispatch({type: UPDATE_USER_AVATAR_ERROR, payload: e.response.data.error})
         }
     }
 }
