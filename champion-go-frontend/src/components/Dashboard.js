@@ -1,5 +1,6 @@
 import React from 'react';
 import Navigation from './Navigation'
+import Register from "./auth/Register";
 
 
 const Dashboard = () => {

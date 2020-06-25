@@ -33,7 +33,7 @@ const Navigation = () => {
         imagePreview = (<img className="img_style_nav" src={Default} alt="profile 2"/>);
     }
 
-    const logout = (e) => {
+    const logoutAction = (e) => {
         e.preventDefault()
         logoutUser()
     }
@@ -42,7 +42,7 @@ const Navigation = () => {
 
     const signedInLinks = (
         <React.Fragment>
-            <NavItem className="mt-2" style={{marginLeft: "15px"}}>
+            <NavItem className="mt-2" style={{marginRight: "15px"}}>
                 <NavLink to="/createpost">Create Post</NavLink>
             </NavItem>
             <NavItem className="mt-2" style={{marginRight: "15px"}}>
@@ -60,7 +60,7 @@ const Navigation = () => {
                     </DropdownItem>
                     <DropdownItem divider/>
                     <DropdownItem>
-                        <a onClick={logout}>Logout</a>
+                        <a onClick={logoutAction}>Logout</a>
                     </DropdownItem>
                 </DropdownMenu>
             </UncontrolledDropdown>
