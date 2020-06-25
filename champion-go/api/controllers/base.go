@@ -41,7 +41,7 @@ func (s *Server) Initialize(DbUser, DbPassword, DbPort, DbHost, DbName string) {
 }
 
 func (s *Server) Run(addr string) {
-	fmt.Println("listening to port 8070")
+	fmt.Printf("listening %s\n", addr)
 	err := http.ListenAndServe(addr, s.Router)
 	if err != nil {
 		log.Fatal(err)
