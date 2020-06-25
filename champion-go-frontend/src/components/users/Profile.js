@@ -4,12 +4,22 @@ import _ from "lodash"
 import Default from "../../assets/default.jpeg"
 import {Redirect} from "react-router"
 import Navigation from "../Navigation"
-import {CardBody, Col, CustomInput, FormGroup, Row, Button, Form, Input, InputGroupAddon} from "reactstrap"
+import {
+    CardBody,
+    Col,
+    CustomInput,
+    FormGroup,
+    Row,
+    Button,
+    Form,
+    Input,
+    InputGroupAddon,
+    InputGroup,
+    Label
+} from "reactstrap"
 import Message from "../utils/Message"
 import {updateUserAvatar, updateUser} from "../../store/modules/auth/actions/authActions"
 import "./Profile.css"
-import {InputGroup, Label} from "reactstrap/es";
-import mt from "moment/locale/mt";
 
 const Profile = () => {
 
