@@ -1,7 +1,7 @@
 import React, {useState} from "react"
 import {useDispatch, useSelector} from "react-redux"
 import {logout} from "../store/modules/auth/actions/authActions"
-import Default from "../assets/default.png"
+import Default from "../assets/default.jpeg"
 import {
     Collapse,
     Navbar,

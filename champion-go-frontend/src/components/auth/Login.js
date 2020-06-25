@@ -5,6 +5,7 @@ import {Redirect} from "react-router"
 import Navigation from "../Navigation"
 import {Card, CardBody, CardHeader, FormGroup, Label, Button, Input} from "reactstrap"
 import {Link} from "react-router-dom"
+import "./Index.css"
 
 const Login = () => {
     const authState = useSelector(state => state.Auth)
@@ -83,7 +84,7 @@ const Login = () => {
                             <FormGroup>
                                 <Label>Password</Label>
                                 <Input
-                                    type="text"
+                                    type="password"
                                     name="password"
                                     onChange={handleChange}
                                     placeholder="Enter password"
@@ -124,7 +125,6 @@ const Login = () => {
                                     Login
                                 </Button>
                             )}
-
                         </form>
 
                         <div className="mt-2" style={{display: "flex", justifyContent: "space-between"}}>

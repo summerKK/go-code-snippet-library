@@ -5,6 +5,7 @@ import Navigation from "../Navigation"
 import {Card, CardHeader, CardBody, FormGroup, Input, Label, Button} from "reactstrap"
 import {Link} from "react-router-dom"
 import {signUp} from "../../store/modules/auth/actions/authActions"
+import "./Index.css"
 
 const Register = () => {
     const authState = useSelector(state => state.Auth)
@@ -43,7 +44,7 @@ const Register = () => {
             <div>
                 <Navigation/>
             </div>
-            <div className="container Auth">
+            <div className="container auth">
                 <Card className="card-style">
                     <CardHeader>Welcome To SeamFlow</CardHeader>
                     <CardBody>

@@ -52,6 +52,7 @@ export const logout = () => {
 }
 
 export const signUp = (newUser) => {
+
     return async dispatch => {
         dispatch({type: BEFORE_STATE})
         try {
@@ -65,11 +66,12 @@ export const signUp = (newUser) => {
 }
 
 export const updateUserAvatar = (updateUserAvatar) => {
+
     return async (dispatch, getState) => {
         dispatch({type: BEFORE_AVATAR_STATE})
         const {id} = getState().Auth.currentUser
         try {
-            let response = await axios.put(`${API_ROUTE}/users/${id}`, updateUserAvatar, {
+            let response = await axios.put(`${API_ROUTE}/avatar/users/${id}`, updateUserAvatar, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -97,8 +99,8 @@ export const updateUser = (updateUser, clearInput) => {
             dispatch({type: UPDATE_USER_SUCCESS, payload: updatedUser})
             window.localStorage.setItem('user_data', JSON.stringify(updatedUser)); //update the localstorages
             clearInput()
-        } catch (err) {
-            dispatch({type: UPDATE_USER_ERROR, payload: err.response.data.error})
+        } catch (e) {
+            dispatch({type: UPDATE_USER_ERROR, payload: e.response.data.error})
         }
     }
 }
