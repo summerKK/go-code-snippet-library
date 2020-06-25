@@ -180,7 +180,7 @@ func (u *User) FindUserByEmail(db *gorm.DB, email string) (user *User, err error
 func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 
 	user = &User{}
-	err = db.Debug().Model(User{}).Where("id = ?", uid).UpdateColumns(
+	err = db.Debug().Model(User{}).Where("id = ?", uid).Updates(
 		map[string]interface{}{
 			"password":  u.Password,
 			"username":  u.Username,
@@ -200,7 +200,7 @@ func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 func (u *User) UpdateAUserAvatar(db *gorm.DB, uid uint32) (user *User, err error) {
 
 	user = &User{}
-	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
+	db = db.Debug().Model(User{}).Where("id = ?", uid).Take(&User{}).Updates(
 		map[string]interface{}{
 			"avatar_path": u.AvatarPath,
 			"update_at":   time.Now(),
@@ -229,17 +229,25 @@ func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (rowAffected int64, err erro
 func (u *User) UpdateAUserPassword(db *gorm.DB) (user *User, err error) {
 
 	user = &User{}
-	db = db.Debug().Model(User{}).Where("email = ?", u.Email).Take(user).UpdateColumns(
+	// hash the password
+	err = u.BeforeSave()
+	if err != nil {
+		return
+	}
+
+	err = db.Debug().Model(User{}).Where("email = ?", u.Email).Updates(
 		map[string]interface{}{
 			"password":  u.Password,
 			"update_at": time.Now(),
 		},
-	)
+	).Error
 
 	if db.Error != nil {
 		err = db.Error
 		return
 	}
+
+	err = db.Debug().Model(User{}).Where("email", u.Email).Take(user).Error
 
 	return
 }

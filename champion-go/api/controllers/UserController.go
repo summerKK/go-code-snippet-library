@@ -229,7 +229,16 @@ func (s *Server) UpdateUser(c *gin.Context) {
 			return
 		}
 
-		user.Password = requestBody["new_password"]
+		hashedPassword, err := security.Hash(requestBody["new_password"])
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status": http.StatusInternalServerError,
+				"error":  "Server error",
+			})
+			return
+		}
+
+		user.Password = string(hashedPassword)
 	}
 
 	//The password fields not entered, so update only the email
@@ -332,8 +341,7 @@ func (s *Server) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	// 只读取512个字节就能获取文件类型
-	buffer := make([]byte, 512)
+	buffer := make([]byte, size)
 	_, _ = f.Read(buffer)
 	fileType := http.DetectContentType(buffer)
 	if !strings.HasPrefix(fileType, "image") {

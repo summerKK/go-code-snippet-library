@@ -4,6 +4,9 @@ import "github.com/summerKK/go-code-snippet-library/champion-go/api/middlewares"
 
 func (s *Server) initializeRoutes() {
 
+	// 图片
+	s.Router.Static("/profile", "./profile-photos/")
+
 	v1 := s.Router.Group("/api/v1")
 	{
 		// Login Route
