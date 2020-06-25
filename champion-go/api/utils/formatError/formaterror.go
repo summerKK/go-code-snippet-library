@@ -6,9 +6,9 @@ import (
 
 var errorMessages = make(map[string]string)
 
-var err error
-
 func FormatError(errString string) map[string]string {
+
+	errorMessages = map[string]string{}
 
 	if strings.Contains(errString, "username") {
 		errorMessages["Taken_username"] = "Username Already Taken"

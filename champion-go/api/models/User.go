@@ -32,6 +32,7 @@ const (
 	USER_TYPE_DEFAULT
 )
 
+// 钩子函数.保存数据的时候自动触发
 func (u *User) BeforeSave() error {
 
 	hashedPassword, err := security.Hash(u.Password)
@@ -138,12 +139,6 @@ func (u *User) Validate(action UserType) map[string]string {
 func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 
 	var err error
-
-	err = u.BeforeSave()
-	if err != nil {
-		return nil, err
-	}
-
 	err = db.Debug().Create(&u).Error
 	if err != nil {
 		return &User{}, err
@@ -184,11 +179,6 @@ func (u *User) FindUserByEmail(db *gorm.DB, email string) (user *User, err error
 
 func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (user *User, err error) {
 
-	// hash password
-	err = u.BeforeSave()
-	if err != nil {
-		return
-	}
 	user = &User{}
 	err = db.Debug().Model(User{}).Where("id = ?", uid).UpdateColumns(
 		map[string]interface{}{
@@ -238,12 +228,7 @@ func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (rowAffected int64, err erro
 
 func (u *User) UpdateAUserPassword(db *gorm.DB) (user *User, err error) {
 
-	err = u.BeforeSave()
 	user = &User{}
-	if err != nil {
-		return
-	}
-
 	db = db.Debug().Model(User{}).Where("email = ?", u.Email).Take(user).UpdateColumns(
 		map[string]interface{}{
 			"password":  u.Password,
