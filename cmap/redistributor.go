@@ -91,7 +91,7 @@ var redistributionTemplate = `Redistributing:
 `
 
 func (p *pariRedistributor) Redistrie(bucketStatus BucketStatus, buckets []IBucket) (newBuckets []IBucket, changed bool) {
-	// 当前痛的总数量
+	// 当前桶的总数量
 	currentNumber := uint64(len(buckets))
 	newNumber := currentNumber
 	// defer func() {
