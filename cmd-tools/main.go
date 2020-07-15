@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/summerKK/go-code-snippet-library/word-conversion/cmd"
+	"github.com/summerKK/go-code-snippet-library/cmd-tools/cmd"
 )
 
 func main() {

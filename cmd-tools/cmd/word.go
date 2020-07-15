@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/summerKK/go-code-snippet-library/word-conversion/internal/word"
+	"github.com/summerKK/go-code-snippet-library/cmd-tools/internal/word"
 )
 
 const (
