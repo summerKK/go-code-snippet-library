@@ -62,8 +62,8 @@ func init() {
 
 	structCmd.Flags().StringVarP(&username, "username", "u", "root", "数据库账号")
 	structCmd.Flags().StringVarP(&password, "password", "p", "root", "数据库密码")
-	structCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.1", "数据库地址")
-	structCmd.Flags().StringVarP(&charset, "charset", "c", "utf8", "数据库编码")
+	structCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.1:3306", "数据库地址")
+	structCmd.Flags().StringVarP(&charset, "charset", "c", "utf8mb4", "数据库编码")
 	structCmd.Flags().StringVarP(&dbType, "dbType", "D", "mysql", "数据库类型")
 	structCmd.Flags().StringVarP(&dbName, "dbname", "d", "", "数据库名称")
 	structCmd.Flags().StringVarP(&tableName, "tableName", "t", "", "数据库表名")
