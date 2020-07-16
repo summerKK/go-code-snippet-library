@@ -34,6 +34,10 @@ func init() {
 	}
 }
 
+// @title 博客系统
+// @version 1.0
+// description Go博客
+// termsOfService github.com/summerKK/go-code-snippet-library/blog-service
 func main() {
 	gin.SetMode(global.ServerSetting.RunModel)
 	router := routers.NewRouter()

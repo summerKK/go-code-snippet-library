@@ -1,5 +1,12 @@
 package model
 
+import "github.com/summerKK/go-code-snippet-library/blog-service/pkg/app"
+
+type ArticleSwagger struct {
+	List  []*Article
+	Pager *app.Pager
+}
+
 type Article struct {
 	*Model
 	Title          string `json:"title"`
