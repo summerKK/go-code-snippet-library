@@ -16,7 +16,7 @@ Database:
   Host: 127.0.0.1:3306
   DBName: blog_service
   TablePrefix: blog_
-  Charset: uft8
+  Charset: utf8mb4,utf8
   ParseTime: True
   MaxIdleConns: 10
   MaxOpenConns: 30

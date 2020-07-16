@@ -22,4 +22,5 @@ require (
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

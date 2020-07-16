@@ -9,7 +9,9 @@ import (
 	"github.com/summerKK/go-code-snippet-library/blog-service/global"
 	"github.com/summerKK/go-code-snippet-library/blog-service/internal/model"
 	"github.com/summerKK/go-code-snippet-library/blog-service/internal/routers"
+	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/logger"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/setting"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func init() {
@@ -17,6 +19,12 @@ func init() {
 	err := setupSetting()
 	if err != nil {
 		log.Fatalf("init.setupSetting error:%v", err)
+	}
+
+	// 初始化日志
+	err = setupLogger()
+	if err != nil {
+		log.Fatalf("init.setupLogger error:%v", err)
 	}
 
 	// 初始化数据库
@@ -80,4 +88,15 @@ func setupDBEngine() error {
 	global.DBEngine, err = model.NewDBEngine(global.DatabaseSetting)
 
 	return err
+}
+
+func setupLogger() error {
+	global.Logger = logger.NewLogger(&lumberjack.Logger{
+		Filename:  global.AppSetting.LogSavePath + "/" + global.AppSetting.LogFileName + global.AppSetting.LogFileExt,
+		MaxSize:   600,
+		MaxAge:    10,
+		LocalTime: true,
+	}, "", log.LstdFlags).WithCaller(2)
+
+	return nil
 }
