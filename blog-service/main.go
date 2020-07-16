@@ -47,6 +47,8 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
+	global.Logger.Infof("%s go-programming-tour-book/%s", "summer", "blog-service")
+
 	err := s.ListenAndServe()
 	if err != nil {
 		panic(err)
