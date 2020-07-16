@@ -4,7 +4,7 @@ import "time"
 
 type ServerSettingS struct {
 	RunModel     string
-	HttpPort     int
+	HttpPort     string
 	ReadTimeOut  time.Duration
 	WriteTimeOut time.Duration
 }
