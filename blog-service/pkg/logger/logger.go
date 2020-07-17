@@ -68,7 +68,7 @@ func (l *Logger) WithLevel(lvl Level) *Logger {
 	return ll
 }
 
-func (l *Logger) WithFileds(f Fields) *Logger {
+func (l *Logger) WithFields(f Fields) *Logger {
 	ll := l.clone()
 	if ll.fields == nil {
 		ll.fields = make(Fields)
