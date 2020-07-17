@@ -81,7 +81,7 @@ func (t Tag) Create(c *gin.Context) {
 		return
 	}
 
-	svc := service.New(c)
+	svc := service.New(c.Request.Context())
 	err := svc.CreateTag(&params)
 	if err != nil {
 		global.Logger.Errorf("svc.CreateTag error:%v", err)
@@ -116,7 +116,7 @@ func (t Tag) Update(c *gin.Context) {
 		return
 	}
 
-	svc := service.New(c)
+	svc := service.New(c.Request.Context())
 	err := svc.UpdateTag(&params)
 	if err != nil {
 		global.Logger.Errorf("svc.UpdateTag error:%v", err)
@@ -146,7 +146,7 @@ func (t Tag) Delete(c *gin.Context) {
 		return
 	}
 
-	svc := service.New(c)
+	svc := service.New(c.Request.Context())
 	err := svc.DeleteTag(&params)
 	if err != nil {
 		global.Logger.Errorf("svc.DeleteTag error:%v", err)
