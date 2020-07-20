@@ -38,7 +38,7 @@ func (d *Dao) CountArticle(title string, state uint8) (int, error) {
 	return article.Count(d.engine)
 }
 
-func (d *Dao) CreateArticle(param *Article) error {
+func (d *Dao) CreateArticle(param *Article) (*model.Article, error) {
 	article := model.Article{
 		Title:          param.Title,
 		Desc:           param.Desc,
@@ -92,8 +92,8 @@ func (d *Dao) CountArticleListByTagID(tagID uint32, state uint8) (int, error) {
 	return article.CountByTagID(d.engine, tagID)
 }
 
-func (d *Dao) GetArticleListByTagID(tagID uint32, state uint8, pager *app.Pager) ([]*model.ArticleRow, error) {
+func (d *Dao) GetArticleListByTagID(tagID uint32, state uint8, pageSize, page int) ([]*model.ArticleRow, error) {
 	article := model.Article{State: state}
 
-	return article.ListByTagID(d.engine, tagID, pager.PageSize, app.GetPageOffset(pager.Page, pager.PageSize))
+	return article.ListByTagID(d.engine, tagID, pageSize, app.GetPageOffset(page, pageSize))
 }

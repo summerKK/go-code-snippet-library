@@ -61,3 +61,13 @@ func (t Tag) Update(db *gorm.DB, values interface{}) error {
 func (t Tag) Delete(db *gorm.DB) error {
 	return db.Where("id = ? and is_del = ?", t.ID, 0).Delete(&t).Error
 }
+
+func (t Tag) GetTag(db *gorm.DB) (*Tag, error) {
+	var tag *Tag
+	err := db.Model(&t).Where("id = ? and and state = ? and is_del = ?", t.ID, t.State, 0).First(&tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return tag, err
+}

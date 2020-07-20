@@ -114,8 +114,10 @@ func (a Article) CountByTagID(db *gorm.DB, tagID uint32) (int, error) {
 	return count, err
 }
 
-func (a Article) Create(db *gorm.DB) error {
-	return db.Create(&a).Error
+func (a Article) Create(db *gorm.DB) (*Article, error) {
+	err := db.Create(&a).Error
+
+	return &a, err
 }
 
 func (a Article) Update(db *gorm.DB, vales interface{}) error {

@@ -29,9 +29,9 @@ func (a ArticleTag) ListByTID(db *gorm.DB) ([]*ArticleTag, error) {
 	return list, err
 }
 
-func (a ArticleTag) ListByAIDs(db *gorm.DB, aIds []uint32) ([]*ArticleTag, error) {
+func (a ArticleTag) ListByAIDs(db *gorm.DB, aIDs []uint32) ([]*ArticleTag, error) {
 	var list []*ArticleTag
-	err := db.Where("article_id in (?) and is_del = ?", aIds, 0).Find(&list).Error
+	err := db.Where("article_id in (?) and is_del = ?", aIDs, 0).Find(&list).Error
 
 	return list, err
 }
