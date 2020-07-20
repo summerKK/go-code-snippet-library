@@ -73,7 +73,7 @@ func (a Article) List(db *gorm.DB, pageSize, pageOffset int) ([]*Article, error)
 	return articles, nil
 }
 
-func (a Article) listByTagID(db *gorm.DB, tagID uint32, pageSize, pageOffset int) ([]*ArticleRow, error) {
+func (a Article) ListByTagID(db *gorm.DB, tagID uint32, pageSize, pageOffset int) ([]*ArticleRow, error) {
 	fields := []string{"a.title as article_title", "a.desc as article_desc", "a.id as article_id", "a.conver_image_url", "a.content"}
 	fields = append(fields, []string{"b.name as tag_name", "b.id as tag_id"}...)
 	if pageSize >= 0 && pageOffset >= 0 {
@@ -101,6 +101,17 @@ func (a Article) listByTagID(db *gorm.DB, tagID uint32, pageSize, pageOffset int
 	}
 
 	return articles, nil
+}
+
+func (a Article) CountByTagID(db *gorm.DB, tagID uint32) (int, error) {
+	var count int
+	err := db.Table(ArticleTag{}.TableName()+" as c ").
+		Joins("left join "+Article{}.TableName()+" as a on c.article_id = a.id").
+		Joins("left join"+Tag{}.TableName()+" as b on c.tag_id = b.id").
+		Where("a.state = ? and a.is_del = ? and c.tag_id = ?", a.State, 0, tagID).
+		Count(&count).Error
+
+	return count, err
 }
 
 func (a Article) Create(db *gorm.DB) error {

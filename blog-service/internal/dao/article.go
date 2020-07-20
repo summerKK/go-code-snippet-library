@@ -17,6 +17,15 @@ type Article struct {
 	State          uint8  `json:"state"`
 }
 
+func (d *Dao) GetArticle(id uint32, state uint8) (*model.Article, error) {
+	article := model.Article{
+		Model: &model.Model{ID: id},
+		State: state,
+	}
+
+	return article.Get(d.engine)
+}
+
 func (d *Dao) GetArticleList(title string, state uint8, page, pageSize int) ([]*model.Article, error) {
 	article := model.Article{Title: title, State: state}
 
@@ -75,4 +84,16 @@ func (d *Dao) DeleteArticle(id uint32) error {
 	article := model.Article{Model: &model.Model{ID: id}}
 
 	return article.Delete(d.engine)
+}
+
+func (d *Dao) CountArticleListByTagID(tagID uint32, state uint8) (int, error) {
+	article := model.Article{State: state}
+
+	return article.CountByTagID(d.engine, tagID)
+}
+
+func (d *Dao) GetArticleListByTagID(tagID uint32, state uint8, pager *app.Pager) ([]*model.ArticleRow, error) {
+	article := model.Article{State: state}
+
+	return article.ListByTagID(d.engine, tagID, pager.PageSize, app.GetPageOffset(pager.Page, pager.PageSize))
 }
