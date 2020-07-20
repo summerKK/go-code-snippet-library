@@ -58,7 +58,7 @@ func (a Article) Count(db *gorm.DB) (int, error) {
 
 func (a Article) List(db *gorm.DB, pageSize, pageOffset int) ([]*Article, error) {
 	var articles []*Article
-	if pageSize >= 0 && pageOffset >= 0 {
+	if pageSize > 0 && pageOffset >= 0 {
 		db = db.Offset(pageOffset).Limit(pageSize)
 	}
 	if a.Title != "" {
@@ -76,7 +76,7 @@ func (a Article) List(db *gorm.DB, pageSize, pageOffset int) ([]*Article, error)
 func (a Article) ListByTagID(db *gorm.DB, tagID uint32, pageSize, pageOffset int) ([]*ArticleRow, error) {
 	fields := []string{"a.title as article_title", "a.desc as article_desc", "a.id as article_id", "a.conver_image_url", "a.content"}
 	fields = append(fields, []string{"b.name as tag_name", "b.id as tag_id"}...)
-	if pageSize >= 0 && pageOffset >= 0 {
+	if pageSize > 0 && pageOffset >= 0 {
 		db = db.Offset(pageOffset).Limit(pageSize)
 	}
 	rows, err := db.Select(fields).Table(ArticleTag{}.TableName()+" as c").
