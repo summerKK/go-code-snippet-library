@@ -2,6 +2,8 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/summerKK/go-code-snippet-library/blog-service/global"
+	"github.com/summerKK/go-code-snippet-library/blog-service/internal/service"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/app"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/errcode"
 )
@@ -37,6 +39,14 @@ func (a Article) Get(c *gin.Context) {
 // @Failure 500 {object} errcode.Error "内部错误"
 // @Router /api/v1/articles [get]
 func (a Article) List(c *gin.Context) {
+	request := service.ArticleListRequest{}
+	response := app.NewResponse(c)
+	ok, errors := app.BindAndValid(c, &request)
+	if ok {
+		global.Logger.Errorf("app.bindAndValid error:%v", errors)
+		response.ToErrorResponse(errcode.InvalidParams.WithDetails(errors.Errors()...))
+		return
+	}
 
 }
 
