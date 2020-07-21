@@ -47,7 +47,7 @@ func (a Article) Get(c *gin.Context) {
 
 // @Summary 获取多个文章
 // @Produce json
-// @Param name query string false "文章名称"
+// @Param title query string false "文章名称"
 // @Param tag_id query int false "标签ID"
 // @Param state query int false "状态"
 // @Param page query int false "页码"

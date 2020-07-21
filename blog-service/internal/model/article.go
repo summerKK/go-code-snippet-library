@@ -80,8 +80,8 @@ func (a Article) ListByTagID(db *gorm.DB, tagID uint32, pageSize, pageOffset int
 		db = db.Offset(pageOffset).Limit(pageSize)
 	}
 	rows, err := db.Select(fields).Table(ArticleTag{}.TableName()+" as c").
-		Joins("left join "+Article{}.TableName()+" as a on a.id = c.article_id").
-		Joins("left join "+Tag{}.TableName()+" as b on b.id = c.tag_id").
+		Joins("left join "+Article{}.TableName()+" as a on a.id = c.article_id ").
+		Joins("left join "+Tag{}.TableName()+" as b on b.id = c.tag_id ").
 		Where("a.state = ? and a.is_del = ? and c.tag_id = ?", a.State, 0, tagID).
 		Rows()
 
@@ -93,7 +93,7 @@ func (a Article) ListByTagID(db *gorm.DB, tagID uint32, pageSize, pageOffset int
 	var articles []*ArticleRow
 	for rows.Next() {
 		r := &ArticleRow{}
-		err := rows.Scan(r, r.ArticleTitle, r.ArticleDesc, r.ArticleID, r.ConverImageUrl, r.Content, r.TagName, r.TagID)
+		err := rows.Scan(&r.ArticleTitle, &r.ArticleDesc, &r.ArticleID, &r.ConverImageUrl, &r.Content, &r.TagName, &r.TagID)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +107,7 @@ func (a Article) CountByTagID(db *gorm.DB, tagID uint32) (int, error) {
 	var count int
 	err := db.Table(ArticleTag{}.TableName()+" as c ").
 		Joins("left join "+Article{}.TableName()+" as a on c.article_id = a.id").
-		Joins("left join"+Tag{}.TableName()+" as b on c.tag_id = b.id").
+		Joins("left join "+Tag{}.TableName()+" as b on c.tag_id = b.id").
 		Where("a.state = ? and a.is_del = ? and c.tag_id = ?", a.State, 0, tagID).
 		Count(&count).Error
 

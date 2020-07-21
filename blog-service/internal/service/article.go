@@ -22,7 +22,7 @@ type ArticleRequest struct {
 }
 
 type ArticleListRequest struct {
-	Title string `form:"title" binding:"min=2,max=100"`
+	Title string `form:"title"`
 	TagID uint32 `form:"tag_id" binding:"gte=1"`
 	State uint8  `form:"state,default=1" binding:"oneof=0 1"`
 }
