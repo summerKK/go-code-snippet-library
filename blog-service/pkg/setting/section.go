@@ -33,3 +33,9 @@ type DatabaseSettingS struct {
 	MaxIdleConns int
 	MaxOpenConns int
 }
+
+type JWTS struct {
+	Secret string
+	Issuer string
+	Expire time.Duration
+}

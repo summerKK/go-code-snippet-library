@@ -55,3 +55,20 @@ create table `blog_article_tag`
     key tag_id (`tag_id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET utf8mb4 comment '文章标签关联';
+
+create table `blog_auth`
+(
+    `id`          int(10) unsigned not null auto_increment,
+    `app_key`     varchar(20)         default '' comment 'key',
+    `app_secret`  varchar(50)         default '' comment 'secret',
+
+    `created_on`  int(10) unsigned    default '0' comment '创建时间',
+    `created_by`  varchar(100)        default '' comment '创建人',
+    `modified_on` int(10) unsigned    default '0' comment '修改时间',
+    `modified_by` varchar(100)        default '' comment '修改人',
+    `deleted_on`  int(10) unsigned    default '0' comment '删除时间',
+    `is_del`      tinyint(3) unsigned default '0' comment '是否删除 0为未删除、1为已删除',
+
+    primary key (`id`) using btree
+) ENGINE = InnoDb
+  DEFAULT CHARSET utf8mb4 comment '认证管理';
