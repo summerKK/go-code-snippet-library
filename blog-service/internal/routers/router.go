@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/summerKK/go-code-snippet-library/blog-service/docs"
 	"github.com/summerKK/go-code-snippet-library/blog-service/internal/middleware"
+	"github.com/summerKK/go-code-snippet-library/blog-service/internal/routers/api"
 	v1 "github.com/summerKK/go-code-snippet-library/blog-service/internal/routers/api/v1"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -16,6 +17,7 @@ func NewRouter() *gin.Engine {
 	r.Use(middleware.Translations())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.POST("/api/upload/file", api.UploadFile)
 
 	article := v1.NewArticle()
 	tag := v1.NewTag()

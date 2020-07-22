@@ -11,12 +11,12 @@ import (
 )
 
 type FileInfo struct {
-	Name      string
-	AccessUrl string
+	Name      string `json:"name"`
+	AccessUrl string `json:"access_url"`
 }
 
 // 文件上传
-func (s Service) Upload(fileType upload.FileType, file multipart.File, header multipart.FileHeader) (*FileInfo, error) {
+func (s Service) Upload(fileType upload.FileType, file multipart.File, header *multipart.FileHeader) (*FileInfo, error) {
 	filename := upload.GetFileName(header.Filename)
 	uploadSavePath := upload.GetSavePath()
 	dst := uploadSavePath + "/" + filename
@@ -25,7 +25,7 @@ func (s Service) Upload(fileType upload.FileType, file multipart.File, header mu
 	}
 
 	if upload.CheckSavePath(dst) {
-		if err := upload.CreateSavePath(dst, os.ModePerm); err != nil {
+		if err := upload.CreateSavePath(uploadSavePath, os.ModePerm); err != nil {
 			return nil, errors.New("创建文件失败")
 		}
 	}
@@ -34,11 +34,11 @@ func (s Service) Upload(fileType upload.FileType, file multipart.File, header mu
 		return nil, errors.New("文件权限不足")
 	}
 
-	if !upload.CheckMaxSize(fileType, header.Filename) {
+	if !upload.CheckMaxSize(fileType, header) {
 		return nil, errors.New("文件超过最大上传尺寸")
 	}
 
-	if err := upload.SaveFile(&header, dst); err != nil {
+	if err := upload.SaveFile(header, dst); err != nil {
 		return nil, errors.New("上传文件失败")
 	}
 

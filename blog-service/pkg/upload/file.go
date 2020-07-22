@@ -54,14 +54,10 @@ func CheckContainExt(t FileType, name string) bool {
 }
 
 // 检查文件是否超过最大字节
-func CheckMaxSize(t FileType, name string) bool {
-	fileInfo, err := os.Stat(name)
-	if err != nil {
-		return false
-	}
+func CheckMaxSize(t FileType, head *multipart.FileHeader) bool {
 	switch t {
 	case FileImage:
-		if fileInfo.Size() <= (global.AppSetting.UploadImageMaxSize << 20) {
+		if head.Size <= (global.AppSetting.UploadImageMaxSize << 20) {
 			return true
 		}
 	}

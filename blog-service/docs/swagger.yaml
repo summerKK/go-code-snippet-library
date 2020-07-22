@@ -83,18 +83,64 @@ definitions:
         $ref: '#/definitions/app.Pager'
         type: object
     type: object
+  service.FileInfo:
+    properties:
+      access_url:
+        type: string
+      name:
+        type: string
+    type: object
 info:
   contact: {}
   license: {}
   title: 博客系统
   version: "1.0"
 paths:
+  /api/upload/file:
+    post:
+      parameters:
+        - description: 上传文件
+          in: body
+          name: file
+          required: true
+          schema:
+            type: string
+        - description: 上传文件类型 1图片
+          in: body
+          name: type
+          required: true
+          schema:
+            type: integer
+        - description: 页码
+          in: query
+          name: page
+          type: integer
+        - description: 每页数量
+          in: query
+          name: page_size
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/service.FileInfo'
+        "400":
+          description: 请求错误
+          schema:
+            $ref: '#/definitions/errcode.Error'
+        "500":
+          description: 内部错误
+          schema:
+            $ref: '#/definitions/errcode.Error'
+      summary: 上传文件
   /api/v1/articles:
     get:
       parameters:
         - description: 文章名称
           in: query
-          name: name
+          name: title
           type: string
         - description: 标签ID
           in: query

@@ -7,6 +7,66 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/upload/file": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "summary": "上传文件",
+        "parameters": [
+          {
+            "description": "上传文件",
+            "name": "file",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "上传文件类型 1图片",
+            "name": "type",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "type": "integer",
+            "description": "页码",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "每页数量",
+            "name": "page_size",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "$ref": "#/definitions/service.FileInfo"
+            }
+          },
+          "400": {
+            "description": "请求错误",
+            "schema": {
+              "$ref": "#/definitions/errcode.Error"
+            }
+          },
+          "500": {
+            "description": "内部错误",
+            "schema": {
+              "$ref": "#/definitions/errcode.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1/articles": {
       "get": {
         "produces": [
@@ -17,7 +77,7 @@
           {
             "type": "string",
             "description": "文章名称",
-            "name": "name",
+            "name": "title",
             "in": "query"
           },
           {
@@ -663,6 +723,17 @@
         "pager": {
           "type": "object",
           "$ref": "#/definitions/app.Pager"
+        }
+      }
+    },
+    "service.FileInfo": {
+      "type": "object",
+      "properties": {
+        "access_url": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
         }
       }
     }
