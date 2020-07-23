@@ -84,6 +84,11 @@ func setupSetting() error {
 		return err
 	}
 
+	err = settingS.ReadSection("Email", &global.EmailSetting)
+	if err != nil {
+		return err
+	}
+
 	global.ServerSetting.ReadTimeOut *= time.Second
 	global.ServerSetting.WriteTimeOut *= time.Second
 

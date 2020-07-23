@@ -31,3 +31,12 @@ JWT:
   Secret: summer
   Issuer: blog-service
   Expire: 7200
+Email:
+  Host:
+  Port:
+  UserName:
+  Password:
+  IsSSL: true
+  From:
+  To:
+    - su943515688@gamil.com
