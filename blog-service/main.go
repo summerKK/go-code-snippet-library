@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/summerKK/go-code-snippet-library/blog-service/internal/routers"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/logger"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/setting"
+	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/tracer"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -32,6 +34,12 @@ func init() {
 	if err != nil {
 		log.Fatalf("init.setupDBEngine error:%v", err)
 	}
+
+	// 日志监控组件
+	err = setupTracer()
+	if err != nil {
+		log.Fatalf("init.setupTracer error:%v", err)
+	}
 }
 
 // @title 博客系统
@@ -51,7 +59,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	global.Logger.Infof("%s go-programming-tour-book/%s", "summer", "blog-service")
+	global.Logger.Infof(context.Background(), "%s go-programming-tour-book/%s", "summer", "blog-service")
 
 	err := s.ListenAndServe()
 	if err != nil {
@@ -113,6 +121,16 @@ func setupLogger() error {
 		MaxAge:    10,
 		LocalTime: true,
 	}, "", log.LstdFlags).WithCaller(2)
+
+	return nil
+}
+
+func setupTracer() error {
+	jaegerTracer, _, err := tracer.NewJaegerTracer("blog-service", "127.0.0.1:6831")
+	if err != nil {
+		return err
+	}
+	global.Tracer = jaegerTracer
 
 	return nil
 }

@@ -21,10 +21,10 @@ func Recovery() gin.HandlerFunc {
 		From:     global.EmailSetting.From,
 	})
 
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				global.Logger.WithCallerFrames().Errorf("panic recover err:%v", err)
+				global.Logger.WithCallerFrames().Errorf(c, "panic recover err:%v", err)
 
 				if defaultMailer.UserName != "" && defaultMailer.Password != "" {
 					err := defaultMailer.SendMail(
@@ -33,15 +33,15 @@ func Recovery() gin.HandlerFunc {
 						fmt.Sprintf("错误信息: %v", err),
 					)
 					if err != nil {
-						global.Logger.Panicf("mail.SendMail err:%v", err)
+						global.Logger.Panicf(c, "mail.SendMail err:%v", err)
 					}
 				}
 
-				app.NewResponse(context).ToErrorResponse(errcode.ServerError)
-				context.Abort()
+				app.NewResponse(c).ToErrorResponse(errcode.ServerError)
+				c.Abort()
 			}
 		}()
 
-		context.Next()
+		c.Next()
 	}
 }

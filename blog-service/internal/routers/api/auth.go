@@ -13,7 +13,7 @@ func GetAuth(c *gin.Context) {
 	response := app.NewResponse(c)
 	ok, errors := app.BindAndValid(c, param)
 	if ok {
-		global.Logger.Errorf("app.BindAndValid error;%v", errors)
+		global.Logger.Errorf(c, "app.BindAndValid error;%v", errors)
 		response.ToErrorResponse(errcode.InvalidParams.WithDetails(errors.Errors()...))
 		return
 	}
@@ -21,14 +21,14 @@ func GetAuth(c *gin.Context) {
 	svc := service.New(c.Request.Context())
 	err := svc.CheckAuth(param)
 	if err != nil {
-		global.Logger.Errorf("svc.checkAuth error:%v", err)
+		global.Logger.Errorf(c, "svc.checkAuth error:%v", err)
 		response.ToErrorResponse(errcode.UnauthorizedAuthNotExist)
 		return
 	}
 
 	token, err := app.GenerateToken(param.AppKey, param.AppSecret)
 	if err != nil {
-		global.Logger.Errorf("app.GenerateToken error:%v", err)
+		global.Logger.Errorf(c, "app.GenerateToken error:%v", err)
 		response.ToErrorResponse(errcode.UnauthorizedTokenGenerate)
 		return
 	}

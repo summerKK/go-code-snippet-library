@@ -35,6 +35,7 @@ func NewRouter() *gin.Engine {
 	r.Use(middleware.RateLimiter(methodLimiters))
 	r.Use(middleware.ContextTimeout(global.AppSetting.DefaultContextTimeOut * time.Second))
 	r.Use(middleware.Translations())
+	r.Use(middleware.Tracing())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.POST("/api/upload/file", api.UploadFile)
