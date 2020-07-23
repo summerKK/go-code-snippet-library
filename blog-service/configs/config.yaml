@@ -16,6 +16,7 @@ App:
     - .jpg
     - jpeg
     - .png
+  DefaultContextTimeOut: 60 # 秒
 Database:
   DBType: mysql
   Username: root

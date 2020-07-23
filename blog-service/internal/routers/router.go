@@ -2,6 +2,7 @@ package routers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/summerKK/go-code-snippet-library/blog-service/docs"
@@ -9,14 +10,30 @@ import (
 	"github.com/summerKK/go-code-snippet-library/blog-service/internal/middleware"
 	"github.com/summerKK/go-code-snippet-library/blog-service/internal/routers/api"
 	v1 "github.com/summerKK/go-code-snippet-library/blog-service/internal/routers/api/v1"
+	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/limiter"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+var methodLimiters = limiter.NewMethodLimiter().AddBuckets(limiter.BucketRule{
+	Key:          "/api/auth",
+	FillInterval: time.Second,
+	Capacity:     10,
+	Quantum:      10,
+})
+
 func NewRouter() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	if global.ServerSetting.RunModel == "debug" {
+		r.Use(gin.Logger())
+		r.Use(gin.Recovery())
+	} else {
+		r.Use(middleware.AccessLog())
+		r.Use(middleware.Recovery())
+	}
+
+	r.Use(middleware.RateLimiter(methodLimiters))
+	r.Use(middleware.ContextTimeout(global.AppSetting.DefaultContextTimeOut * time.Second))
 	r.Use(middleware.Translations())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -28,9 +45,8 @@ func NewRouter() *gin.Engine {
 	article := v1.NewArticle()
 	tag := v1.NewTag()
 	apiv1 := r.Group("/api/v1")
+	// 注册中间件
 	apiv1.Use(middleware.JWT())
-	apiv1.Use(middleware.AccessLog())
-	apiv1.Use(middleware.Recovery())
 	{
 		apiv1.POST("/tags", tag.Create)
 		apiv1.GET("/tags", tag.List)
