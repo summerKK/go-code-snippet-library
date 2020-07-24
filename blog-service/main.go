@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +19,26 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+var (
+	port     string
+	runModel string
+	config   string
+
+	isVersion    bool
+	buildTime    string
+	buildVersion string
+	gitCommitId  string
+)
+
 func init() {
+	// 解析参数
+	err := setupFlag()
+	if err != nil {
+		log.Fatalf("init.setupFlag error:%v", err)
+	}
+
 	//  读取配置文件
-	err := setupSetting()
+	err = setupSetting()
 	if err != nil {
 		log.Fatalf("init.setupSetting error:%v", err)
 	}
@@ -47,6 +67,14 @@ func init() {
 // description Go博客
 // termsOfService github.com/summerKK/go-code-snippet-library/blog-service
 func main() {
+
+	if isVersion {
+		fmt.Printf("build_time:%s\n", buildTime)
+		fmt.Printf("build_version:%s\n", buildVersion)
+		fmt.Printf("git_commit_id:%s\n", gitCommitId)
+		return
+	}
+
 	gin.SetMode(global.ServerSetting.RunModel)
 	router := routers.NewRouter()
 
@@ -68,7 +96,7 @@ func main() {
 }
 
 func setupSetting() error {
-	settingS, err := setting.NewSetting()
+	settingS, err := setting.NewSetting(strings.Split(config, ",")...)
 	if err != nil {
 		return err
 	}
@@ -99,6 +127,14 @@ func setupSetting() error {
 
 	global.ServerSetting.ReadTimeOut *= time.Second
 	global.ServerSetting.WriteTimeOut *= time.Second
+
+	if port != "" {
+		global.ServerSetting.HttpPort = port
+	}
+
+	if runModel != "" {
+		global.ServerSetting.RunModel = runModel
+	}
 
 	log.Printf("[cofnig] serviceSetting: %+v \n", global.ServerSetting)
 	log.Printf("[config] appSetting: %+v \n", global.AppSetting)
@@ -131,6 +167,16 @@ func setupTracer() error {
 		return err
 	}
 	global.Tracer = jaegerTracer
+
+	return nil
+}
+
+func setupFlag() error {
+	flag.StringVar(&port, "port", "", "启动端口")
+	flag.StringVar(&runModel, "model", "", "启动模式")
+	flag.StringVar(&config, "config", "configs/", "指定使用的配置文件路径")
+	flag.BoolVar(&isVersion, "version", false, "编译信息")
+	flag.Parse()
 
 	return nil
 }
