@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	otgorm "github.com/eddycjy/opentracing-gorm"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/summerKK/go-code-snippet-library/blog-service/global"
@@ -53,6 +54,9 @@ func NewDBEngine(databaseSetting *setting.DatabaseSettingS) (*gorm.DB, error) {
 
 	db.DB().SetMaxIdleConns(global.DatabaseSetting.MaxIdleConns)
 	db.DB().SetMaxOpenConns(global.DatabaseSetting.MaxOpenConns)
+
+	// sql链路追踪
+	otgorm.AddGormCallbacks(db)
 
 	return db, nil
 }

@@ -21,7 +21,7 @@ func GetJWTSecret() []byte {
 
 func GenerateToken(appKey, appSecret string) (string, error) {
 	nowTime := time.Now()
-	expireTime := nowTime.Add(global.JWTSetting.Expire)
+	expireTime := nowTime.Add(global.JWTSetting.Expire * time.Second)
 	claims := Claims{
 		AppKey:    util.EncodeMd5(appKey),
 		AppSecret: util.EncodeMd5(appSecret),
