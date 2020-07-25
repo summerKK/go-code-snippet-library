@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package helloWorld;
+
+service Greeter {
+  rpc SayHello(HelloRequest) returns (HelloResponse){}
+  rpc SayList(HelloRequest) returns (stream HelloReplay){}
+  rpc SayRecord(stream HelloRequest) returns (HelloRecord){}
+  rpc SayRoute(stream HelloRequest) returns(stream HelloReplay){}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse{
+  string message = 1;
+}
+
+message HelloReplay{
+  string message = 1;
+}
+
+message HelloRecord{
+  map<int32, HelloReplay> list = 1;
+}
