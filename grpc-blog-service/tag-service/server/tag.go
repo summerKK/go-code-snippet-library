@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/api"
+	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/errcode"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
 )
 
@@ -15,7 +16,7 @@ func (t *TagServer) GetTagList(ctx context.Context, request *pb.GetTagListReques
 	api := api.NewApi("http://127.0.0.1:8000")
 	list, err := api.GetTagList(ctx, request.GetName())
 	if err != nil {
-		return nil, err
+		return nil, errcode.TogRPCError(errcode.ErrorGetTagListFail)
 	}
 
 	tagList := &pb.GetTagListReply{}
