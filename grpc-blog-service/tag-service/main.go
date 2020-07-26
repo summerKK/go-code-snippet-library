@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/soheilhy/cmux"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
 	tagServer "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/server"
 	"google.golang.org/grpc"
@@ -13,54 +14,53 @@ import (
 )
 
 var (
-	gRPCPort string
-	httpPort string
+	port string
 )
 
 func main() {
-	flag.StringVar(&gRPCPort, "gRPC_port", "8001", "gRPC启动端口号")
-	flag.StringVar(&httpPort, "http_port", "9001", "http启动端口号")
+	flag.StringVar(&port, "port", "8001", "服务启动端口")
 	flag.Parse()
 
-	errs := make(chan error)
-	go func() {
-		err := RunHttpServer()
-		if err != nil {
-			errs <- err
-		}
-	}()
+	tcpServer, err := RunTcpServer()
+	if err != nil {
+		log.Fatalf("Run tcp server error:%v", err)
+	}
 
-	go func() {
-		err := RunGrpcServer()
-		if err != nil {
-			errs <- err
-		}
-	}()
+	mux := cmux.New(tcpServer)
+	grpcL := mux.MatchWithWriters(cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc"))
+	httpL := mux.Match(cmux.HTTP1Fast())
 
-	select {
-	case <-errs:
-		log.Fatalf("Run server got error:%v", errs)
+	grpcServer := RunGrpcServer()
+	httpServer := RunHttpServer()
+	go grpcServer.Serve(grpcL)
+	go httpServer.Serve(httpL)
+
+	err = mux.Serve()
+	if err != nil {
+		log.Fatalf("mux server run error:%v", err)
 	}
 }
 
-func RunHttpServer() error {
+func RunHttpServer() *http.Server {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc("/ping", func(writer http.ResponseWriter, r *http.Request) {
 		_, _ = writer.Write([]byte("pong"))
 	})
 
-	return http.ListenAndServe(":"+httpPort, serveMux)
+	return &http.Server{
+		Addr:    ":" + port,
+		Handler: serveMux,
+	}
 }
 
-func RunGrpcServer() error {
+func RunGrpcServer() *grpc.Server {
 	server := grpc.NewServer()
 	pb.RegisterTagServiceServer(server, tagServer.NewTagServer())
 	reflection.Register(server)
 
-	lis, err := net.Listen("tcp", ":"+gRPCPort)
-	if err != nil {
-		return err
-	}
+	return server
+}
 
-	return server.Serve(lis)
+func RunTcpServer() (net.Listener, error) {
+	return net.Listen("tcp", ":"+port)
 }
