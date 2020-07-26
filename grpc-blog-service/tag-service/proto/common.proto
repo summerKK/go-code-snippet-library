@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto";
+
+message Pager{
+  int64 page = 1;
+  int64 page_size = 2;
+  int64 total_rows = 3;
+}
