@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/summerKK/go-code-snippet-library/blog-service/global"
-	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/Email"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/app"
+	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/email"
 	"github.com/summerKK/go-code-snippet-library/blog-service/pkg/errcode"
 )
 
 func Recovery() gin.HandlerFunc {
-	defaultMailer := Email.NewEmail(&Email.SMTPInfo{
+	defaultMailer := email.NewEmail(&email.SMTPInfo{
 		Host:     global.EmailSetting.Host,
 		Port:     global.EmailSetting.Port,
 		IsSSL:    global.EmailSetting.IsSSL,
