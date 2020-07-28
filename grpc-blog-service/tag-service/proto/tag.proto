@@ -4,9 +4,14 @@ package proto;
 option go_package = "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto";
 
 import "proto/common.proto";
+import "google/api/annotations.proto";
 
 service TagService {
-  rpc GetTagList(GetTagListRequest) returns(GetTagListReply){}
+  rpc GetTagList(GetTagListRequest) returns(GetTagListReply){
+    option (google.api.http) = {
+      get: "/api/v1/tags",
+    };
+  }
 }
 
 message GetTagListRequest{
