@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/swagger"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
@@ -48,6 +49,7 @@ func RunHttpServer() *http.ServeMux {
 	})
 
 	prefix := "/swagger-ui/"
+	// noinspection ALL
 	fileServer := http.FileServer(&assetfs.AssetFS{
 		Asset:    swagger.Asset,
 		AssetDir: swagger.AssetDir,
@@ -70,7 +72,13 @@ func RunHttpServer() *http.ServeMux {
 }
 
 func RunGrpcServer() *grpc.Server {
-	server := grpc.NewServer()
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			HelloInterceptor,
+			WorldInterceptor,
+		)),
+	}
+	server := grpc.NewServer(opts...)
 	// 注册tagService
 	pb.RegisterTagServiceServer(server, grpcServer.NewTagServer())
 	// 注册articleService
@@ -134,4 +142,20 @@ func grpcGatewayError(ctx context.Context, mux *runtime.ServeMux, marshaler runt
 	w.WriteHeader(runtime.HTTPStatusFromCode(s.Code()))
 
 	_, _ = w.Write(marshal)
+}
+
+func HelloInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	log.Println("你好")
+	resp, err = handler(ctx, req)
+	log.Println("再见")
+
+	return resp, err
+}
+
+func WorldInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	log.Println("你好,Summer")
+	resp, err = handler(ctx, req)
+	log.Println("再见,Summer")
+
+	return resp, err
 }
