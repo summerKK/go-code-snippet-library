@@ -3,9 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -49,12 +52,26 @@ func (a *API) GetTagList(ctx context.Context, name string) ([]byte, error) {
 	return a.httpGet(ctx, fmt.Sprintf("%s?token=%s&name=%s", "api/v1/tags", token, name))
 }
 
+func (a *API) GetArticleList(ctx context.Context, tagId uint32) ([]byte, error) {
+	token, err := a.GetAccessToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.httpGet(ctx, fmt.Sprintf("%s?token=%s&tag_id=%d", "api/v1/articles", token, tagId))
+}
+
 func (a *API) httpGet(ctx context.Context, path string) ([]byte, error) {
 	response, err := http.Get(fmt.Sprintf("%s/%s", a.Url, path))
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		log.Warnf("get %s 失败,状态码:%d", path, response.StatusCode)
+		return nil, errors.New("httpGet请求失败")
+	}
 
 	return ioutil.ReadAll(response.Body)
 }

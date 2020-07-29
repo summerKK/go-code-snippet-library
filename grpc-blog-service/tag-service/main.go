@@ -9,7 +9,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
-	tagServer "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/server"
+	grpcServer "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/server"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -41,7 +41,10 @@ func RunHttpServer() *http.ServeMux {
 
 func RunGrpcServer() *grpc.Server {
 	server := grpc.NewServer()
-	pb.RegisterTagServiceServer(server, tagServer.NewTagServer())
+	// 注册tagService
+	pb.RegisterTagServiceServer(server, grpcServer.NewTagServer())
+	// 注册articleService
+	pb.RegisterArticleServiceServer(server, grpcServer.NewArticleServer())
 	reflection.Register(server)
 
 	return server
@@ -62,6 +65,7 @@ func RunGrpcGatewayServer() *runtime.ServeMux {
 	serveMux := runtime.NewServeMux()
 	options := []grpc.DialOption{grpc.WithInsecure()}
 	_ = pb.RegisterTagServiceHandlerFromEndpoint(context.Background(), serveMux, endpoint, options)
+	_ = pb.RegisterArticleServiceHandlerFromEndpoint(context.Background(), serveMux, endpoint, options)
 
 	return serveMux
 }

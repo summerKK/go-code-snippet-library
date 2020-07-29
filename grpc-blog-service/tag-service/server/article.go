@@ -9,25 +9,25 @@ import (
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
 )
 
-type TagServer struct {
+type ArticleServer struct {
 }
 
-func (t *TagServer) GetTagList(ctx context.Context, request *pb.GetTagListRequest) (*pb.GetTagListReply, error) {
+func NewArticleServer() *ArticleServer {
+	return &ArticleServer{}
+}
+
+func (t *ArticleServer) GetArticleList(ctx context.Context, request *pb.GetArticleListRequest) (*pb.GetArticleListReply, error) {
 	apiService := api.NewApi("http://127.0.0.1:8000")
-	list, err := apiService.GetTagList(ctx, request.GetName())
+	list, err := apiService.GetArticleList(ctx, request.TagId)
 	if err != nil {
-		return nil, errcode.TogRPCError(errcode.ErrorGetTagListFail)
+		return nil, errcode.TogRPCError(errcode.ErrorGetArticleListFail)
 	}
 
-	tagList := &pb.GetTagListReply{}
-	err = json.Unmarshal(list, &tagList)
+	articleList := &pb.GetArticleListReply{}
+	err = json.Unmarshal(list, &articleList)
 	if err != nil {
 		return nil, errcode.TogRPCError(errcode.Fail)
 	}
 
-	return tagList, nil
-}
-
-func NewTagServer() *TagServer {
-	return &TagServer{}
+	return articleList, nil
 }

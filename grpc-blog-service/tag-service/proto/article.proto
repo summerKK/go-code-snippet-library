@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto";
+
+import "proto/common.proto";
+import "proto/tag.proto";
+import "google/api/annotations.proto";
+
+service ArticleService{
+  rpc GetArticleList(GetArticleListRequest) returns(GetArticleListReply) {
+    option (google.api.http) = {
+      get: "/api/v1/articles",
+    };
+  }
+}
+
+message GetArticleListRequest{
+  string title = 1;
+  uint32 tag_id = 2;
+  uint32 state = 3;
+}
+
+message Article {
+  int64 id = 1;
+  string title = 2;
+  string desc = 3;
+  string content = 4;
+  string conver_image_url = 5;
+  uint32 state = 6;
+  Tag tag = 7;
+}
+
+message GetArticleListReply{
+  repeated Article list = 1;
+  Pager pager = 2;
+}
