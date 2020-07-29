@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -13,8 +14,15 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
+
+type HttpError struct {
+	Code    int32  `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+}
 
 var (
 	port string
@@ -61,6 +69,7 @@ func RunTcpServer() error {
 }
 
 func RunGrpcGatewayServer() *runtime.ServeMux {
+	runtime.HTTPError = grpcGatewayError
 	endpoint := "0.0.0.0:" + port
 	serveMux := runtime.NewServeMux()
 	options := []grpc.DialOption{grpc.WithInsecure()}
@@ -79,4 +88,28 @@ func grpcHandleFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Han
 			otherHandler.ServeHTTP(w, r)
 		}
 	}), &http2.Server{})
+}
+
+func grpcGatewayError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+	s, ok := status.FromError(err)
+	if !ok {
+		s = status.New(codes.Unknown, err.Error())
+	}
+	httpError := HttpError{
+		Code:    int32(s.Code()),
+		Message: s.Message(),
+	}
+	details := s.Details()
+	for _, detail := range details {
+		if v, ok := detail.(*pb.Error); ok {
+			httpError.Code = v.Code
+			httpError.Message = v.Message
+		}
+	}
+
+	marshal, _ := json.Marshal(httpError)
+	w.Header().Set("Content-Type", marshaler.ContentType())
+	w.WriteHeader(runtime.HTTPStatusFromCode(s.Code()))
+
+	_, _ = w.Write(marshal)
 }
