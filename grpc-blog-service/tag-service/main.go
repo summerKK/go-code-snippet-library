@@ -131,6 +131,7 @@ func grpcGatewayError(ctx context.Context, mux *runtime.ServeMux, marshaler runt
 	}
 	details := s.Details()
 	for _, detail := range details {
+		// 捕捉到自定义错误,直接把code和message改为自定义的
 		if v, ok := detail.(*pb.Error); ok {
 			httpError.Code = v.Code
 			httpError.Message = v.Message

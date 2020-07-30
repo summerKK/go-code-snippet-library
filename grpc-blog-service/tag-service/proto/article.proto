@@ -6,6 +6,7 @@ option go_package = "github.com/summerKK/go-code-snippet-library/grpc-blog-servi
 import "proto/common.proto";
 import "proto/tag.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
 
 service ArticleService{
   rpc GetArticleList(GetArticleListRequest) returns(GetArticleListReply) {
@@ -35,3 +36,15 @@ message GetArticleListReply{
   repeated Article list = 1;
   Pager pager = 2;
 }
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    title: "grpc gateway sample";
+    version: "1.0";
+    license: {
+      name: "MIT";
+    };
+  }
+
+  schemes: HTTP
+};
