@@ -8,6 +8,6 @@ require (
 	golang.org/x/sys v0.0.0-20200724161237-0e2f3a69832c // indirect
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/genproto v0.0.0-20200724131911-43cab4749ae7 // indirect
-	google.golang.org/grpc v1.29.1
+	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0 // indirect
 )

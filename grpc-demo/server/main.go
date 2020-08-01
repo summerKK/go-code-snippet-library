@@ -10,6 +10,10 @@ import (
 
 	pb "github.com/summerKK/go-code-snippet-library/grpc-demo/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 type GreeterServer struct {
@@ -66,6 +70,14 @@ func (sv GreeterServer) SayList(request *pb.HelloRequest, server pb.Greeter_SayL
 }
 
 func (sv GreeterServer) SayHello(ctx context.Context, r *pb.HelloRequest) (*pb.HelloResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	log.Printf("receive metadata from context:%v", md)
+
+	header := metadata.New(map[string]string{"x-response-id": "res-127"})
+	if err := grpc.SendHeader(ctx, header); err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to send 'x-response-id' header")
+	}
+
 	return &pb.HelloResponse{
 		Message: r.Name + " hello,world",
 	}, nil
@@ -73,6 +85,9 @@ func (sv GreeterServer) SayHello(ctx context.Context, r *pb.HelloRequest) (*pb.H
 
 func main() {
 	server := grpc.NewServer()
+
+	reflection.Register(server)
+
 	pb.RegisterGreeterServer(server, GreeterServer{})
 	listen, err := net.Listen("tcp", ":8082")
 	if err != nil {

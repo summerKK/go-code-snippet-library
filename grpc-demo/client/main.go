@@ -9,10 +9,14 @@ import (
 
 	pb "github.com/summerKK/go-code-snippet-library/grpc-demo/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func main() {
-	conn, err := grpc.Dial(":8082", grpc.WithInsecure())
+	ctx := context.Background()
+	md := metadata.New(map[string]string{"go": "hello,world"})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	conn, err := grpc.DialContext(ctx, ":8082", grpc.WithInsecure())
 	defer conn.Close()
 
 	if err != nil {
@@ -39,18 +43,21 @@ func main() {
 	//}
 
 	// 双向流式rpc
-	err = sayRoute(client)
-	if err != nil {
-		panic(err)
-	}
+	//err = sayRoute(client)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func sayHello(client pb.GreeterClient) error {
-	response, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "summer"})
+	var header metadata.MD
+	response, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "summer"}, grpc.Header(&header))
 	if err != nil {
 		return err
 	}
 	log.Println(response)
+
+	log.Printf("receive metadata from context:%v", header)
 
 	return nil
 }
