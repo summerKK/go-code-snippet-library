@@ -12,11 +12,17 @@ import (
 )
 
 type TagServer struct {
+	auth *Auth
 }
 
 func (t *TagServer) GetTagList(ctx context.Context, request *pb.GetTagListRequest) (*pb.GetTagListReply, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	log.Printf("receive metadata from context:%v,ok:%v", md, ok)
+
+	// 接口验证
+	if err := t.auth.Check(ctx); err != nil {
+		return nil, err
+	}
 
 	apiService := api.NewApi("http://127.0.0.1:8000")
 	list, err := apiService.GetTagList(ctx, request.GetName())

@@ -3,13 +3,16 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/api"
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/errcode"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
+	"google.golang.org/grpc/metadata"
 )
 
 type ArticleServer struct {
+	auth *Auth
 }
 
 func NewArticleServer() *ArticleServer {
@@ -17,6 +20,13 @@ func NewArticleServer() *ArticleServer {
 }
 
 func (t *ArticleServer) GetArticleList(ctx context.Context, request *pb.GetArticleListRequest) (*pb.GetArticleListReply, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	log.Printf("receive metadata from context:%v,ok:%v", md, ok)
+
+	if err := t.auth.Check(ctx); err != nil {
+		return nil, err
+	}
+
 	apiService := api.NewApi("http://127.0.0.1:8000")
 	list, err := apiService.GetArticleList(ctx, request.TagId)
 	if err != nil {

@@ -14,11 +14,32 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type Auth struct {
+	AppKey    string
+	AppSecret string
+}
+
+func (a *Auth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"app_key":    a.AppKey,
+		"app_secret": a.AppSecret,
+	}, nil
+}
+
+func (a *Auth) RequireTransportSecurity() bool {
+	return false
+}
+
 func main() {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancelFunc()
 	md := metadata.New(map[string]string{"go": "hello,world"})
 	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	auth := &Auth{
+		AppKey:    "summer",
+		AppSecret: "summer",
+	}
 
 	options := []grpc.DialOption{
 		grpc.WithUnaryInterceptor(
@@ -36,6 +57,8 @@ func main() {
 				),
 			),
 		),
+		// grpc认证
+		grpc.WithPerRPCCredentials(auth),
 	}
 
 	clientConn, err := GetClientConn(ctx, ":8001", options)
