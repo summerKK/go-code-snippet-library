@@ -12,11 +12,37 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type Auth struct {
+	AppKey    string
+	AppSecret string
+}
+
+func (a *Auth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"app_key":    a.AppKey,
+		"app_secret": a.AppSecret,
+	}, nil
+}
+
+func (a *Auth) RequireTransportSecurity() bool {
+	return false
+}
+
 func main() {
 	ctx := context.Background()
 	md := metadata.New(map[string]string{"go": "hello,world"})
 	ctx = metadata.NewOutgoingContext(ctx, md)
-	conn, err := grpc.DialContext(ctx, ":8082", grpc.WithInsecure())
+	auth := &Auth{
+		AppKey:    "summer",
+		AppSecret: "summer",
+	}
+	opts := []grpc.DialOption{
+		// 不使用tls
+		grpc.WithInsecure(),
+		// 增加接口验证
+		grpc.WithPerRPCCredentials(auth),
+	}
+	conn, err := grpc.DialContext(ctx, ":8082", opts...)
 	defer conn.Close()
 
 	if err != nil {
@@ -25,7 +51,7 @@ func main() {
 
 	//
 	client := pb.NewGreeterClient(conn)
-	err = sayHello(client)
+	err = sayHello(client, ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -49,9 +75,9 @@ func main() {
 	//}
 }
 
-func sayHello(client pb.GreeterClient) error {
+func sayHello(client pb.GreeterClient, ctx context.Context) error {
 	var header metadata.MD
-	response, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "summer"}, grpc.Header(&header))
+	response, err := client.SayHello(ctx, &pb.HelloRequest{Name: "summer"}, grpc.Header(&header))
 	if err != nil {
 		return err
 	}
