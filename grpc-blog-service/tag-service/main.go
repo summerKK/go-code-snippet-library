@@ -12,8 +12,10 @@ import (
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/global"
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/internal/middleware"
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/swagger"
+	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/tracer"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
 	grpcServer "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/server"
 	"golang.org/x/net/http2"
@@ -32,6 +34,13 @@ type HttpError struct {
 var (
 	port string
 )
+
+func init() {
+	err := setUpTracer()
+	if err != nil {
+		log.Printf("setUpTracer error:%v", err)
+	}
+}
 
 func main() {
 	flag.StringVar(&port, "port", "8001", "服务启动端口")
@@ -77,6 +86,8 @@ func RunGrpcServer() *grpc.Server {
 			middleware.Recovery,
 			middleware.AccessLog,
 			middleware.ErrLog,
+			// 联络追踪
+			middleware.ServerTracing,
 		)),
 	}
 	server := grpc.NewServer(opts...)
@@ -144,4 +155,14 @@ func grpcGatewayError(ctx context.Context, mux *runtime.ServeMux, marshaler runt
 	w.WriteHeader(runtime.HTTPStatusFromCode(s.Code()))
 
 	_, _ = w.Write(marshal)
+}
+
+func setUpTracer() error {
+	jaegerTracer, _, err := tracer.NewJaegerTracer("rpc-blog-service", "127.0.0.1:6831")
+	if err != nil {
+		return err
+	}
+	global.Tracer = jaegerTracer
+
+	return nil
 }

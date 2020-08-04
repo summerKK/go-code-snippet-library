@@ -24,7 +24,7 @@ func (t *TagServer) GetTagList(ctx context.Context, request *pb.GetTagListReques
 		return nil, err
 	}
 
-	apiService := api.NewApi("http://127.0.0.1:8000")
+	apiService := api.NewApi("http://grpc-summer.cc:8000")
 	list, err := apiService.GetTagList(ctx, request.GetName())
 	if err != nil {
 		return nil, errcode.TogRPCError(errcode.ErrorGetTagListFail)

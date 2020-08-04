@@ -7,7 +7,9 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/global"
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/internal/middleware"
+	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/pkg/tracer"
 	pb "github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -30,6 +32,13 @@ func (a *Auth) RequireTransportSecurity() bool {
 	return false
 }
 
+func init() {
+	err := setUpTracer()
+	if err != nil {
+		log.Printf("setUpTracer error:%v", err)
+	}
+}
+
 func main() {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancelFunc()
@@ -46,6 +55,8 @@ func main() {
 			grpc_middleware.ChainUnaryClient(
 				// 设置超时时间
 				middleware.UnaryContextTimeout(),
+				// 链路追踪
+				middleware.ClientTracing(),
 				// 设置重试
 				grpc_retry.UnaryClientInterceptor(
 					grpc_retry.WithMax(2),
@@ -79,4 +90,14 @@ func main() {
 func GetClientConn(ctx context.Context, target string, options []grpc.DialOption) (*grpc.ClientConn, error) {
 	options = append(options, grpc.WithInsecure())
 	return grpc.DialContext(ctx, target, options...)
+}
+
+func setUpTracer() error {
+	jaegerTracer, _, err := tracer.NewJaegerTracer("rpc-blog-service", "127.0.0.1:6831")
+	if err != nil {
+		return err
+	}
+	global.Tracer = jaegerTracer
+
+	return nil
 }

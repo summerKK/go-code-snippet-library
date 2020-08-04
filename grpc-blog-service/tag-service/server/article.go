@@ -27,7 +27,7 @@ func (t *ArticleServer) GetArticleList(ctx context.Context, request *pb.GetArtic
 		return nil, err
 	}
 
-	apiService := api.NewApi("http://127.0.0.1:8000")
+	apiService := api.NewApi("http://grpc-summer.cc:8000")
 	list, err := apiService.GetArticleList(ctx, request.TagId)
 	if err != nil {
 		return nil, errcode.TogRPCError(errcode.ErrorGetArticleListFail)

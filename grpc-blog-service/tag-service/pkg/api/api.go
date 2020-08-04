@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -62,11 +65,40 @@ func (a *API) GetArticleList(ctx context.Context, tagId uint32) ([]byte, error) 
 }
 
 func (a *API) httpGet(ctx context.Context, path string) ([]byte, error) {
-	response, err := http.Get(fmt.Sprintf("%s/%s", a.Url, path))
+	urlstr := fmt.Sprintf("%s/%s", a.Url, path)
+	req, err := http.NewRequest(http.MethodGet, urlstr, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	span, newCtx := opentracing.StartSpanFromContext(ctx, "HTTP GET: "+a.Url,
+		opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
+	)
+	span.SetTag("url", urlstr)
+	_ = opentracing.GlobalTracer().Inject(
+		span.Context(),
+		opentracing.HTTPHeaders,
+		opentracing.HTTPHeadersCarrier(req.Header),
+	)
+
+	req = req.WithContext(newCtx)
+	// 设置抓包代理
+	//fixedUrl, _ := url.Parse("http://127.0.0.1:8888")
+
+	client := http.Client{
+		Timeout: time.Second * 60,
+		//Transport: &http.Transport{
+		//	Proxy: http.ProxyURL(fixedUrl),
+		//},
+	}
+
+	response, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	defer response.Body.Close()
+	defer span.Finish()
 
 	if response.StatusCode != http.StatusOK {
 		log.Warnf("get %s 失败,状态码:%d", path, response.StatusCode)
