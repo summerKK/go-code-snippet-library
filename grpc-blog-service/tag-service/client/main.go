@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/naming"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/summerKK/go-code-snippet-library/grpc-blog-service/tag-service/global"
@@ -72,7 +75,7 @@ func main() {
 		grpc.WithPerRPCCredentials(auth),
 	}
 
-	clientConn, err := GetClientConn(ctx, ":8001", options)
+	clientConn, err := GetClientConn(ctx, "rpc-blog-service", options)
 
 	if err != nil {
 		panic(err)
@@ -87,8 +90,19 @@ func main() {
 	log.Printf("getTagList:%+v", list)
 }
 
-func GetClientConn(ctx context.Context, target string, options []grpc.DialOption) (*grpc.ClientConn, error) {
-	options = append(options, grpc.WithInsecure())
+func GetClientConn(ctx context.Context, serviceName string, options []grpc.DialOption) (*grpc.ClientConn, error) {
+	config := clientv3.Config{
+		Endpoints:   []string{"http://127.0.0.1:2379"},
+		DialTimeout: time.Second * 60,
+	}
+	client, err := clientv3.New(config)
+	if err != nil {
+		return nil, err
+	}
+	r := &naming.GRPCResolver{Client: client}
+	target := fmt.Sprintf("/etcdv3://goproject/grpc/%s", serviceName)
+
+	options = append(options, grpc.WithInsecure(), grpc.WithBalancer(grpc.RoundRobin(r)), grpc.WithBlock())
 	return grpc.DialContext(ctx, target, options...)
 }
 
