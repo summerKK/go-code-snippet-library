@@ -1,12 +1,14 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "proto/article.proto",
-    "version": "version not set"
+    "title": "grpc gateway sample",
+    "version": "1.0",
+    "license": {
+      "name": "MIT"
+    }
   },
   "schemes": [
-    "http",
-    "https"
+    "http"
   ],
   "consumes": [
     "application/json"

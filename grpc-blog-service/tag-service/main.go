@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
+	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/proxy/grpcproxy"
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -34,6 +38,8 @@ type HttpError struct {
 var (
 	port string
 )
+
+const SERVICE_NAME = "rpc-blog-service"
 
 func init() {
 	err := setUpTracer()
@@ -107,6 +113,18 @@ func RunTcpServer() error {
 	gatewayMux := RunGrpcGatewayServer()
 	httpMux.Handle("/", gatewayMux)
 
+	etcdClient, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"127.0.0.1:2379"},
+		DialTimeout: time.Second * 60,
+	})
+	if err != nil {
+		return err
+	}
+	defer etcdClient.Close()
+
+	target := fmt.Sprintf("/etcdv3://goproject/grpc/%s", SERVICE_NAME)
+	grpcproxy.Register(etcdClient, target, ":"+port, 60)
+
 	return http.ListenAndServe(":"+port, grpcHandleFunc(RunGrpcServer(), httpMux))
 }
 
@@ -158,7 +176,7 @@ func grpcGatewayError(ctx context.Context, mux *runtime.ServeMux, marshaler runt
 }
 
 func setUpTracer() error {
-	jaegerTracer, _, err := tracer.NewJaegerTracer("rpc-blog-service", "127.0.0.1:6831")
+	jaegerTracer, _, err := tracer.NewJaegerTracer(SERVICE_NAME, "127.0.0.1:6831")
 	if err != nil {
 		return err
 	}

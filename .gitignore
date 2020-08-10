@@ -18,3 +18,4 @@
 
 .idea
 
+!/grpc-blog-service/tag-service/scripts/default.etcd/
