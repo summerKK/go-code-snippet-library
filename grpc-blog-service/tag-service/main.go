@@ -49,7 +49,7 @@ func init() {
 }
 
 func main() {
-	flag.StringVar(&port, "port", "8001", "服务启动端口")
+	flag.StringVar(&port, "port", "9001", "服务启动端口")
 	flag.Parse()
 
 	err := RunTcpServer()
