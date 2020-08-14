@@ -79,9 +79,28 @@ func handleConn(conn net.Conn) {
 
 	enteringChannel <- user
 
+	// 用户超时自动断开
+	userActive := make(chan struct{})
+	go func() {
+		d := time.Minute * 1
+		timer := time.NewTimer(d)
+		for {
+			select {
+			case <-timer.C:
+				// 关闭连接
+				conn.Close()
+			case <-userActive:
+				// 重置时间
+				timer.Reset(d)
+			}
+		}
+	}()
+
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
 		messageChannel <- []string{strconv.Itoa(user.ID) + ":" + input.Text(), strconv.Itoa(user.ID)}
+
+		userActive <- struct{}{}
 	}
 
 	if err := input.Err(); err != nil {
@@ -91,7 +110,6 @@ func handleConn(conn net.Conn) {
 	// 用户离开,断开连接
 	leavingChannel <- user
 	messageChannel <- []string{"user:" + strconv.Itoa(user.ID) + " has left", strconv.Itoa(user.ID)}
-
 }
 
 // 给单个用户发送消息
