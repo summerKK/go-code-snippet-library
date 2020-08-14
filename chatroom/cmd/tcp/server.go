@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -34,6 +36,11 @@ var (
 )
 
 func main() {
+
+	go func() {
+		http.ListenAndServe(":2021", nil)
+	}()
+
 	listener, err := net.Listen("tcp", ":2020")
 	if err != nil {
 		panic(err)
