@@ -45,8 +45,10 @@ func (b *broadcaster) Start() {
 	for {
 		select {
 		case u := <-b.enteringChannel:
+			// 用户进去聊天室.把用户放在用户列表中
 			b.users[u.Nickname] = u
 		case u := <-b.leavingChannel:
+			// 用户离开聊天室.需要关闭结束消息的goroutine.避免内存泄露
 			delete(b.users, u.Nickname)
 			// 关闭消息channel
 			close(u.MessageChannel)

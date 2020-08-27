@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"sync/atomic"
 	"time"
 
 	"nhooyr.io/websocket"
@@ -23,13 +24,14 @@ type User struct {
 	isNew bool
 }
 
-var globalUid uint32 = 0
+var globalUid uint64 = 0
 
 // 系统用户
 var System = &User{}
 
 func NewUser(nickname, token, addr string, conn *websocket.Conn) *User {
 	user := &User{
+		Uid:            int(atomic.AddUint64(&globalUid, 1)),
 		Nickname:       nickname,
 		EnterAt:        time.Now(),
 		Addr:           addr,
@@ -55,6 +57,7 @@ func NewUser(nickname, token, addr string, conn *websocket.Conn) *User {
 	return user
 }
 
+// 给用户发送消息
 func (u *User) SendMessage(ctx context.Context) {
 	for msg := range u.MessageChannel {
 		wsjson.Write(ctx, u.conn, msg)
