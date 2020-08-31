@@ -11,7 +11,7 @@ type messageType int
 
 const (
 	// 普通 用户消息
-	MsgTypeNormal messageType = iota + 1
+	MsgTypeNormal messageType = iota
 	// 当前用户欢迎消息
 	MsgTypeWelcome
 	// 用户进入

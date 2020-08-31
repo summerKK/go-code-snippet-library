@@ -54,6 +54,11 @@ func (b *broadcaster) Start() {
 			close(u.MessageChannel)
 		case msg := <-b.messageChannel:
 			for _, u := range b.users {
+				// 不用发送给自己
+				if u.Uid == msg.User.Uid {
+					continue
+				}
+
 				u.MessageChannel <- msg
 			}
 		case nickname := <-b.checkUserChannel:

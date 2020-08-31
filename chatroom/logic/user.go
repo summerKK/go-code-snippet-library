@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"regexp"
 	"sync/atomic"
 	"time"
 
@@ -28,6 +29,9 @@ var globalUid uint64 = 0
 
 // 系统用户
 var System = &User{}
+
+// 解析@
+var regAtUsers = regexp.MustCompile(`@[^\s@]{2,20}`)
 
 func NewUser(nickname, token, addr string, conn *websocket.Conn) *User {
 	user := &User{
@@ -88,6 +92,9 @@ func (u *User) ReceiveMessage(ctx context.Context) error {
 
 		// 内容发送到聊天室
 		sendMsg := NewMsg(u, receiveMsg["content"], receiveMsg["client_time"])
+
+		// 解析content,看看@了谁
+		sendMsg.Ats = regAtUsers.FindAllString(sendMsg.Content, -1)
 
 		Broadcaster.Broadcast(sendMsg)
 	}

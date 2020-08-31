@@ -330,7 +330,7 @@
                 that = this;
                 if (data.ats != null) {
                     data.ats.forEach(function (nickname) {
-                        if (nickname == '@' + that.nickname) {
+                        if (nickname == '@' + that.curUser.nickname) {
                             that.usertip = '有人 @ 你了';
                         }
                     })
