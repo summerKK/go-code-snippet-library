@@ -90,6 +90,9 @@ func (u *User) ReceiveMessage(ctx context.Context) error {
 			return err
 		}
 
+		// 过滤敏感词
+		receiveMsg["content"] = FilterSensitiveWord(receiveMsg["content"])
+
 		// 内容发送到聊天室
 		sendMsg := NewMsg(u, receiveMsg["content"], receiveMsg["client_time"])
 

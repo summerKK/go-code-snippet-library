@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	_ "github.com/summerKK/go-code-snippet-library/chatroom/global"
 	"github.com/summerKK/go-code-snippet-library/chatroom/server"
 )
 
