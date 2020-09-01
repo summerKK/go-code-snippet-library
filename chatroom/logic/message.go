@@ -53,10 +53,10 @@ func NewWelcomeMsg(user *User) *Message {
 	}
 }
 
-func NewNoticeMsg(user *User) *Message {
+func NewEnterMsg(user *User) *Message {
 	return &Message{
 		User:    user,
-		Type:    MsgTypeNormal,
+		Type:    MsgTypeEnter,
 		Content: fmt.Sprintf("%s 进入聊天室", user.Nickname),
 		MsgTime: time.Now(),
 	}

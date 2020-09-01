@@ -44,7 +44,7 @@ func websocketHandleFunc(w http.ResponseWriter, r *http.Request) {
 	user.MessageChannel <- logic.NewWelcomeMsg(user)
 
 	// 提醒所有用户新用户到来
-	msg := logic.NewNoticeMsg(user)
+	msg := logic.NewEnterMsg(user)
 	logic.Broadcaster.Broadcast(msg)
 
 	// 把用户加入到用户列表

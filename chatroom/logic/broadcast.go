@@ -68,7 +68,9 @@ func (b *broadcaster) Start() {
 			_, ok := b.users[nickname]
 			b.checkCanInChannel <- !ok
 		case <-b.requestUsersChannel:
-			userList := make([]*User, len(b.users))
+			var userList []*User
+			// append是增加元素.make的时候已经初始化了容量.所以这里不能指定容量
+			// ❌ userList := make([]*User, len(b.users))
 			for _, user := range b.users {
 				userList = append(userList, user)
 			}
