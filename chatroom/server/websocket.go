@@ -51,9 +51,6 @@ func websocketHandleFunc(w http.ResponseWriter, r *http.Request) {
 	logic.Broadcaster.UserEntering(user)
 	log.Printf("用户:%s加入聊天室\n", user.Nickname)
 
-	// 给用户发送历史消息
-	logic.OfflineProcessor.Send(user)
-
 	// 用户接收消息
 	err = user.ReceiveMessage(r.Context())
 

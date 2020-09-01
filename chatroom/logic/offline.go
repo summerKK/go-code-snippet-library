@@ -32,14 +32,7 @@ func (o *offlineProcessor) Save(msg *Message) {
 		return
 	}
 
-	// 这里主要解决了 `slice`的地址是指针数组的问题.通过make.生成一个新的slice.然后把元素再copy回去
-	// 这样copyMsg和msg的 Ats指向的内存地址就不一样了
-	copyMsg := *msg
-	copyMsg.Ats = make([]string, len(msg.Ats))
-	copy(copyMsg.Ats, msg.Ats)
-	copyMsg.Ats = nil
-
-	o.recentRing.Value = &copyMsg
+	o.recentRing.Value = msg
 	// ring 是一个环形链表,这里指针下移
 	o.recentRing = o.recentRing.Next()
 
@@ -68,7 +61,18 @@ func (o *offlineProcessor) Send(user *User) {
 	// 遍历离线消息列表
 	o.recentRing.Do(func(value interface{}) {
 		if value != nil {
-			user.MessageChannel <- value.(*Message)
+			msg := value.(*Message)
+			if len(msg.Ats) > 0 {
+				// 这里主要解决了 `slice`的地址是指针数组的问题.通过make.生成一个新的slice.然后把元素再copy回去
+				// 这样copyMsg和msg的 Ats指向的内存地址就不一样了
+				copyMsg := *msg
+				copyMsg.Ats = make([]string, len(msg.Ats))
+				copy(copyMsg.Ats, msg.Ats)
+				copyMsg.Ats = nil
+				user.MessageChannel <- &copyMsg
+			} else {
+				user.MessageChannel <- msg
+			}
 		}
 	})
 

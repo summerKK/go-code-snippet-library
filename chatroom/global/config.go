@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	MessageQueueLen = 1024
+	MessageQueueLen int
 )
 
 var (
@@ -22,6 +22,7 @@ func initConfig() {
 	}
 
 	SensitiveWords = viper.GetStringSlice("sensitive")
+	MessageQueueLen = viper.GetInt("message-queue-len")
 
 	// 监控配置文件改变
 	viper.WatchConfig()

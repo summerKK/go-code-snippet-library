@@ -4,12 +4,15 @@ import (
 	"log"
 	"net/http"
 
+	_ "net/http/pprof"
+
+	"github.com/spf13/viper"
 	_ "github.com/summerKK/go-code-snippet-library/chatroom/global"
 	"github.com/summerKK/go-code-snippet-library/chatroom/server"
 )
 
 var (
-	addr = ":2020"
+	addr = viper.GetString("service-port")
 )
 
 func main() {

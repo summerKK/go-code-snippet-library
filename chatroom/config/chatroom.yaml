@@ -1,6 +1,12 @@
 # token生成加密字符串
 token-secret: TbifxmiPFk9QGPK9Wbqj
 
+# 消息队列的长度
+message-queue-len: 1024
+
+# 服务启动端口
+service-port: :2020
+
 # 保留离线消息数量
 offline-num: 100
 

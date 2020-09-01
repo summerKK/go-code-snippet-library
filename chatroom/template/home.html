@@ -245,7 +245,7 @@
             leavechat: function () {
                 gWS.close();
 
-                that.msglist.splice(0);
+                this.msglist.splice(0);
 
                 this.addMsg2List({
                     user: {nickname: ""},

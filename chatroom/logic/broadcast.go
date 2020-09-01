@@ -47,6 +47,8 @@ func (b *broadcaster) Start() {
 		case u := <-b.enteringChannel:
 			// 用户进去聊天室.把用户放在用户列表中
 			b.users[u.Nickname] = u
+			// 给用户发送离线消息
+			OfflineProcessor.Send(u)
 		case u := <-b.leavingChannel:
 			// 用户离开聊天室.需要关闭结束消息的goroutine.避免内存泄露
 			delete(b.users, u.Nickname)
