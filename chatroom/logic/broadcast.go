@@ -105,3 +105,9 @@ func (b *broadcaster) UserList() []*User {
 
 	return <-b.usersChannel
 }
+
+func (b *broadcaster) CheckUserOnline(nickname string) bool {
+	_, ok := b.users[nickname]
+
+	return ok
+}
