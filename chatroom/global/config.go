@@ -14,6 +14,7 @@ var (
 )
 
 func initConfig() {
+	viper.Debug()
 	viper.SetConfigName("chatroom")
 	viper.AddConfigPath(RootDir + "/config")
 

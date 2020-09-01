@@ -1,3 +1,7 @@
+# token生成加密字符串
+token-secret: TbifxmiPFk9QGPK9Wbqj
+
+# 敏感词
 sensitive:
   - 爱液
   - 按摩棒
