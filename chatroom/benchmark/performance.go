@@ -38,8 +38,8 @@ func main() {
 
 func UserConnect(nickname string) {
 	// 设置超时1分钟(测试一分钟)
-	ctx, cance := context.WithTimeout(context.Background(), time.Minute)
-	defer cance()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
 	conn, _, err := websocket.Dial(ctx, "ws://127.0.0.1:2020/ws?nickname="+nickname, nil)
 	if err != nil {
@@ -47,24 +47,25 @@ func UserConnect(nickname string) {
 		return
 	}
 
+	log.Printf("user:%s登录", nickname)
+
 	defer conn.Close(websocket.StatusInternalError, "内部错误!")
 
 	go sendMessage(conn, nickname)
 
 	for {
 		var message logic.Message
-		err := wsjson.Read(ctx, conn, &message)
+		err := wsjson.Read(context.Background(), conn, &message)
 		if err != nil {
 			log.Println("receive msg error:", err)
-			continue
+			break
 		}
 
-		// 抑制console输出
 		if message.ClientSendTime.IsZero() {
 			continue
 		}
 
-		// 抑制console输出
+		// 只打印延迟1s以上的消息
 		if d := time.Now().Sub(message.ClientSendTime); d > 1*time.Second {
 			fmt.Printf("接收到服务器响应(%d):%v\n", d.Milliseconds(), message)
 		}
@@ -84,9 +85,10 @@ func sendMessage(conn *websocket.Conn, nickname string) {
 		err := wsjson.Write(ctx, conn, msg)
 		if err != nil {
 			log.Printf("send msg error:%v,nickname:%s,no:%d", err, nickname, i)
+			break
 		}
 		i++
-	}
 
-	time.Sleep(msgInterval)
+		time.Sleep(msgInterval)
+	}
 }
