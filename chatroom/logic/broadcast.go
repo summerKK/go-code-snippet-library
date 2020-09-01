@@ -61,6 +61,9 @@ func (b *broadcaster) Start() {
 
 				u.MessageChannel <- msg
 			}
+			// 保存最近消息
+			OfflineProcessor.Save(msg)
+
 		case nickname := <-b.checkUserChannel:
 			_, ok := b.users[nickname]
 			b.checkCanInChannel <- !ok
@@ -93,4 +96,10 @@ func (b *broadcaster) UserEntering(user *User) {
 
 func (b *broadcaster) UserLeaving(user *User) {
 	b.leavingChannel <- user
+}
+
+func (b *broadcaster) UserList() []*User {
+	b.requestUsersChannel <- struct{}{}
+
+	return <-b.usersChannel
 }

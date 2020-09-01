@@ -1,6 +1,9 @@
 # token生成加密字符串
 token-secret: TbifxmiPFk9QGPK9Wbqj
 
+# 保留离线消息数量
+offline-num: 100
+
 # 敏感词
 sensitive:
   - 爱液
