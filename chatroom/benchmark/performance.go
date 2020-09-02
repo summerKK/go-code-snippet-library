@@ -67,7 +67,7 @@ func UserConnect(nickname string) {
 
 		// 只打印延迟1s以上的消息
 		if d := time.Now().Sub(message.ClientSendTime); d > 1*time.Second {
-			fmt.Printf("接收到服务器响应(%d):%v\n", d.Milliseconds(), message)
+			fmt.Printf("接收到服务器响应(%d):%+v\n", d.Milliseconds(), message)
 		}
 	}
 
@@ -79,8 +79,8 @@ func sendMessage(conn *websocket.Conn, nickname string) {
 	i := 1
 	for {
 		msg := map[string]string{
-			"content":   fmt.Sprintf("来自%s的消息:%d", nickname, i),
-			"send_time": strconv.FormatInt(time.Now().UnixNano(), 10),
+			"content":     fmt.Sprintf("来自%s的消息:%d", nickname, i),
+			"client_time": strconv.FormatInt(time.Now().UnixNano(), 10),
 		}
 		err := wsjson.Write(ctx, conn, msg)
 		if err != nil {
