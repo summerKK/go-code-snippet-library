@@ -258,7 +258,10 @@
                 this.joined = false;
             },
             sendChatContent: function () {
-                let msg = JSON.stringify({"content": this.content});
+                let msg = JSON.stringify({
+                    "content": this.content,
+                    "client_time": (new Date().getTime() * 1000 * 1000).toString()
+                });
                 gWS.send(msg);
 
                 let data = {

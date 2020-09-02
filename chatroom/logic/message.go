@@ -80,7 +80,8 @@ func NewMsg(user *User, content, clientSendTime string) *Message {
 	}
 
 	if clientSendTime != "" {
-		msg.ClientSendTime = time.Unix(0, cast.ToInt64(clientSendTime))
+		clientSendTimeStr := cast.ToInt64(clientSendTime)
+		msg.ClientSendTime = time.Unix(0, clientSendTimeStr)
 	}
 
 	return msg
