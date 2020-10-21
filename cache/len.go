@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-func CaleLen(value interface{}) int {
+func CalcLen(value interface{}) int {
 	var n int
 	switch v := value.(type) {
 	case Value:
