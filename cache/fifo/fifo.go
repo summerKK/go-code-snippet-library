@@ -8,6 +8,7 @@ import (
 
 // FIFO 是一个 FIFO cache,他不是并发安全的
 // 通过 map 和 双向链表实现查询o(1),插入o(1)
+// 淘汰策略是淘汰最先加入的元素
 type fifo struct {
 	// 缓存最大的容量,单位字节
 	maxBytes int
