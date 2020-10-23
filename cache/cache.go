@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+const DefaultMaxBytes = 1 << 29
+
 type Cache interface {
 	Set(key string, value interface{})
 	Get(key string) interface{}
@@ -54,7 +56,7 @@ func (s *safeCache) Get(key string) interface{} {
 	return value
 }
 
-func (s *safeCache) Stat() *Stat {
+func (s *safeCache) stat() *Stat {
 	s.m.RLock()
 	defer s.m.RUnlock()
 
