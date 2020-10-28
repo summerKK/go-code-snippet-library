@@ -48,6 +48,7 @@ func NewRouter() *gin.Engine {
 	apiv1 := r.Group("/api/v1")
 	// 注册中间件
 	apiv1.Use(middleware.JWT())
+
 	{
 		apiv1.POST("/tags", tag.Create)
 		apiv1.GET("/tags", tag.List)

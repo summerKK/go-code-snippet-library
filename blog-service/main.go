@@ -71,6 +71,7 @@ func init() {
 // termsOfService github.com/summerKK/go-code-snippet-library/blog-service
 func main() {
 
+	// 打印版本
 	if isVersion {
 		fmt.Printf("build_time:%s\n", buildTime)
 		fmt.Printf("build_version:%s\n", buildVersion)
