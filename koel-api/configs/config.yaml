@@ -11,3 +11,6 @@ Database:
   MaxIdleConns: 10
   # 最大连接数
   MaxOpenConns: 30
+
+Server:
+  RunModel: debug

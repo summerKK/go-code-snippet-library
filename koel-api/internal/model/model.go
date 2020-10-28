@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/summerKK/go-code-snippet-library/koel-api/global"
 	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/setting"
