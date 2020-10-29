@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/errcode"
 )
 
 type Response struct {
@@ -32,6 +33,19 @@ func (r *Response) ToResponseList(list interface{}, totalRows int) {
 			TotalRows: totalRows,
 		},
 	})
+}
+
+func (r *Response) ToErrorResponse(err *errcode.Error) {
+	response := gin.H{
+		"code": err.Code(),
+		"msg":  err.Msg(),
+	}
+	details := err.Details()
+	if len(details) > 0 {
+		response["detail"] = details
+	}
+
+	r.Ctx.JSON(err.StatusCode(), response)
 }
 
 type Pagination struct {

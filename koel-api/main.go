@@ -2,9 +2,13 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/summerKK/go-code-snippet-library/koel-api/global"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/model"
+	"github.com/summerKK/go-code-snippet-library/koel-api/internal/router"
 	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/setting"
 )
 
@@ -28,7 +32,20 @@ func init() {
 }
 
 func main() {
+	gin.SetMode(global.ServerSetting.RunModel)
 
+	r := router.NewRouter()
+
+	s := http.Server{
+		Addr:           ":" + global.ServerSetting.HttpPort,
+		Handler:        r,
+		TLSConfig:      nil,
+		ReadTimeout:    global.ServerSetting.ReadTimeOut,
+		WriteTimeout:   global.ServerSetting.WriteTimeOut,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	_ = s.ListenAndServe()
 }
 
 func setupSetting() error {
@@ -57,6 +74,9 @@ func setupSetting() error {
 	if err != nil {
 		return err
 	}
+
+	global.ServerSetting.ReadTimeOut *= time.Second
+	global.ServerSetting.WriteTimeOut *= time.Second
 
 	return nil
 }

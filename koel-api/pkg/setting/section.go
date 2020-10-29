@@ -3,7 +3,10 @@ package setting
 import "time"
 
 type ServerSettingS struct {
-	RunModel string
+	RunModel     string
+	HttpPort     string
+	ReadTimeOut  time.Duration
+	WriteTimeOut time.Duration
 }
 
 type DatabaseSettingS struct {
