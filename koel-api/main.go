@@ -32,6 +32,7 @@ func init() {
 }
 
 func main() {
+	// 设置运行模式
 	gin.SetMode(global.ServerSetting.RunModel)
 
 	r := router.NewRouter()

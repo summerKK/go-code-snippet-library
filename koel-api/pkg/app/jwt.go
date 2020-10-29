@@ -29,7 +29,7 @@ func GenerateToken(appKey string) (string, error) {
 		},
 	}
 
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return tokenClaims.SignedString(GetJWTSecret())
 }

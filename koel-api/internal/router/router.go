@@ -12,7 +12,7 @@ func NewRouter() *gin.Engine {
 	r.Use(middleware.Translations())
 
 	r1 := r.Group("/api")
-	r1.POST("/api/me", api.GetAuth)
+	r1.POST("me", api.GetAuth)
 
 	return r
 }
