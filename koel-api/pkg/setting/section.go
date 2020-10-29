@@ -1,5 +1,7 @@
 package setting
 
+import "time"
+
 type ServerSettingS struct {
 	RunModel string
 }
@@ -20,4 +22,10 @@ type DatabaseSettingS struct {
 type AppSettingS struct {
 	MaxPageSize     int
 	DefaultPageSize int
+}
+
+type JWTSettingS struct {
+	Secret string
+	Issuer string
+	Expire time.Duration
 }

@@ -21,3 +21,8 @@ App:
   MaxPageSize: 50
   # 默认分页大小
   DefaultPageSize: 20
+
+JWT:
+  Secret: summer
+  Issuer: koel-api
+  Expire: 7200

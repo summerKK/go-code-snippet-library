@@ -53,6 +53,11 @@ func setupSetting() error {
 		return err
 	}
 
+	err = SettingS.ReadSection("JWT", &global.JWTSetting)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
