@@ -48,6 +48,11 @@ func setupSetting() error {
 		return err
 	}
 
+	err = SettingS.ReadSection("App", &global.AppSetting)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

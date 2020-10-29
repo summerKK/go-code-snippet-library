@@ -16,3 +16,8 @@ type DatabaseSettingS struct {
 	MaxIdleConns int
 	MaxOpenConns int
 }
+
+type AppSettingS struct {
+	MaxPageSize     int
+	DefaultPageSize int
+}

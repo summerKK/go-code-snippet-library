@@ -13,4 +13,11 @@ Database:
   MaxOpenConns: 30
 
 Server:
+  # debug/prod 模式
   RunModel: debug
+
+App:
+  # 列表最大返回数据
+  MaxPageSize: 50
+  # 默认分页大小
+  DefaultPageSize: 20
