@@ -11,7 +11,7 @@ import (
 )
 
 type Model struct {
-	ID        uint32    `json:"id,omitempty" gorm:"primary_key"`
+	ID        int       `json:"id" gorm:"primary_key"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

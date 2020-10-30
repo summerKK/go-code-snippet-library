@@ -22,6 +22,8 @@ App:
   MaxPageSize: 50
   # 默认分页大小
   DefaultPageSize: 20
+  # 是否允许下载
+  AllowDownload: true
 
 JWT:
   Secret: summer

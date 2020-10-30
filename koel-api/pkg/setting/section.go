@@ -25,6 +25,7 @@ type DatabaseSettingS struct {
 type AppSettingS struct {
 	MaxPageSize     int
 	DefaultPageSize int
+	AllowDownload   bool
 }
 
 type JWTSettingS struct {

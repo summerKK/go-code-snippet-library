@@ -4,7 +4,7 @@ import "github.com/jinzhu/gorm"
 
 type Album struct {
 	*Model
-	ArtistId uint32 `json:"artist_id"`
+	ArtistId int    `json:"artist_id"`
 	Artist   Artist `json:"artist" gorm:"foreignKey:artist_id"`
 	Name     string `json:"name"`
 	Cover    string `json:"cover"`
