@@ -1,40 +1,18 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/summerKK/go-code-snippet-library/koel-api/global"
-	"github.com/summerKK/go-code-snippet-library/koel-api/internal/model"
+	boot "github.com/summerKK/go-code-snippet-library/koel-api/init"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/router"
-	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/setting"
-)
-
-var (
-	configPath = []string{"configs/"}
 )
 
 func init() {
-	var err error
-	// 读取配置文件
-	err = setupSetting()
-	if err != nil {
-		log.Fatalf("init.Setting error:%v", err)
-	}
-
-	// 初始化数据库
-	err = setupDBEngine()
-	if err != nil {
-		log.Fatalf("init.DBEngine error:%v", err)
-	}
+	boot.SetConfig(nil)
 }
 
 func main() {
-	// 设置运行模式
-	gin.SetMode(global.ServerSetting.RunModel)
-
 	r := router.NewRouter()
 
 	s := http.Server{
@@ -47,44 +25,4 @@ func main() {
 	}
 
 	_ = s.ListenAndServe()
-}
-
-func setupSetting() error {
-	var err error
-	SettingS, err := setting.NewSetting(configPath...)
-	if err != nil {
-		return err
-	}
-
-	err = SettingS.ReadSection("Database", &global.DatabaseSetting)
-	if err != nil {
-		return err
-	}
-
-	err = SettingS.ReadSection("Server", &global.ServerSetting)
-	if err != nil {
-		return err
-	}
-
-	err = SettingS.ReadSection("App", &global.AppSetting)
-	if err != nil {
-		return err
-	}
-
-	err = SettingS.ReadSection("JWT", &global.JWTSetting)
-	if err != nil {
-		return err
-	}
-
-	global.ServerSetting.ReadTimeOut *= time.Second
-	global.ServerSetting.WriteTimeOut *= time.Second
-
-	return nil
-}
-
-func setupDBEngine() error {
-	var err error
-	global.DBEngine, err = model.NewDbEngine(global.DatabaseSetting)
-
-	return err
 }
