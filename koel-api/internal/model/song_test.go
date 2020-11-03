@@ -55,3 +55,21 @@ func TestSong_Create(t *testing.T) {
 		t.Errorf("TestSong_Create got error:%v", err)
 	}
 }
+
+func TestSong_Get(t *testing.T) {
+	var song model.Song
+	s0, err := song.First(global.DBEngine)
+	if err != nil {
+		t.Errorf("TestSong_Get got error:%v", err)
+	}
+
+	song.ID = s0.ID
+	s2, err := song.Get(global.DBEngine)
+	if err != nil {
+		t.Errorf("TestSong_Get got error:%v", err)
+	}
+
+	fmt.Printf("song:%+v\n", s2)
+	fmt.Printf("album:%+v\n", s2.Album)
+	fmt.Printf("artist:%+v\n", s2.Artist)
+}

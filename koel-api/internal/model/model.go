@@ -12,10 +12,10 @@ import (
 
 type Model struct {
 	ID int `json:"id" gorm:"primary_key"`
-	TimeStruct
+	CommonTime
 }
 
-type TimeStruct struct {
+type CommonTime struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

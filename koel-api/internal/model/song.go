@@ -20,7 +20,7 @@ type Song struct {
 	Lyrics   string  `json:"lyrics"`
 	Path     string  `json:"path"`
 	Mtime    int64   `json:"mtime"`
-	TimeStruct
+	CommonTime
 }
 
 func (s *Song) TableName() string {
@@ -74,4 +74,24 @@ func (s *Song) All(db *gorm.DB) ([]*Song, error) {
 
 func (s *Song) Create(db *gorm.DB) error {
 	return db.Create(&s).Error
+}
+
+func (s *Song) Get(db *gorm.DB) (*Song, error) {
+	var song Song
+	err := db.Where("id = ?", s.ID).Preload("Album").Preload("Artist").First(&song).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return &song, err
+	}
+
+	return &song, nil
+}
+
+func (s *Song) First(db *gorm.DB) (*Song, error) {
+	var song Song
+	err := db.First(&song).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return &song, err
+	}
+
+	return &song, nil
 }
