@@ -9,7 +9,8 @@ import (
 )
 
 func init() {
-	boot.SetConfig(nil)
+	//boot.SetConfig(nil)
+	boot.Boot()
 }
 
 func main() {

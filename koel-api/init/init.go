@@ -20,7 +20,7 @@ func SetConfig(configPath []string) {
 	}
 }
 
-func init() {
+func Boot() {
 	var err error
 	// 读取配置文件
 	err = setupSetting()

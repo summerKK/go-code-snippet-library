@@ -8,7 +8,6 @@ import (
 )
 
 type Song struct {
-	*Model
 	ID       string  `json:"id" gorm:"primary_key"`
 	AlbumId  int     `json:"album_id"`
 	Album    Album   `json:"album" gorm:"foreignKey:album_id"`
@@ -21,6 +20,7 @@ type Song struct {
 	Lyrics   string  `json:"lyrics"`
 	Path     string  `json:"path"`
 	Mtime    int     `json:"mtime"`
+	TimeStruct
 }
 
 func (s *Song) TableName() string {

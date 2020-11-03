@@ -3,7 +3,7 @@ package model
 import "github.com/jinzhu/gorm"
 
 type Album struct {
-	*Model
+	Model
 	ArtistId int    `json:"artist_id"`
 	Artist   Artist `json:"artist" gorm:"foreignKey:artist_id"`
 	Name     string `json:"name"`
