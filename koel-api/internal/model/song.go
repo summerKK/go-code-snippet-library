@@ -19,7 +19,7 @@ type Song struct {
 	Disc     int     `json:"disc"`
 	Lyrics   string  `json:"lyrics"`
 	Path     string  `json:"path"`
-	Mtime    int     `json:"mtime"`
+	Mtime    int64   `json:"mtime"`
 	TimeStruct
 }
 
@@ -28,12 +28,21 @@ func (s *Song) TableName() string {
 }
 
 //  钩子函数.插入前执行
-func (s *Song) BeforeSave(tx *gorm.DB) error {
+func (s *Song) BeforeCreate(tx *gorm.DB) error {
 	if s.Path == "" {
 		return errors.New("path can not be empty")
 	}
 
+	s.CreatedAt = util.CurrentTime()
+	s.UpdatedAt = util.CurrentTime()
+
 	s.ID = util.EncodeMd5(s.Path)
+
+	return nil
+}
+
+func (s *Song) BeforeUpdate(tx *gorm.DB) error {
+	s.UpdatedAt = util.CurrentTime()
 
 	return nil
 }
@@ -61,4 +70,8 @@ func (s *Song) All(db *gorm.DB) ([]*Song, error) {
 	}
 
 	return songs, nil
+}
+
+func (s *Song) Create(db *gorm.DB) error {
+	return db.Create(&s).Error
 }

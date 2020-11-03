@@ -21,3 +21,13 @@ func (a *Artist) Get(db *gorm.DB) (*Artist, error) {
 
 	return &artist, nil
 }
+
+func (a *Artist) First(db *gorm.DB) (*Artist, error) {
+	var artist Artist
+	err := db.First(&artist).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return &artist, err
+	}
+
+	return &artist, nil
+}
