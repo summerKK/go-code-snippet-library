@@ -217,11 +217,12 @@ type Context struct {
 }
 
 // 执行middleware
+// gin的中间件实现很巧妙.主要是在 c.index < s.当c.index == 0 //标记为`a` 的时候.
+// 在 c.handers[0](c) 调用后.在c.handers[0](c) {c.Next() //标记为`b`} 会调用下一次的Next()方法
+// 此时在`a`的循环里面c.index已经变成了1
 func (c *Context) Next() {
 	// index 初始值为 -1
 	c.index++
-	s := int8(len(c.handlers))
-	for ; c.index < s; c.index++ {
-		c.handlers[c.index](c)
-	}
+	_ = int8(len(c.handlers))
+	c.handlers[c.index](c)
 }
