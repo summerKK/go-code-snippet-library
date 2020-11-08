@@ -3,6 +3,7 @@ package gin
 import (
 	"context"
 	"encoding/json"
+	"html/template"
 	"log"
 	"math"
 	"net/http"
@@ -153,8 +154,9 @@ func (r *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
 type Engine struct {
 	*RouterGroup
 	// api未找到,触发的方法
-	handlers404 []HandlerFunc
-	router      *httprouter.Router
+	handlers404   []HandlerFunc
+	router        *httprouter.Router
+	HTMLTemplates *template.Template
 }
 
 func (e *Engine) NotFound404(handler ...HandlerFunc) {
@@ -183,6 +185,10 @@ func (e *Engine) Run(c context.Context, addr string) {
 	_ = s.Shutdown(context.Background())
 
 	log.Printf("http server stopped!\n")
+}
+
+func (e *Engine) LoadHTMLTemplates(pattern string) {
+	e.HTMLTemplates = template.Must(template.ParseGlob(pattern))
 }
 
 func New() *Engine {
@@ -287,4 +293,38 @@ func (c *Context) ParseBody(item interface{}) error {
 	} else {
 		return err
 	}
+}
+
+func (c *Context) JSON(code int, v interface{}) {
+	c.Writer.WriteHeader(code)
+	c.Writer.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(c.Writer)
+	if err := encoder.Encode(v); err != nil {
+		c.Error(err, v)
+		http.Error(c.Writer, err.Error(), 500)
+	}
+}
+
+// https://golang.org/pkg/text/template/#Template
+func (c *Context) HTML(code int, name string, data interface{}) {
+	c.Writer.WriteHeader(code)
+	c.Writer.Header().Set("Content-Type", "text/html")
+	if err := c.engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
+		c.Error(err, map[string]interface{}{
+			"name": name,
+			"data": data,
+		})
+		http.Error(c.Writer, err.Error(), 500)
+	}
+}
+
+func (c *Context) String(code int, msg string) {
+	c.Writer.Header().Set("Content-Type", "text/plain")
+	c.Writer.WriteHeader(code)
+	_, _ = c.Writer.Write([]byte(msg))
+}
+
+func (c *Context) Data(code int, data []byte) {
+	c.Writer.WriteHeader(code)
+	_, _ = c.Writer.Write(data)
 }
