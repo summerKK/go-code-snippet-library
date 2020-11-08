@@ -2,19 +2,26 @@ package gin
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"math"
 	"net/http"
 	"path"
+
+	"github.com/julienschmidt/httprouter"
 )
-import "github.com/julienschmidt/httprouter"
+
+const (
+	AbortIndex = math.MaxInt8 / 2
+)
 
 /************************************/
 /********** ErrorMsg *********/
 /************************************/
 
 type ErrorMsg struct {
-	Message string `json:"msg"`
-	Meta    string `json:"meta"`
+	Message string      `json:"msg"`
+	Meta    interface{} `json:"meta"`
 }
 
 /************************************/
@@ -223,6 +230,61 @@ type Context struct {
 func (c *Context) Next() {
 	// index 初始值为 -1
 	c.index++
-	_ = int8(len(c.handlers))
-	c.handlers[c.index](c)
+	// 避免数组越界.比如Abort的时候把index设置为AbortIndex
+	if c.index < int8(len(c.handlers)) {
+		c.handlers[c.index](c)
+	}
+}
+
+// 终止请求
+func (c *Context) Abort(code int) {
+	c.Writer.WriteHeader(code)
+	// 把index设置到最大,让剩余的中间件不执行
+	c.index = AbortIndex
+}
+
+// 失败调用方法
+func (c *Context) Fail(code int, err error) {
+	c.Error(err, "Operation aborted")
+	c.Abort(code)
+}
+
+func (c *Context) Error(err error, meta interface{}) {
+	c.Errors = append(c.Errors, ErrorMsg{
+		Message: err.Error(),
+		Meta:    meta,
+	})
+}
+
+func (c *Context) Set(key string, v interface{}) {
+	if c.Keys == nil {
+		c.Keys = make(map[string]interface{})
+	}
+
+	c.Keys[key] = v
+}
+
+func (c *Context) Get(key string) interface{} {
+	var ok bool
+	if c.Keys == nil {
+		ok = false
+	}
+
+	v, ok := c.Keys[key]
+
+	if !ok {
+		log.Panicf("Key %s does'nt exist", key)
+	}
+
+	return v
+}
+
+// 解析请求参数
+func (c *Context) ParseBody(item interface{}) error {
+	decoder := json.NewDecoder(c.Req.Body)
+	if err := decoder.Decode(&item); err == nil {
+		return Validate(c, item)
+	} else {
+		return err
+	}
 }
