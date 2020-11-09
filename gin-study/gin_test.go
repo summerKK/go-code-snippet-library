@@ -89,3 +89,24 @@ func TestContext_ParseBody(t *testing.T) {
 
 	resp.Body.Close()
 }
+
+func TestRouterGroup_Group(t *testing.T) {
+	assertIs := is.New(t)
+	r := engine.Group("/api", func(c *gin.Context) {
+		c.Next()
+		_, _ = c.Writer.Write([]byte("hello,world"))
+	})
+
+	r.GET("/test", func(c *gin.Context) {
+
+	})
+
+	resp, err := http.Get(fmt.Sprintf(addrFormat, "api") + "/test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	all, _ := ioutil.ReadAll(resp.Body)
+	assertIs.Equal(string(all), "hello,world")
+}

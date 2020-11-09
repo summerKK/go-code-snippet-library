@@ -49,29 +49,34 @@ func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 /************************************/
-/********** ResponseWriter *********/
+/********** responseWriter *********/
 /************************************/
+type ResponseWriter interface {
+	http.ResponseWriter
+	Status() int
+	Written() bool
+}
 
-type ResponseWriter struct {
+type responseWriter struct {
 	http.ResponseWriter
 	status int
 }
 
-func (w *ResponseWriter) WriteHeader(s int) {
+func (w *responseWriter) WriteHeader(s int) {
 	w.ResponseWriter.WriteHeader(s)
 	w.status = s
 }
 
-func (w *ResponseWriter) Write(b []byte) (int, error) {
+func (w *responseWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-func (w *ResponseWriter) Status() int {
+func (w *responseWriter) Status() int {
 	return w.status
 }
 
 // 判断是否已经写入数据
-func (w *ResponseWriter) Written() bool {
+func (w *responseWriter) Written() bool {
 	return w.Status() != 0
 }
 
@@ -93,7 +98,7 @@ type RouterGroup struct {
 func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
 	return &Context{
 		Req:      req,
-		Writer:   &ResponseWriter{w, 0},
+		Writer:   &responseWriter{w, 0},
 		index:    -1,
 		engine:   r.engine,
 		Params:   params,
@@ -117,10 +122,21 @@ func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 	r.Handlers = append(r.Handlers, middlewares...)
 }
 
+// 返回新的group
+func (r *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
+	prefix := path.Join(r.prefix, component)
+	return &RouterGroup{
+		Handlers: handlers,
+		prefix:   prefix,
+		parent:   r,
+		engine:   r.engine,
+	}
+}
+
 func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
-	path := path.Join(r.prefix, p)
+	pathName := path.Join(r.prefix, p)
 	allHandlers := r.allHandlers(handlers...)
-	r.engine.router.Handle(method, path, func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	r.engine.router.Handle(method, pathName, func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		// 创建context
 		r.createContext(writer, req, params, allHandlers).Next()
 	})
@@ -219,7 +235,7 @@ func Default() *Engine {
 // gin的核心模块.
 type Context struct {
 	Req    *http.Request
-	Writer *ResponseWriter
+	Writer *responseWriter
 	Keys   map[string]interface{}
 	Params httprouter.Params
 	Errors []ErrorMsg
