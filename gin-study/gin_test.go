@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -169,4 +170,26 @@ func TestErrorMsgs_String(t *testing.T) {
 	}
 
 	fmt.Println(errorMsgs.String())
+}
+
+func TestContext_Pool(t *testing.T) {
+	engine.GET("/userinfo", func(c *gin.Context) {
+		c.Abort(http.StatusOK)
+	})
+
+	wg := &sync.WaitGroup{}
+	for i := 0; i < gin.CtxPoolSize/8; i++ {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			resp, err := http.Get(fmt.Sprintf(addrFormat, "userinfo"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			wg.Done()
+		}(wg)
+	}
+
+	wg.Wait()
 }

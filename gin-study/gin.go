@@ -62,7 +62,7 @@ func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !c.Writer.Written() {
 		http.NotFound(w, r)
 	}
-	// 返回池子
+	// 放回池子
 	c.engine.reuseCtx(c)
 }
 
@@ -120,7 +120,7 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 		ctx.Req = req
 		ctx.Params = params
 		ctx.handlers = handlers
-
+		ctx.index = -1
 		return ctx
 	default:
 		return &Context{
@@ -260,7 +260,7 @@ func New() *Engine {
 	}
 	engine.router = httprouter.New()
 	engine.router.NotFound = &handlers404{engine: engine}
-	engine.ctxPool = make(chan *Context, CtxPoolSize/2)
+	engine.ctxPool = make(chan *Context, CtxPoolSize)
 
 	// 初始化ctx池
 	for i := 0; i < CtxPoolSize/2; i++ {
@@ -283,6 +283,7 @@ func Default() *Engine {
 
 // gin的核心模块.
 type Context struct {
+	ID     int
 	Req    *http.Request
 	Writer *responseWriter
 	Keys   map[string]interface{}
