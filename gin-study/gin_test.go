@@ -57,7 +57,7 @@ func TestRouterGroup_Use(t *testing.T) {
 	assertIs.Equal(string(all), respText)
 }
 
-func TestContext_ParseBody(t *testing.T) {
+func TestContext_Bind(t *testing.T) {
 	assertIs := is.New(t)
 
 	type P struct {
@@ -72,10 +72,12 @@ func TestContext_ParseBody(t *testing.T) {
 
 	engine.POST("/userinfo", func(c *gin.Context) {
 		var params0 P
-		err := c.ParseBody(&params0)
-		if err != nil {
-			t.Errorf("ParseBody got error:%v", err)
+		r := c.Bind(&params0)
+		if !r {
+			t.Error("Bind params got error")
+			return
 		}
+
 		assertIs.Equal(params0.Name, params1.Name)
 		assertIs.Equal(params0.Age, params1.Age)
 		c.Abort(200)

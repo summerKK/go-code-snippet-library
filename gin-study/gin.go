@@ -13,6 +13,7 @@ import (
 	"path"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/summerKK/go-code-snippet-library/gin-study/binding"
 )
 
 const (
@@ -194,6 +195,10 @@ func (r *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
 
 func (r *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
 	r.Handle("PUT", path, handlers)
+}
+
+func (r *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
+	r.Handle("OPTIONS", path, handlers)
 }
 
 /************************************/
@@ -415,7 +420,31 @@ func (c *Context) Get(key string) interface{} {
 }
 
 func (c *Context) EnsureBody(item interface{}) bool {
-	if err := c.ParseBody(item); err != nil {
+	return c.Bind(item)
+}
+
+// DEPRECATED use bindings directly
+// 解析请求参数
+func (c *Context) ParseBody(item interface{}) error {
+	return binding.JSON.Bind(c.Req.Body, item)
+}
+
+func (c *Context) Bind(v interface{}) bool {
+	var err error
+	switch c.Req.Header.Get("Content-Type") {
+	case "application/json":
+		err = binding.JSON.Bind(c.Req.Body, v)
+	case "application/xml":
+		err = binding.XML.Bind(c.Req.Body, v)
+	default:
+		err = errors.New("unknown content-type: " + c.Req.Header.Get("Content-Type"))
+	}
+
+	if err == nil {
+		err = Validate(c, v)
+	}
+
+	if err != nil {
 		c.Fail(400, err)
 		return false
 	}
@@ -423,14 +452,12 @@ func (c *Context) EnsureBody(item interface{}) bool {
 	return true
 }
 
-// 解析请求参数
-func (c *Context) ParseBody(item interface{}) error {
-	decoder := json.NewDecoder(c.Req.Body)
-	if err := decoder.Decode(&item); err == nil {
-		return Validate(c, item)
-	} else {
-		return err
+func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
+	if err := b.Bind(c.Req.Body, v); err == nil {
+		return true
 	}
+
+	return false
 }
 
 func (c *Context) JSON(code int, v interface{}) {
