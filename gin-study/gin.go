@@ -325,7 +325,7 @@ func (c *Context) ParseBody(item interface{}) error {
 
 func (c *Context) JSON(code int, v interface{}) {
 	c.Writer.Header().Set("Content-Type", "application/json")
-	if code > 0 {
+	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
 	encoder := json.NewEncoder(c.Writer)
@@ -338,7 +338,7 @@ func (c *Context) JSON(code int, v interface{}) {
 // https://golang.org/pkg/text/template/#Template
 func (c *Context) HTML(code int, name string, data interface{}) {
 	c.Writer.Header().Set("Content-Type", "text/html")
-	if code > 0 {
+	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
 	if err := c.engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
@@ -351,12 +351,18 @@ func (c *Context) HTML(code int, name string, data interface{}) {
 }
 
 func (c *Context) String(code int, msg string) {
+	if code >= 0 {
+		c.Writer.WriteHeader(code)
+	}
+
 	c.Writer.Header().Set("Content-Type", "text/plain")
-	c.Writer.WriteHeader(code)
 	_, _ = c.Writer.Write([]byte(msg))
 }
 
 func (c *Context) Data(code int, data []byte) {
-	c.Writer.WriteHeader(code)
+	if code >= 0 {
+		c.Writer.WriteHeader(code)
+	}
+
 	_, _ = c.Writer.Write(data)
 }

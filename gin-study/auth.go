@@ -7,6 +7,10 @@ import (
 	"sort"
 )
 
+const (
+	AUTH_USER_KEY = "user"
+)
+
 type BasicAuthPair struct {
 	Code string
 	User string
@@ -84,7 +88,7 @@ func BasicAuth(accounts Accounts) HandlerFunc {
 			c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"Authorization Required\"")
 			c.Fail(401, errors.New("Unauthorized"))
 		} else {
-			c.Set("user", user)
+			c.Set(AUTH_USER_KEY, user)
 		}
 
 		c.Next()
