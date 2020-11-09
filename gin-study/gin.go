@@ -324,8 +324,10 @@ func (c *Context) ParseBody(item interface{}) error {
 }
 
 func (c *Context) JSON(code int, v interface{}) {
-	c.Writer.WriteHeader(code)
 	c.Writer.Header().Set("Content-Type", "application/json")
+	if code > 0 {
+		c.Writer.WriteHeader(code)
+	}
 	encoder := json.NewEncoder(c.Writer)
 	if err := encoder.Encode(v); err != nil {
 		c.Error(err, v)
@@ -335,8 +337,10 @@ func (c *Context) JSON(code int, v interface{}) {
 
 // https://golang.org/pkg/text/template/#Template
 func (c *Context) HTML(code int, name string, data interface{}) {
-	c.Writer.WriteHeader(code)
 	c.Writer.Header().Set("Content-Type", "text/html")
+	if code > 0 {
+		c.Writer.WriteHeader(code)
+	}
 	if err := c.engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
 		c.Error(err, map[string]interface{}{
 			"name": name,

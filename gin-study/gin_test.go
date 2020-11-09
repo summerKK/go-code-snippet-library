@@ -19,6 +19,7 @@ var ctx context.Context
 var cancelFunc func()
 var port string = "8080"
 var addrFormat = "http://127.0.0.1:" + port + "/%s"
+var respText = "hello,world"
 
 func TestMain(m *testing.M) {
 	engine = gin.Default()
@@ -39,7 +40,7 @@ func TestRouterGroup_Use(t *testing.T) {
 	assertIs := is.New(t)
 	engine.Use(func(c *gin.Context) {
 		c.Next()
-		_, _ = c.Writer.Write([]byte("hello,world"))
+		_, _ = c.Writer.Write([]byte(respText))
 	})
 
 	engine.GET("/middleware", func(c *gin.Context) {
@@ -52,7 +53,7 @@ func TestRouterGroup_Use(t *testing.T) {
 	}
 	defer resp.Body.Close()
 	all, _ := ioutil.ReadAll(resp.Body)
-	assertIs.Equal(string(all), "hello,world")
+	assertIs.Equal(string(all), respText)
 }
 
 func TestContext_ParseBody(t *testing.T) {
@@ -95,7 +96,7 @@ func TestRouterGroup_Group(t *testing.T) {
 	assertIs := is.New(t)
 	r := engine.Group("/api", func(c *gin.Context) {
 		c.Next()
-		_, _ = c.Writer.Write([]byte("hello,world"))
+		_, _ = c.Writer.Write([]byte(respText))
 	})
 
 	r.GET("/test", func(c *gin.Context) {
@@ -109,7 +110,7 @@ func TestRouterGroup_Group(t *testing.T) {
 	defer resp.Body.Close()
 
 	all, _ := ioutil.ReadAll(resp.Body)
-	assertIs.Equal(string(all), "hello,world")
+	assertIs.Equal(string(all), respText)
 }
 
 func TestRouterGroupParams(t *testing.T) {
@@ -124,4 +125,37 @@ func TestRouterGroupParams(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
+}
+
+func TestBasicAuth(t *testing.T) {
+	assertIs := is.New(t)
+	u := "summer"
+	p := "123"
+	basicAccounts := []gin.Account{
+		{
+			User:     u,
+			Password: p,
+		},
+	}
+	engine.Use(gin.BasicAuth(basicAccounts))
+
+	engine.GET("/basic-auth", func(c *gin.Context) {
+		c.String(http.StatusOK, respText)
+	})
+
+	req, err := http.NewRequest("GET", fmt.Sprintf(addrFormat, "basic-auth"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.SetBasicAuth(u, p)
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+
+	all, _ := ioutil.ReadAll(response.Body)
+
+	assertIs.Equal(string(all), respText)
 }
