@@ -22,6 +22,7 @@ var addrFormat = "http://127.0.0.1:" + port + "/%s"
 
 func TestMain(m *testing.M) {
 	engine = gin.Default()
+	engine.Use(gin.ErrorLogger())
 	ctx, cancelFunc = context.WithCancel(context.Background())
 	defer cancelFunc()
 

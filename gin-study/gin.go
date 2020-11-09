@@ -135,7 +135,9 @@ func (r *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGr
 
 func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	pathName := path.Join(r.prefix, p)
+	// 获取所有的中间件
 	allHandlers := r.allHandlers(handlers...)
+	// 处理请求
 	r.engine.router.Handle(method, pathName, func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		// 创建context
 		r.createContext(writer, req, params, allHandlers).Next()
@@ -238,6 +240,7 @@ type Context struct {
 	Writer *responseWriter
 	Keys   map[string]interface{}
 	Params httprouter.Params
+	// 收集错误.在logger中间件进行记录
 	Errors []ErrorMsg
 	// 中间件
 	handlers []HandlerFunc
@@ -299,6 +302,15 @@ func (c *Context) Get(key string) interface{} {
 	}
 
 	return v
+}
+
+func (c *Context) EnsureBody(item interface{}) bool {
+	if err := c.ParseBody(item); err != nil {
+		c.Fail(400, err)
+		return false
+	}
+
+	return true
 }
 
 // 解析请求参数
