@@ -130,6 +130,7 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 			engine:   r.engine,
 			Params:   params,
 			handlers: handlers,
+			keep:     false,
 		}
 	}
 }
@@ -261,9 +262,11 @@ func (e *Engine) LoadHTMLTemplates(pattern string) {
 
 // 放回池子
 func (e *Engine) reuseCtx(c *Context) {
-	select {
-	case e.ctxPool <- c:
-	default:
+	if c.keep {
+		select {
+		case e.ctxPool <- c:
+		default:
+		}
 	}
 }
 
@@ -293,7 +296,7 @@ func NewWithConfig(c Config) *Engine {
 
 	// 初始化ctx池
 	for i := 0; i < c.CtxPreloadSize; i++ {
-		engine.ctxPool <- &Context{}
+		engine.ctxPool <- &Context{keep: true}
 	}
 
 	return engine
@@ -323,6 +326,8 @@ type Context struct {
 	handlers []HandlerFunc
 	index    int8
 	engine   *Engine
+	// 标识是否需要放回池子中
+	keep bool
 }
 
 // 执行middleware
@@ -335,6 +340,25 @@ func (c *Context) Next() {
 	// 避免数组越界.比如Abort的时候把index设置为AbortIndex
 	if c.index < int8(len(c.handlers)) {
 		c.handlers[c.index](c)
+	}
+}
+
+//  标识ctx可以放入池子中
+func (c *Context) Keep() {
+	// 修改keep状态.使其可以放入池子中继续使用
+	if !c.keep {
+		c.keep = true
+	} else {
+		log.Println("gin: trying to Keep same context several times")
+	}
+}
+
+// 释放ctx
+func (c *Context) Release() {
+	if c.keep {
+		c.keep = false
+	} else {
+		log.Println("gin: trying to release same context several times")
 	}
 }
 
