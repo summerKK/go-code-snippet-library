@@ -1,8 +1,10 @@
 package gin
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"math"
@@ -21,8 +23,20 @@ const (
 /************************************/
 
 type ErrorMsg struct {
-	Message string      `json:"msg"`
+	Message string      `json:"error"`
 	Meta    interface{} `json:"meta"`
+}
+
+type ErrorMsgs []ErrorMsg
+
+func (e ErrorMsgs) String() string {
+	var buf bytes.Buffer
+	for i, msg := range e {
+		text := fmt.Sprintf("Error #%02d: %s\nMeta:%v\n\n", i+1, msg.Message, msg.Meta)
+		buf.WriteString(text)
+	}
+
+	return buf.String()
 }
 
 /************************************/
@@ -241,7 +255,7 @@ type Context struct {
 	Keys   map[string]interface{}
 	Params httprouter.Params
 	// 收集错误.在logger中间件进行记录
-	Errors []ErrorMsg
+	Errors ErrorMsgs
 	// 中间件
 	handlers []HandlerFunc
 	index    int8

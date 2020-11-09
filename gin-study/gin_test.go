@@ -159,3 +159,14 @@ func TestBasicAuth(t *testing.T) {
 
 	assertIs.Equal(string(all), respText)
 }
+
+func TestErrorMsgs_String(t *testing.T) {
+	var errorMsgs gin.ErrorMsgs = []gin.ErrorMsg{
+		{
+			Message: "hello,world",
+			Meta:    map[string]int{"a": 1},
+		},
+	}
+
+	fmt.Println(errorMsgs.String())
+}
