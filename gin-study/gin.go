@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	AbortIndex  = math.MaxInt8 / 2
-	CtxPoolSize = 1024
+	AbortIndex         = math.MaxInt8 / 2
+	DefaultCtxPoolSize = 1024
 )
 
 /************************************/
@@ -199,6 +199,23 @@ func (r *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
 /********** Engine *********/
 /************************************/
 
+type Config struct {
+	CtxPoolSize    int
+	CtxPreloadSize int
+}
+
+func (c Config) Check() error {
+	if c.CtxPoolSize < 2 {
+		return errors.New("CtxPoolSize must be at least 2")
+	}
+
+	if c.CtxPreloadSize > c.CtxPoolSize {
+		return errors.New("CtxPreloadSize must be less or equal to CtxPoolSize")
+	}
+
+	return nil
+}
+
 // 整个framework
 type Engine struct {
 	*RouterGroup
@@ -251,6 +268,18 @@ func (e *Engine) reuseCtx(c *Context) {
 }
 
 func New() *Engine {
+	return NewWithConfig(Config{
+		CtxPoolSize:    DefaultCtxPoolSize,
+		CtxPreloadSize: DefaultCtxPoolSize / 2,
+	})
+}
+
+func NewWithConfig(c Config) *Engine {
+	// 检查参数
+	if err := c.Check(); err != nil {
+		panic(err)
+	}
+
 	engine := &Engine{}
 	engine.RouterGroup = &RouterGroup{
 		nil,
@@ -260,10 +289,10 @@ func New() *Engine {
 	}
 	engine.router = httprouter.New()
 	engine.router.NotFound = &handlers404{engine: engine}
-	engine.ctxPool = make(chan *Context, CtxPoolSize)
+	engine.ctxPool = make(chan *Context, c.CtxPoolSize)
 
 	// 初始化ctx池
-	for i := 0; i < CtxPoolSize/2; i++ {
+	for i := 0; i < c.CtxPreloadSize; i++ {
 		engine.ctxPool <- &Context{}
 	}
 

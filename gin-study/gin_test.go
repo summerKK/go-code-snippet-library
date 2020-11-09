@@ -178,7 +178,7 @@ func TestContext_Pool(t *testing.T) {
 	})
 
 	wg := &sync.WaitGroup{}
-	for i := 0; i < gin.CtxPoolSize/8; i++ {
+	for i := 0; i < gin.DefaultCtxPoolSize/8; i++ {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
 			resp, err := http.Get(fmt.Sprintf(addrFormat, "userinfo"))
