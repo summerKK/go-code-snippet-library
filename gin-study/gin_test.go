@@ -163,8 +163,8 @@ func TestBasicAuth(t *testing.T) {
 func TestErrorMsgs_String(t *testing.T) {
 	var errorMsgs gin.ErrorMsgs = []gin.ErrorMsg{
 		{
-			Message: "hello,world",
-			Meta:    map[string]int{"a": 1},
+			Err:  "hello,world",
+			Meta: map[string]int{"a": 1},
 		},
 	}
 

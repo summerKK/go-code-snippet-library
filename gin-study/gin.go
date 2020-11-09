@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -15,7 +16,8 @@ import (
 )
 
 const (
-	AbortIndex = math.MaxInt8 / 2
+	AbortIndex  = math.MaxInt8 / 2
+	CtxPoolSize = 1024
 )
 
 /************************************/
@@ -23,8 +25,8 @@ const (
 /************************************/
 
 type ErrorMsg struct {
-	Message string      `json:"error"`
-	Meta    interface{} `json:"meta"`
+	Err  string      `json:"error"`
+	Meta interface{} `json:"meta"`
 }
 
 type ErrorMsgs []ErrorMsg
@@ -32,7 +34,7 @@ type ErrorMsgs []ErrorMsg
 func (e ErrorMsgs) String() string {
 	var buf bytes.Buffer
 	for i, msg := range e {
-		text := fmt.Sprintf("Error #%02d: %s\nMeta:%v\n\n", i+1, msg.Message, msg.Meta)
+		text := fmt.Sprintf("Error #%02d: %s\nMeta:%v\n\n", i+1, msg.Err, msg.Meta)
 		buf.WriteString(text)
 	}
 
@@ -60,6 +62,8 @@ func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !c.Writer.Written() {
 		http.NotFound(w, r)
 	}
+	// 返回池子
+	c.engine.reuseCtx(c)
 }
 
 /************************************/
@@ -110,13 +114,23 @@ type RouterGroup struct {
 
 // 创建context,贯穿整个请求
 func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
-	return &Context{
-		Req:      req,
-		Writer:   &responseWriter{w, 0},
-		index:    -1,
-		engine:   r.engine,
-		Params:   params,
-		handlers: handlers,
+	select {
+	case ctx := <-r.engine.ctxPool:
+		ctx.Writer = &responseWriter{w, 0}
+		ctx.Req = req
+		ctx.Params = params
+		ctx.handlers = handlers
+
+		return ctx
+	default:
+		return &Context{
+			Req:      req,
+			Writer:   &responseWriter{w, 0},
+			index:    -1,
+			engine:   r.engine,
+			Params:   params,
+			handlers: handlers,
+		}
 	}
 }
 
@@ -154,7 +168,10 @@ func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	// 处理请求
 	r.engine.router.Handle(method, pathName, func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		// 创建context
-		r.createContext(writer, req, params, allHandlers).Next()
+		ctx := r.createContext(writer, req, params, allHandlers)
+		ctx.Next()
+		// 回收ctx
+		r.engine.reuseCtx(ctx)
 	})
 }
 
@@ -189,6 +206,8 @@ type Engine struct {
 	handlers404   []HandlerFunc
 	router        *httprouter.Router
 	HTMLTemplates *template.Template
+	// context pool
+	ctxPool chan *Context
 }
 
 func (e *Engine) NotFound404(handler ...HandlerFunc) {
@@ -223,6 +242,14 @@ func (e *Engine) LoadHTMLTemplates(pattern string) {
 	e.HTMLTemplates = template.Must(template.ParseGlob(pattern))
 }
 
+// 放回池子
+func (e *Engine) reuseCtx(c *Context) {
+	select {
+	case e.ctxPool <- c:
+	default:
+	}
+}
+
 func New() *Engine {
 	engine := &Engine{}
 	engine.RouterGroup = &RouterGroup{
@@ -233,6 +260,12 @@ func New() *Engine {
 	}
 	engine.router = httprouter.New()
 	engine.router.NotFound = &handlers404{engine: engine}
+	engine.ctxPool = make(chan *Context, CtxPoolSize/2)
+
+	// 初始化ctx池
+	for i := 0; i < CtxPoolSize/2; i++ {
+		engine.ctxPool <- &Context{}
+	}
 
 	return engine
 }
@@ -290,9 +323,18 @@ func (c *Context) Fail(code int, err error) {
 
 func (c *Context) Error(err error, meta interface{}) {
 	c.Errors = append(c.Errors, ErrorMsg{
-		Message: err.Error(),
-		Meta:    meta,
+		Err:  err.Error(),
+		Meta: meta,
 	})
+}
+
+func (c *Context) LastError() error {
+	l := len(c.Errors)
+	if l > 0 {
+		return errors.New(c.Errors[l-1].Err)
+	}
+
+	return nil
 }
 
 func (c *Context) Set(key string, v interface{}) {
