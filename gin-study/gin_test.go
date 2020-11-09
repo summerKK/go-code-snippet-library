@@ -102,7 +102,7 @@ func TestRouterGroup_Group(t *testing.T) {
 
 	})
 
-	resp, err := http.Get(fmt.Sprintf(addrFormat, "api") + "/test")
+	resp, err := http.Get(fmt.Sprintf(addrFormat, "api/test"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,4 +110,18 @@ func TestRouterGroup_Group(t *testing.T) {
 
 	all, _ := ioutil.ReadAll(resp.Body)
 	assertIs.Equal(string(all), "hello,world")
+}
+
+func TestRouterGroupParams(t *testing.T) {
+	assertIs := is.New(t)
+	username := "summer"
+	engine.GET("/user/:username", func(c *gin.Context) {
+		assertIs.Equal(c.Params.ByName("username"), username)
+	})
+
+	resp, err := http.Get(fmt.Sprintf(addrFormat, "/user/"+username))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
 }
