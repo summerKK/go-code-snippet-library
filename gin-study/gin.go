@@ -405,19 +405,14 @@ func (c *Context) Set(key string, v interface{}) {
 }
 
 func (c *Context) Get(key string) (interface{}, error) {
-	var ok bool
-	var err error
-	if c.Keys == nil {
-		ok = false
+	if c.Keys != nil {
+		item, ok := c.Keys[key]
+		if ok {
+			return item, nil
+		}
 	}
 
-	v, ok := c.Keys[key]
-
-	if !ok {
-		err = errors.New(fmt.Sprintf("Key %s does'nt exist", key))
-	}
-
-	return v, err
+	return nil, errors.New(fmt.Sprintf("Key %s does'nt exist", key))
 }
 
 func (c *Context) EnsureBody(item interface{}) bool {
