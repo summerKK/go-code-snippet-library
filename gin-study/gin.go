@@ -404,8 +404,9 @@ func (c *Context) Set(key string, v interface{}) {
 	c.Keys[key] = v
 }
 
-func (c *Context) Get(key string) interface{} {
+func (c *Context) Get(key string) (interface{}, error) {
 	var ok bool
+	var err error
 	if c.Keys == nil {
 		ok = false
 	}
@@ -413,10 +414,10 @@ func (c *Context) Get(key string) interface{} {
 	v, ok := c.Keys[key]
 
 	if !ok {
-		log.Panicf("Key %s does'nt exist", key)
+		err = errors.New(fmt.Sprintf("Key %s does'nt exist", key))
 	}
 
-	return v
+	return v, err
 }
 
 func (c *Context) EnsureBody(item interface{}) bool {
