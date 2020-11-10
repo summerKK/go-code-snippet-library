@@ -68,38 +68,6 @@ func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 /************************************/
-/********** responseWriter *********/
-/************************************/
-type ResponseWriter interface {
-	http.ResponseWriter
-	Status() int
-	Written() bool
-}
-
-type responseWriter struct {
-	http.ResponseWriter
-	status int
-}
-
-func (w *responseWriter) WriteHeader(s int) {
-	w.ResponseWriter.WriteHeader(s)
-	w.status = s
-}
-
-func (w *responseWriter) Write(b []byte) (int, error) {
-	return w.ResponseWriter.Write(b)
-}
-
-func (w *responseWriter) Status() int {
-	return w.status
-}
-
-// 判断是否已经写入数据
-func (w *responseWriter) Written() bool {
-	return w.Status() != 0
-}
-
-/************************************/
 /********** RouterGroup *********/
 /************************************/
 
@@ -117,7 +85,8 @@ type RouterGroup struct {
 func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
 	select {
 	case ctx := <-r.engine.ctxPool:
-		ctx.Writer = &responseWriter{w, 0}
+		// 重置
+		ctx.Writer.Reset(w)
 		ctx.Req = req
 		ctx.Params = params
 		ctx.handlers = handlers
@@ -125,8 +94,10 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 		return ctx
 	default:
 		return &Context{
-			Req:      req,
-			Writer:   &responseWriter{w, 0},
+			Req: req,
+			Writer: &responseWriter{
+				ResponseWriter: w,
+			},
 			index:    -1,
 			engine:   r.engine,
 			Params:   params,
@@ -301,7 +272,11 @@ func NewWithConfig(c Config) *Engine {
 
 	// 初始化ctx池
 	for i := 0; i < c.CtxPreloadSize; i++ {
-		engine.ctxPool <- &Context{keep: true}
+		engine.ctxPool <- &Context{
+			keep:   true,
+			engine: engine,
+			Writer: &responseWriter{},
+		}
 	}
 
 	return engine
@@ -322,7 +297,7 @@ func Default() *Engine {
 type Context struct {
 	ID     int
 	Req    *http.Request
-	Writer *responseWriter
+	Writer ResponseWriter
 	Keys   map[string]interface{}
 	Params httprouter.Params
 	// 收集错误.在logger中间件进行记录
