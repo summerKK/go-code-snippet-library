@@ -19,6 +19,11 @@ import (
 const (
 	AbortIndex         = math.MaxInt8 / 2
 	DefaultCtxPoolSize = 1024
+	MIMEJSON           = "application/json"
+	MIMEHTML           = "text/html"
+	MIMEXML            = "application/xml"
+	MIMEXML2           = "text/xml"
+	MIMEPlain          = "text/plain"
 )
 
 /************************************/
@@ -401,29 +406,25 @@ func (c *Context) MustGet(key string) interface{} {
 	return v
 }
 
-func (c *Context) EnsureBody(item interface{}) bool {
-	return c.Bind(item)
-}
+func (c *Context) filterFlags(content string) string {
+	for i, c := range content {
+		if c == ' ' || c == ';' {
+			return content[:i]
+		}
+	}
 
-// DEPRECATED use bindings directly
-// 解析请求参数
-func (c *Context) ParseBody(item interface{}) error {
-	return binding.JSON.Bind(c.Req.Body, item)
+	return content
 }
 
 func (c *Context) Bind(v interface{}) bool {
 	var err error
-	switch c.Req.Header.Get("Content-Type") {
-	case "application/json":
-		err = binding.JSON.Bind(c.Req.Body, v)
-	case "application/xml":
-		err = binding.XML.Bind(c.Req.Body, v)
+	switch c.filterFlags(c.Req.Header.Get("Content-Type")) {
+	case MIMEJSON:
+		err = binding.JSON.Bind(c.Req, v)
+	case MIMEXML, MIMEXML2:
+		err = binding.XML.Bind(c.Req, v)
 	default:
 		err = errors.New("unknown content-type: " + c.Req.Header.Get("Content-Type"))
-	}
-
-	if err == nil {
-		err = Validate(c, v)
 	}
 
 	if err != nil {
@@ -435,7 +436,7 @@ func (c *Context) Bind(v interface{}) bool {
 }
 
 func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
-	if err := b.Bind(c.Req.Body, v); err == nil {
+	if err := b.Bind(c.Req, v); err == nil {
 		return true
 	}
 
