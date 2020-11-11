@@ -165,6 +165,10 @@ func TestErrorMsgs_String(t *testing.T) {
 			Err:  "hello,world",
 			Meta: map[string]int{"a": 1},
 		},
+		{
+			Err:  "hello,world",
+			Meta: []int{1, 2},
+		},
 	}
 
 	fmt.Println(errorMsgs.String())

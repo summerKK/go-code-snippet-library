@@ -2,7 +2,7 @@ package gin
 
 import "net/http"
 
-type ResponseWriter interface {
+type ResponseWriterInterface interface {
 	http.ResponseWriter
 	Status() int
 	Written() bool
@@ -11,35 +11,43 @@ type ResponseWriter interface {
 	Reset(w http.ResponseWriter)
 }
 
-type responseWriter struct {
+type ResponseWriter struct {
 	http.ResponseWriter
 	status  int
 	written bool
 }
 
-func (r *responseWriter) Status() int {
+func NewResponseWriter(w http.ResponseWriter, status int, written bool) *ResponseWriter {
+	return &ResponseWriter{
+		w,
+		status,
+		written,
+	}
+}
+
+func (r *ResponseWriter) Status() int {
 	return r.status
 }
 
-func (r *responseWriter) Written() bool {
+func (r *ResponseWriter) Written() bool {
 	return r.written
 }
 
-func (r *responseWriter) SetStatus(i int) {
+func (r *ResponseWriter) SetStatus(i int) {
 	r.status = i
 }
 
-func (r *responseWriter) Reset(w http.ResponseWriter) {
+func (r *ResponseWriter) Reset(w http.ResponseWriter) {
 	r.status = 0
 	r.written = false
 	r.ResponseWriter = w
 }
 
-func (r *responseWriter) WriteHeader(s int) {
+func (r *ResponseWriter) WriteHeader(s int) {
 	r.ResponseWriter.WriteHeader(s)
 	r.status = s
 }
 
-func (r *responseWriter) Write(b []byte) (int, error) {
+func (r *ResponseWriter) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }

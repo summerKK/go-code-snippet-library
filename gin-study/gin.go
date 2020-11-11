@@ -35,10 +35,10 @@ type ErrorMsgs []ErrorMsg
 func (e ErrorMsgs) String() string {
 	var buf bytes.Buffer
 	for i, msg := range e {
-		text := fmt.Sprintf("Error #%02d: %s\nMeta:%v\n\n", i+1, msg.Err, msg.Meta)
+		text := fmt.Sprintf("Error #%02d: %s\n     Meta:%v\n\n", i+1, msg.Err, msg.Meta)
 		buf.WriteString(text)
 	}
-
+	buf.WriteByte('\n')
 	return buf.String()
 }
 
@@ -95,7 +95,7 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 	default:
 		return &Context{
 			Req: req,
-			Writer: &responseWriter{
+			Writer: &ResponseWriter{
 				ResponseWriter: w,
 			},
 			index:    -1,
@@ -275,7 +275,7 @@ func NewWithConfig(c Config) *Engine {
 		engine.ctxPool <- &Context{
 			keep:   true,
 			engine: engine,
-			Writer: &responseWriter{},
+			Writer: &ResponseWriter{},
 		}
 	}
 
@@ -284,7 +284,7 @@ func NewWithConfig(c Config) *Engine {
 
 func Default() *Engine {
 	engine := New()
-	engine.Use(Recovery(), Logger())
+	engine.Use(Recovery(), Logger(nil))
 
 	return engine
 }
@@ -297,7 +297,7 @@ func Default() *Engine {
 type Context struct {
 	ID     int
 	Req    *http.Request
-	Writer ResponseWriter
+	Writer ResponseWriterInterface
 	Keys   map[string]interface{}
 	Params httprouter.Params
 	// 收集错误.在logger中间件进行记录
@@ -484,4 +484,8 @@ func (c *Context) Data(code int, data []byte) {
 	}
 
 	_, _ = c.Writer.Write(data)
+}
+
+func (c *Context) SetIndex(index int8) {
+	c.index = index
 }

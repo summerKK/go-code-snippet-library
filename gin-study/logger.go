@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"io"
 	"log"
 	"os"
 	"time"
@@ -26,8 +27,12 @@ var (
 	reset  = string([]byte{27, 91, 48, 109})
 )
 
-func Logger() HandlerFunc {
-	logger := log.New(os.Stdout, "", 0)
+func Logger(writer io.Writer) HandlerFunc {
+	if writer == nil {
+		writer = os.Stdout
+	}
+	logger := log.New(writer, "", 0)
+
 	return func(c *Context) {
 		t := time.Now()
 
