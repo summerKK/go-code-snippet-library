@@ -390,6 +390,15 @@ func (c *Context) Get(key string) (interface{}, error) {
 	return nil, errors.New(fmt.Sprintf("Key %s does'nt exist", key))
 }
 
+func (c *Context) MustGet(key string) interface{} {
+	v, err := c.Get(key)
+	if v == nil || err != nil {
+		log.Panicf("MustGet key %s does'nt exist", key)
+	}
+
+	return v
+}
+
 func (c *Context) EnsureBody(item interface{}) bool {
 	return c.Bind(item)
 }
