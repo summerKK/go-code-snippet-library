@@ -16,12 +16,7 @@ type BasicAuthPair struct {
 	User string
 }
 
-type Account struct {
-	User     string
-	Password string
-}
-
-type Accounts []Account
+type Accounts map[string]string
 
 type Pairs []BasicAuthPair
 
@@ -43,14 +38,14 @@ func ProcessCredentials(accounts Accounts) (Pairs, error) {
 		return nil, errors.New("Empty list of authorized credentials.")
 	}
 
-	pairs := make(Pairs, len(accounts))
-	for i, account := range accounts {
-		if len(account.User) == 0 || len(account.Password) == 0 {
+	pairs := make(Pairs, 0, len(accounts))
+	for account, password := range accounts {
+		if len(account) == 0 || len(password) == 0 {
 			return nil, errors.New("User or Password empty.")
 		}
-		base := account.User + ":" + account.Password
+		base := account + ":" + password
 		code := "Basic " + base64.StdEncoding.EncodeToString([]byte(base))
-		pairs[i] = BasicAuthPair{Code: code, User: account.User}
+		pairs = append(pairs, BasicAuthPair{Code: code, User: account})
 	}
 	// 排序后通过二分查找进行查找.时间复杂度为O(logN)
 	sort.Sort(pairs)

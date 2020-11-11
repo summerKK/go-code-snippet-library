@@ -134,12 +134,8 @@ func TestBasicAuth(t *testing.T) {
 	assertIs := is.New(t)
 	u := "summer"
 	p := "123"
-	basicAccounts := []gin.Account{
-		{
-			User:     u,
-			Password: p,
-		},
-	}
+	var basicAccounts gin.Accounts = map[string]string{}
+	basicAccounts[u] = p
 	engine.Use(gin.BasicAuth(basicAccounts))
 
 	engine.GET("/basic-auth", func(c *gin.Context) {
