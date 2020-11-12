@@ -95,6 +95,34 @@ func TestContext_Bind(t *testing.T) {
 	resp.Body.Close()
 }
 
+func TestContext_Bind2(t *testing.T) {
+	assertIs := is.New(t)
+
+	type P struct {
+		Name []string `form:"name" binding:"required"`
+		Age  []int    `form:"age" binding:"required"`
+	}
+
+	engine.GET("/userinfo", func(c *gin.Context) {
+		var params0 P
+		if c.Bind(&params0) {
+			assertIs.Equal([]string{"summer", "summer"}, params0.Name)
+			assertIs.Equal([]int{28, 28}, params0.Age)
+			c.Abort(http.StatusOK)
+			return
+		}
+
+		t.Error("Bind params got error")
+	})
+
+	resp, err := http.Get(fmt.Sprintf(addrFormat, "userinfo?name=summer&age=28&name=summer&age=28"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp.Body.Close()
+}
+
 func TestRouterGroup_Group(t *testing.T) {
 	assertIs := is.New(t)
 	r := engine.Group("/api", func(c *gin.Context) {

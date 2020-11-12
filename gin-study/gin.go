@@ -419,10 +419,12 @@ func (c *Context) filterFlags(content string) string {
 func (c *Context) Bind(v interface{}) bool {
 	var b binding.Binding
 	contentType := c.filterFlags(c.Req.Header.Get("Content-Type"))
-	switch contentType {
-	case MIMEJSON:
+	switch {
+	case c.Req.Method == "GET":
+		b = binding.FORM
+	case contentType == MIMEJSON:
 		b = binding.JSON
-	case MIMEXML, MIMEXML2:
+	case contentType == MIMEXML || contentType == MIMEXML2:
 		b = binding.XML
 	default:
 		c.Fail(400, errors.New("unknown content-type: "+contentType))
