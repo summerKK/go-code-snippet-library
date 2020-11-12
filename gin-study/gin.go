@@ -417,22 +417,19 @@ func (c *Context) filterFlags(content string) string {
 }
 
 func (c *Context) Bind(v interface{}) bool {
-	var err error
-	switch c.filterFlags(c.Req.Header.Get("Content-Type")) {
+	var b binding.Binding
+	contentType := c.filterFlags(c.Req.Header.Get("Content-Type"))
+	switch contentType {
 	case MIMEJSON:
-		err = binding.JSON.Bind(c.Req, v)
+		b = binding.JSON
 	case MIMEXML, MIMEXML2:
-		err = binding.XML.Bind(c.Req, v)
+		b = binding.XML
 	default:
-		err = errors.New("unknown content-type: " + c.Req.Header.Get("Content-Type"))
-	}
-
-	if err != nil {
-		c.Fail(400, err)
+		c.Fail(400, errors.New("unknown content-type: "+contentType))
 		return false
 	}
 
-	return true
+	return c.BindWith(v, b)
 }
 
 func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
