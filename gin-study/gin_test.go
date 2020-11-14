@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"os"
+	"path"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -267,4 +271,51 @@ func TestH_MarshalXML(t *testing.T) {
 	}
 
 	fmt.Println(string(b))
+}
+
+func TestHandleStaticFile(t *testing.T) {
+	assertIs := is.New(t)
+	testRoot, _ := os.Getwd()
+	f, err := ioutil.TempFile(testRoot, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _ = f.WriteString("hello,world")
+	f.Close()
+
+	defer func() {
+		_ = os.Remove(f.Name())
+	}()
+
+	filepath := path.Join("/", path.Base(f.Name()))
+	req, err := http.NewRequest("GET", filepath, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	engine.ServeFiles("/*filepath", http.Dir("./"))
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(http.StatusOK, w.Code)
+	assertIs.Equal("hello,world", w.Body.String())
+	assertIs.Equal("text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+}
+
+func TestHandleStaticDir(t *testing.T) {
+	assertIs := is.New(t)
+	engine.ServeFiles("/*filepath", http.Dir("./"))
+
+	req := httptest.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(http.StatusOK, w.Code)
+
+	bodyAsString := w.Body.String()
+	assertIs.True(strings.Contains(bodyAsString, "gin.go"))
+	assertIs.Equal("text/html; charset=utf-8", w.Header().Get("Content-Type"))
 }

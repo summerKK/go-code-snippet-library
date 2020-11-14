@@ -241,6 +241,10 @@ func (e *Engine) NotFound404(handler ...HandlerFunc) {
 	e.handlers404 = handler
 }
 
+func (e *Engine) ServeFiles(path string, root http.FileSystem) {
+	e.router.ServeFiles(path, root)
+}
+
 // ServeHTTP makes the router implement the http.Handler interface.
 func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	e.router.ServeHTTP(w, req)
