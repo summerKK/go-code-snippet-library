@@ -55,12 +55,22 @@ func (e ErrorMsgs) String() string {
 type H map[string]interface{}
 
 func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	_ = e.EncodeToken(start)
-	for key, v := range h {
-		elem := xml.StartElement{Name: xml.Name{Local: key}}
-		_ = e.EncodeElement(v, elem)
+	if err := e.EncodeToken(start); err != nil {
+		return err
 	}
-	_ = e.EncodeToken(xml.EndElement{Name: start.Name})
+
+	for key, v := range h {
+		elem := xml.StartElement{
+			Name: xml.Name{Local: key},
+			Attr: []xml.Attr{},
+		}
+		if err := e.EncodeElement(v, elem); err != nil {
+			return err
+		}
+	}
+	if err := e.EncodeToken(xml.EndElement{Name: start.Name}); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -509,7 +519,11 @@ func (c *Context) String(code int, msg string) {
 	_, _ = c.Writer.Write([]byte(msg))
 }
 
-func (c *Context) Data(code int, data []byte) {
+func (c *Context) Data(code int, contentType string, data []byte) {
+	if len(contentType) > 0 {
+		c.Writer.Header().Set("Content-Type", contentType)
+	}
+
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
