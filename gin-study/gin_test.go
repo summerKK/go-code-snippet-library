@@ -223,3 +223,33 @@ func TestContext_Pool(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestContext_JSON(t *testing.T) {
+	assertIs := is.New(t)
+	type P struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+	engine.GET("/json", func(c *gin.Context) {
+		c.JSON(http.StatusOK, P{
+			Name: "summer",
+			Age:  28,
+		})
+	})
+
+	resp, err := http.Get(fmt.Sprintf(addrFormat, "json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	var p P
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&p); err != nil {
+		t.Fatal(err)
+	}
+
+	assertIs.Equal(p.Name, "summer")
+	assertIs.Equal(p.Age, 28)
+}

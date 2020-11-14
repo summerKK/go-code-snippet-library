@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"html/template"
@@ -34,6 +35,8 @@ type ErrorMsg struct {
 	Err  string      `json:"error"`
 	Meta interface{} `json:"meta"`
 }
+
+type H map[string]interface{}
 
 type ErrorMsgs []ErrorMsg
 
@@ -443,7 +446,7 @@ func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
 }
 
 func (c *Context) JSON(code int, v interface{}) {
-	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.Header().Set("Content-Type", MIMEJSON)
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
@@ -454,9 +457,22 @@ func (c *Context) JSON(code int, v interface{}) {
 	}
 }
 
+func (c *Context) XML(code int, v interface{}) {
+	c.Writer.Header().Set("Content-Type", MIMEXML)
+	if code >= 0 {
+		c.Writer.WriteHeader(code)
+	}
+
+	encoder := xml.NewEncoder(c.Writer)
+	if err := encoder.Encode(v); err != nil {
+		c.Error(err, v)
+		http.Error(c.Writer, err.Error(), 500)
+	}
+}
+
 // https://golang.org/pkg/text/template/#Template
 func (c *Context) HTML(code int, name string, data interface{}) {
-	c.Writer.Header().Set("Content-Type", "text/html")
+	c.Writer.Header().Set("Content-Type", MIMEHTML)
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
@@ -470,11 +486,11 @@ func (c *Context) HTML(code int, name string, data interface{}) {
 }
 
 func (c *Context) String(code int, msg string) {
+	c.Writer.Header().Set("Content-Type", MIMEPlain)
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
 
-	c.Writer.Header().Set("Content-Type", "text/plain")
 	_, _ = c.Writer.Write([]byte(msg))
 }
 
