@@ -30,6 +30,7 @@ func runHandle(B *testing.B, handler gin.HandlerFunc) {
 	c := &gin.Context{
 		Req:    req,
 		Writer: gin.NewResponseWriter(httptest.NewRecorder(), 0, false),
+		Engine: gin.New(),
 	}
 
 	B.ReportAllocs()

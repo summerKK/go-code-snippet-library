@@ -97,7 +97,7 @@ func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 	// 放回池子
-	c.engine.reuseCtx(c)
+	c.Engine.reuseCtx(c)
 }
 
 /************************************/
@@ -132,7 +132,7 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 				ResponseWriter: w,
 			},
 			index:    -1,
-			engine:   r.engine,
+			Engine:   r.engine,
 			Params:   params,
 			handlers: handlers,
 			keep:     false,
@@ -283,6 +283,11 @@ func (e *Engine) reuseCtx(c *Context) {
 	}
 }
 
+// ctx压力获取
+func (e *Engine) CacheStress() float32 {
+	return 1.0 - float32(len(e.ctxPool))/float32(cap(e.ctxPool))
+}
+
 func New() *Engine {
 	return NewWithConfig(Config{
 		CtxPoolSize:    DefaultCtxPoolSize,
@@ -311,7 +316,7 @@ func NewWithConfig(c Config) *Engine {
 	for i := 0; i < c.CtxPreloadSize; i++ {
 		engine.ctxPool <- &Context{
 			keep:   true,
-			engine: engine,
+			Engine: engine,
 			Writer: &ResponseWriter{},
 		}
 	}
@@ -342,7 +347,7 @@ type Context struct {
 	// 中间件
 	handlers []HandlerFunc
 	index    int8
-	engine   *Engine
+	Engine   *Engine
 	// 标识是否需要放回池子中
 	keep bool
 }
@@ -505,7 +510,7 @@ func (c *Context) HTML(code int, name string, data interface{}) {
 	if code >= 0 {
 		c.Writer.WriteHeader(code)
 	}
-	if err := c.engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
+	if err := c.Engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
 		c.Error(err, map[string]interface{}{
 			"name": name,
 			"data": data,
