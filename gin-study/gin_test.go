@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -252,4 +253,18 @@ func TestContext_JSON(t *testing.T) {
 
 	assertIs.Equal(p.Name, "summer")
 	assertIs.Equal(p.Age, 28)
+}
+
+func TestH_MarshalXML(t *testing.T) {
+	h := gin.H{
+		"slice": []int{1, 2, 3},
+		"name":  "summer",
+	}
+
+	b, err := xml.Marshal(h)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(string(b))
 }

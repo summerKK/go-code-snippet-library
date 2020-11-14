@@ -36,8 +36,6 @@ type ErrorMsg struct {
 	Meta interface{} `json:"meta"`
 }
 
-type H map[string]interface{}
-
 type ErrorMsgs []ErrorMsg
 
 func (e ErrorMsgs) String() string {
@@ -48,6 +46,23 @@ func (e ErrorMsgs) String() string {
 	}
 	buf.WriteByte('\n')
 	return buf.String()
+}
+
+/************************************/
+/********** H *********/
+/************************************/
+
+type H map[string]interface{}
+
+func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	_ = e.EncodeToken(start)
+	for key, v := range h {
+		elem := xml.StartElement{Name: xml.Name{Local: key}}
+		_ = e.EncodeElement(v, elem)
+	}
+	_ = e.EncodeToken(xml.EndElement{Name: start.Name})
+
+	return nil
 }
 
 /************************************/
