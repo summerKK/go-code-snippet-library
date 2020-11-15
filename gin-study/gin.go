@@ -12,6 +12,7 @@ import (
 	"math"
 	"net/http"
 	"path"
+	"sync"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/summerKK/go-code-snippet-library/gin-study/binding"
@@ -99,7 +100,7 @@ func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 	// 放回池子
-	c.Engine.reuseCtx(c)
+	c.Engine.freeCtx(c)
 }
 
 /************************************/
@@ -118,28 +119,15 @@ type RouterGroup struct {
 
 // 创建context,贯穿整个请求
 func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
-	select {
-	case ctx := <-r.engine.ctxPool:
-		// 重置
-		ctx.Writer.Reset(w)
-		ctx.Req = req
-		ctx.Params = params
-		ctx.handlers = handlers
-		ctx.index = -1
-		return ctx
-	default:
-		return &Context{
-			Req: req,
-			Writer: &ResponseWriter{
-				ResponseWriter: w,
-			},
-			index:    -1,
-			Engine:   r.engine,
-			Params:   params,
-			handlers: handlers,
-			keep:     false,
-		}
-	}
+	ctx := r.engine.ctxPool.Get().(*Context)
+	// 初始化ctx
+	ctx.Writer.Reset(w)
+	ctx.Req = req
+	ctx.Params = params
+	ctx.handlers = handlers
+	ctx.index = -1
+
+	return ctx
 }
 
 // 获取所有中间件
@@ -179,7 +167,7 @@ func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 		ctx := r.createContext(writer, req, params, allHandlers)
 		ctx.Next()
 		// 回收ctx
-		r.engine.reuseCtx(ctx)
+		r.engine.freeCtx(ctx)
 	})
 }
 
@@ -216,18 +204,6 @@ type Config struct {
 	CtxPreloadSize int
 }
 
-func (c Config) Check() error {
-	if c.CtxPoolSize < 2 {
-		return errors.New("CtxPoolSize must be at least 2")
-	}
-
-	if c.CtxPreloadSize > c.CtxPoolSize {
-		return errors.New("CtxPreloadSize must be less or equal to CtxPoolSize")
-	}
-
-	return nil
-}
-
 // 整个framework
 type Engine struct {
 	*RouterGroup
@@ -236,7 +212,7 @@ type Engine struct {
 	router        *httprouter.Router
 	HTMLTemplates *template.Template
 	// context pool
-	ctxPool chan *Context
+	ctxPool sync.Pool
 }
 
 func (e *Engine) NotFound404(handler ...HandlerFunc) {
@@ -276,48 +252,22 @@ func (e *Engine) LoadHTMLTemplates(pattern string) {
 }
 
 // 放回池子
-func (e *Engine) reuseCtx(c *Context) {
-	if c.keep {
-		select {
-		case e.ctxPool <- c:
-		default:
-		}
-	}
-}
-
-// ctx压力获取
-func (e *Engine) CacheStress() float32 {
-	return 1.0 - float32(len(e.ctxPool))/float32(cap(e.ctxPool))
+func (e *Engine) freeCtx(c *Context) {
+	e.ctxPool.Put(c)
 }
 
 func New() *Engine {
-	return NewWithConfig(Config{
-		CtxPoolSize:    DefaultCtxPoolSize,
-		CtxPreloadSize: DefaultCtxPoolSize / 2,
-	})
-}
-
-func NewWithConfig(c Config) *Engine {
-	// 检查参数
-	if err := c.Check(); err != nil {
-		panic(err)
-	}
-
 	engine := &Engine{}
 	engine.RouterGroup = &RouterGroup{
 		nil,
-		"/",
+		"",
 		nil,
 		engine,
 	}
 	engine.router = httprouter.New()
 	engine.router.NotFound = &handlers404{engine: engine}
-	engine.ctxPool = make(chan *Context, c.CtxPoolSize)
-
-	// 初始化ctx池
-	for i := 0; i < c.CtxPreloadSize; i++ {
-		engine.ctxPool <- &Context{
-			keep:   true,
+	engine.ctxPool.New = func() interface{} {
+		return &Context{
 			Engine: engine,
 			Writer: &ResponseWriter{},
 		}
@@ -339,7 +289,6 @@ func Default() *Engine {
 
 // gin的核心模块.
 type Context struct {
-	ID     int
 	Req    *http.Request
 	Writer ResponseWriterInterface
 	Keys   map[string]interface{}
@@ -350,8 +299,6 @@ type Context struct {
 	handlers []HandlerFunc
 	index    int8
 	Engine   *Engine
-	// 标识是否需要放回池子中
-	keep bool
 }
 
 // 执行middleware
@@ -364,25 +311,6 @@ func (c *Context) Next() {
 	// 避免数组越界.比如Abort的时候把index设置为AbortIndex
 	if c.index < int8(len(c.handlers)) {
 		c.handlers[c.index](c)
-	}
-}
-
-//  标识ctx可以放入池子中
-func (c *Context) Keep() {
-	// 修改keep状态.使其可以放入池子中继续使用
-	if !c.keep {
-		c.keep = true
-	} else {
-		log.Println("gin: trying to Keep same context several times")
-	}
-}
-
-// 释放ctx
-func (c *Context) Release() {
-	if c.keep {
-		c.keep = false
-	} else {
-		log.Println("gin: trying to release same context several times")
 	}
 }
 

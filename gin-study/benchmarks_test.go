@@ -11,7 +11,7 @@ import (
 )
 
 func runRequest(B *testing.B, r *gin.Engine, path string) {
-	url := fmt.Sprintf(addrFormat, path)
+	url := fmt.Sprintf(url, path)
 	req := httptest.NewRequest("GET", url, nil)
 
 	// 创建一个假的writer

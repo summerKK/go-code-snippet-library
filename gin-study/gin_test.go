@@ -2,7 +2,6 @@ package gin_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -14,36 +13,20 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/matryer/is"
 	"github.com/summerKK/go-code-snippet-library/gin-study"
 )
 
-var engine *gin.Engine
-var ctx context.Context
-var cancelFunc func()
-var port string = "8080"
-var addrFormat = "http://127.0.0.1:" + port + "/%s"
-var respText = "hello,world"
-
-func TestMain(m *testing.M) {
-	engine = gin.Default()
-	engine.Use(gin.ErrorLogger())
-	ctx, cancelFunc = context.WithCancel(context.Background())
-	defer cancelFunc()
-
-	go func() {
-		engine.Run(ctx, fmt.Sprintf(":%s", port))
-	}()
-	time.Sleep(time.Second)
-	m.Run()
-
-	cancelFunc()
-}
+var (
+	url      = "http://localhost/%s"
+	respText = "hello,world"
+)
 
 func TestRouterGroup_Use(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
+
 	engine.Use(func(c *gin.Context) {
 		c.Next()
 		_, _ = c.Writer.Write([]byte(respText))
@@ -53,17 +36,18 @@ func TestRouterGroup_Use(t *testing.T) {
 		c.Abort(200)
 	})
 
-	resp, err := http.Get(fmt.Sprintf(addrFormat, "middleware"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-	all, _ := ioutil.ReadAll(resp.Body)
-	assertIs.Equal(string(all), respText)
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "middleware"), nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(http.StatusOK, w.Code)
+	assertIs.Equal(respText, w.Body.String())
 }
 
 func TestContext_Bind(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
 
 	type P struct {
 		Name string `json:"name" binding:"required"`
@@ -77,12 +61,8 @@ func TestContext_Bind(t *testing.T) {
 
 	engine.POST("/userinfo", func(c *gin.Context) {
 		var params0 P
-		r := c.Bind(&params0)
-		if !r {
-			t.Error("Bind params got error")
-			return
-		}
 
+		assertIs.True(c.Bind(&params0))
 		assertIs.Equal(params0.Name, params1.Name)
 		assertIs.Equal(params0.Age, params1.Age)
 		c.Abort(200)
@@ -92,16 +72,17 @@ func TestContext_Bind(t *testing.T) {
 	values["Name"] = params1.Name
 	values["Age"] = params1.Age
 	jsonBytes, _ := json.Marshal(values)
-	resp, err := http.Post(fmt.Sprintf(addrFormat, "userinfo"), "application/json", bytes.NewReader(jsonBytes))
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	resp.Body.Close()
+	req := httptest.NewRequest("POST", fmt.Sprintf(url, "userinfo"), bytes.NewReader(jsonBytes))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
 }
 
 func TestContext_Bind2(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
 
 	type P struct {
 		Name []string `form:"name" binding:"required"`
@@ -120,16 +101,16 @@ func TestContext_Bind2(t *testing.T) {
 		t.Error("Bind params got error")
 	})
 
-	resp, err := http.Get(fmt.Sprintf(addrFormat, "userinfo?name=summer&age=28&name=summer&age=28"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "userinfo?name=summer&age=28&name=summer&age=28"), nil)
+	w := httptest.NewRecorder()
 
-	resp.Body.Close()
+	engine.ServeHTTP(w, req)
 }
 
 func TestRouterGroup_Group(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
+
 	r := engine.Group("/api", func(c *gin.Context) {
 		c.Next()
 		_, _ = c.Writer.Write([]byte(respText))
@@ -139,32 +120,33 @@ func TestRouterGroup_Group(t *testing.T) {
 
 	})
 
-	resp, err := http.Get(fmt.Sprintf(addrFormat, "api/test"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "api/test"), nil)
+	w := httptest.NewRecorder()
 
-	all, _ := ioutil.ReadAll(resp.Body)
-	assertIs.Equal(string(all), respText)
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(respText, w.Body.String())
 }
 
 func TestRouterGroupParams(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
 	username := "summer"
+
 	engine.GET("/user/:username", func(c *gin.Context) {
 		assertIs.Equal(c.Params.ByName("username"), username)
 	})
 
-	resp, err := http.Get(fmt.Sprintf(addrFormat, "/user/"+username))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "user/"+username), nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
 }
 
 func TestBasicAuth(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
+
 	u := "summer"
 	p := "123"
 	var basicAccounts gin.Accounts = map[string]string{}
@@ -175,21 +157,18 @@ func TestBasicAuth(t *testing.T) {
 		c.String(http.StatusOK, respText)
 	})
 
-	req, err := http.NewRequest("GET", fmt.Sprintf(addrFormat, "basic-auth"), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf(url, "basic-auth"), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	req.SetBasicAuth(u, p)
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer response.Body.Close()
 
-	all, _ := ioutil.ReadAll(response.Body)
+	w := httptest.NewRecorder()
 
-	assertIs.Equal(string(all), respText)
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(respText, w.Body.String())
 }
 
 func TestErrorMsgs_String(t *testing.T) {
@@ -208,19 +187,23 @@ func TestErrorMsgs_String(t *testing.T) {
 }
 
 func TestContext_Pool(t *testing.T) {
-	engine.GET("/userinfo", func(c *gin.Context) {
+	assertIs := is.New(t)
+	engine := gin.New()
+
+	engine.GET("/pool", func(c *gin.Context) {
 		c.Abort(http.StatusOK)
 	})
 
 	wg := &sync.WaitGroup{}
-	for i := 0; i < gin.DefaultCtxPoolSize/8; i++ {
+	for i := 0; i < gin.DefaultCtxPoolSize; i++ {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
-			resp, err := http.Get(fmt.Sprintf(addrFormat, "userinfo"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer resp.Body.Close()
+			req := httptest.NewRequest("GET", fmt.Sprintf(url, "pool"), nil)
+			w := httptest.NewRecorder()
+
+			engine.ServeHTTP(w, req)
+
+			assertIs.Equal(http.StatusOK, w.Code)
 
 			wg.Done()
 		}(wg)
@@ -231,6 +214,8 @@ func TestContext_Pool(t *testing.T) {
 
 func TestContext_JSON(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
+
 	type P struct {
 		Name string `json:"name"`
 		Age  int    `json:"age"`
@@ -242,15 +227,13 @@ func TestContext_JSON(t *testing.T) {
 		})
 	})
 
-	resp, err := http.Get(fmt.Sprintf(addrFormat, "json"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "json"), nil)
+	w := httptest.NewRecorder()
 
-	defer resp.Body.Close()
+	engine.ServeHTTP(w, req)
 
 	var p P
-	decoder := json.NewDecoder(resp.Body)
+	decoder := json.NewDecoder(w.Body)
 	if err := decoder.Decode(&p); err != nil {
 		t.Fatal(err)
 	}
@@ -275,6 +258,8 @@ func TestH_MarshalXML(t *testing.T) {
 
 func TestHandleStaticFile(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
+
 	testRoot, _ := os.Getwd()
 	f, err := ioutil.TempFile(testRoot, "")
 	if err != nil {
@@ -306,6 +291,8 @@ func TestHandleStaticFile(t *testing.T) {
 
 func TestHandleStaticDir(t *testing.T) {
 	assertIs := is.New(t)
+	engine := gin.New()
+
 	engine.ServeFiles("/*filepath", http.Dir("./"))
 
 	req := httptest.NewRequest("GET", "/", nil)
