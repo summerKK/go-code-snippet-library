@@ -38,6 +38,16 @@ func Logger(writer io.Writer) HandlerFunc {
 
 		c.Next()
 
+		requester := c.Req.Header.Get("X-Real-IP")
+		if requester == "" {
+			requester = c.Req.Header.Get("X-Forwarded-For")
+		}
+
+		// 如果还是为空直接取request的ip
+		if requester == "" {
+			requester = c.Req.RemoteAddr
+		}
+
 		var color string
 		code := c.Writer.Status()
 		switch {
@@ -51,12 +61,14 @@ func Logger(writer io.Writer) HandlerFunc {
 			color = red
 		}
 
-		logger.Printf("[GIN] %v |%s %3d %s| %12v | %3.1f%% | %3s %s\n",
+		logger.Printf("[GIN] %v |%s %3d %s| %12v | %3.1f%% | %s %4s %s\n",
 			time.Now().Format("2006/01/02 - 15:04:05"),
 			color, c.Writer.Status(), reset,
 			time.Since(t),
 			c.Engine.CacheStress()*100,
-			c.Req.Method, c.Req.URL.Path,
+			requester,
+			c.Req.Method,
+			c.Req.URL.Path,
 		)
 
 		if len(c.Errors) > 0 {

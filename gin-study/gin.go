@@ -55,6 +55,8 @@ func (e ErrorMsgs) String() string {
 type H map[string]interface{}
 
 func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	start.Name = xml.Name{"", "map"}
+
 	if err := e.EncodeToken(start); err != nil {
 		return err
 	}
