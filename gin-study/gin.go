@@ -28,18 +28,42 @@ const (
 	MIMEPlain          = "text/plain"
 )
 
+const (
+	ErrorTypeInternal = 1 << iota
+	ErrorTypeExternal = 1 << iota
+	ErrorTypeAll      = (1 << 32) - 1
+)
+
 /************************************/
-/********** ErrorMsg *********/
+/********** errorMsg *********/
 /************************************/
 
-type ErrorMsg struct {
+type errorMsg struct {
 	Err  string      `json:"error"`
+	Type uint32      `json:"-"`
 	Meta interface{} `json:"meta"`
 }
 
-type ErrorMsgs []ErrorMsg
+type errorMsgs []errorMsg
 
-func (e ErrorMsgs) String() string {
+// 返回特定的错误
+func (e errorMsgs) ByType(typ uint32) errorMsgs {
+	if len(e) == 0 {
+		return e
+	}
+
+	result := make(errorMsgs, 0, len(e))
+	for _, msg := range e {
+		// 只返回特定的错误
+		if msg.Type&typ > 0 {
+			result = append(result, msg)
+		}
+	}
+
+	return result
+}
+
+func (e errorMsgs) String() string {
 	var buf bytes.Buffer
 	for i, msg := range e {
 		text := fmt.Sprintf("Error #%02d: %s\n     Meta:%v\n\n", i+1, msg.Err, msg.Meta)
@@ -294,7 +318,7 @@ type Context struct {
 	Keys   map[string]interface{}
 	Params httprouter.Params
 	// 收集错误.在logger中间件进行记录
-	Errors ErrorMsgs
+	Errors errorMsgs
 	// 中间件
 	handlers []HandlerFunc
 	index    int8
@@ -329,11 +353,9 @@ func (c *Context) Fail(code int, err error) {
 	c.Abort(code)
 }
 
+// 添加错误
 func (c *Context) Error(err error, meta interface{}) {
-	c.Errors = append(c.Errors, ErrorMsg{
-		Err:  err.Error(),
-		Meta: meta,
-	})
+	c.ErrorTyped(err, ErrorTypeExternal, meta)
 }
 
 func (c *Context) LastError() error {
@@ -416,8 +438,9 @@ func (c *Context) JSON(code int, v interface{}) {
 	}
 	encoder := json.NewEncoder(c.Writer)
 	if err := encoder.Encode(v); err != nil {
-		c.Error(err, v)
-		http.Error(c.Writer, err.Error(), 500)
+		// 内部错误
+		c.ErrorTyped(err, ErrorTypeInternal, v)
+		c.Abort(http.StatusInternalServerError)
 	}
 }
 
@@ -429,8 +452,8 @@ func (c *Context) XML(code int, v interface{}) {
 
 	encoder := xml.NewEncoder(c.Writer)
 	if err := encoder.Encode(v); err != nil {
-		c.Error(err, v)
-		http.Error(c.Writer, err.Error(), 500)
+		c.ErrorTyped(err, ErrorTypeInternal, v)
+		c.Abort(http.StatusInternalServerError)
 	}
 }
 
@@ -441,11 +464,11 @@ func (c *Context) HTML(code int, name string, data interface{}) {
 		c.Writer.WriteHeader(code)
 	}
 	if err := c.Engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
-		c.Error(err, map[string]interface{}{
+		c.ErrorTyped(err, ErrorTypeInternal, H{
 			"name": name,
 			"data": data,
 		})
-		http.Error(c.Writer, err.Error(), 500)
+		c.Abort(http.StatusInternalServerError)
 	}
 }
 
@@ -472,4 +495,12 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 
 func (c *Context) SetIndex(index int8) {
 	c.index = index
+}
+
+func (c *Context) ErrorTyped(err error, typ uint32, meta interface{}) {
+	c.Errors = append(c.Errors, errorMsg{
+		Err:  err.Error(),
+		Type: typ,
+		Meta: meta,
+	})
 }

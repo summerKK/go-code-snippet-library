@@ -171,21 +171,6 @@ func TestBasicAuth(t *testing.T) {
 	assertIs.Equal(respText, w.Body.String())
 }
 
-func TestErrorMsgs_String(t *testing.T) {
-	var errorMsgs gin.ErrorMsgs = []gin.ErrorMsg{
-		{
-			Err:  "hello,world",
-			Meta: map[string]int{"a": 1},
-		},
-		{
-			Err:  "hello,world",
-			Meta: []int{1, 2},
-		},
-	}
-
-	fmt.Println(errorMsgs.String())
-}
-
 func TestContext_Pool(t *testing.T) {
 	assertIs := is.New(t)
 	engine := gin.New()

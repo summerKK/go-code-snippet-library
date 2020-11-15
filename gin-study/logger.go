@@ -7,18 +7,6 @@ import (
 	"time"
 )
 
-func ErrorLogger() HandlerFunc {
-	return func(c *Context) {
-		defer func() {
-			if len(c.Errors) > 0 {
-				c.JSON(-1, c.Errors)
-			}
-		}()
-
-		c.Next()
-	}
-}
-
 var (
 	green  = string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
 	white  = string([]byte{27, 91, 57, 48, 59, 52, 55, 109})
@@ -26,6 +14,24 @@ var (
 	red    = string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
 	reset  = string([]byte{27, 91, 48, 109})
 )
+
+// 返回所有错误
+func ErrorLogger() HandlerFunc {
+	return ErrorLoggerT(ErrorTypeAll)
+}
+
+//  返回特定的错误
+func ErrorLoggerT(typ uint32) HandlerFunc {
+	return func(c *Context) {
+
+		c.Next()
+
+		errs := c.Errors.ByType(typ)
+		if len(errs) > 0 {
+			c.JSON(-1, c.Errors)
+		}
+	}
+}
 
 func Logger(writer io.Writer) HandlerFunc {
 	if writer == nil {
