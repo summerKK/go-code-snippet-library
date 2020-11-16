@@ -90,13 +90,22 @@ func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 
 // 返回新的group
 func (r *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
-	prefix := joinGroupPath(r.prefix, component)
+	prefix := r.pathFor(component)
 	return &RouterGroup{
 		Handlers: handlers,
 		prefix:   prefix,
 		parent:   r,
 		engine:   r.engine,
 	}
+}
+
+func (r *RouterGroup) pathFor(p string) string {
+	joined := path.Join(r.prefix, p)
+	if len(p) > 0 && p[len(p)-1] == '/' && joined[len(joined)-1] != '/' {
+		joined += "/"
+	}
+
+	return joined
 }
 
 func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
@@ -138,13 +147,12 @@ func (r *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
 }
 
 func (r *RouterGroup) Static(p, root string) {
+	prefix := r.pathFor(p)
 	p = path.Join(p, "/*filepath")
-	fileServer := http.FileServer(http.Dir(root))
+	// see https://studygolang.com/articles/9197
+	fileServer := http.StripPrefix(prefix, http.FileServer(http.Dir(root)))
 	r.GET(p, func(c *Context) {
-		original := c.Request.URL.Path
-		c.Request.URL.Path = c.Params.ByName("filepath")
 		fileServer.ServeHTTP(c.Writer, c.Request)
-		c.Request.URL.Path = original
 	})
 }
 
