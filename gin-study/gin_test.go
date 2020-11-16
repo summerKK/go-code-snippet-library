@@ -2,6 +2,7 @@ package gin_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -290,4 +291,23 @@ func TestHandleStaticDir(t *testing.T) {
 	bodyAsString := w.Body.String()
 	assertIs.True(strings.Contains(bodyAsString, "package gin"))
 	assertIs.Equal("text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+}
+
+func TestEngine_Run(t *testing.T) {
+	assertIs := is.New(t)
+	engine := gin.New()
+
+	engine.GET("/", func(c *gin.Context) {
+		c.Abort(http.StatusOK)
+	})
+
+	engine.Run(context.Background(), ":8899")
+
+	resp, err := http.Get("http://127.0.0.1:8899")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	assertIs.Equal(http.StatusOK, resp.StatusCode)
 }

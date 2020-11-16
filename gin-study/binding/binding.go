@@ -159,35 +159,58 @@ func Validate(value interface{}) error {
 		val = val.Elem()
 	}
 
-	// 对每个字段都进行校验
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		fieldValue := val.Field(i).Interface()
-		// 零值
-		zero := reflect.Zero(field.Type).Interface()
+	switch typ.Kind() {
+	// 结构体
+	case reflect.Struct:
+		// 对每个字段都进行校验
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
 
-		// 嵌套结构体
-		// 如果field的值是指针.并且不为空
-		if field.Type.Kind() == reflect.Struct || (field.Type.Kind() == reflect.Ptr && !reflect.DeepEqual(zero, fieldValue)) {
-			err = Validate(fieldValue)
-		}
+			// 过滤字段
+			if field.Tag.Get("form") == "-" {
+				continue
+			}
 
-		// 必填认证
-		if strings.Index(field.Tag.Get("binding"), "required") > -1 {
-			// 字段为空
-			if reflect.DeepEqual(zero, fieldValue) {
-				name := field.Name
-				if j := field.Tag.Get("json"); j != "" {
-					name = j
+			fieldValue := val.Field(i).Interface()
+			// 零值
+			zero := reflect.Zero(field.Type).Interface()
+
+			// 必填认证
+			if strings.Index(field.Tag.Get("binding"), "required") > -1 {
+				fieldType := field.Type.Kind()
+				// 结构体嵌套
+				if fieldType == reflect.Struct {
+					// 验证结构体
+					err = Validate(fieldValue)
+					if err != nil {
+						return err
+					}
+
+					// 空值
+				} else if reflect.DeepEqual(zero, fieldValue) {
+					return errors.New("Required " + field.Name)
+
+					// 如果 字段是slice,并且slice里面的元素类型也是struct
+				} else if fieldType == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+					err = Validate(fieldValue)
+					if err != nil {
+						return err
+					}
 				}
-
-				if f := field.Tag.Get("form"); f != "" {
-					name = f
-				}
-
-				return errors.New("Required" + name)
 			}
 		}
+
+	case reflect.Slice:
+		for i := 0; i < val.Len(); i++ {
+			fieldValue := val.Index(i).Interface()
+			err = Validate(fieldValue)
+			if err != nil {
+				return err
+			}
+		}
+
+	default:
+		return nil
 	}
 
 	return err

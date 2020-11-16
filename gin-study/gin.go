@@ -10,9 +10,11 @@ import (
 	"html/template"
 	"log"
 	"math"
+	"net"
 	"net/http"
 	"path"
 	"sync"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/summerKK/go-code-snippet-library/gin-study/binding"
@@ -26,6 +28,7 @@ const (
 	MIMEXML            = "application/xml"
 	MIMEXML2           = "text/xml"
 	MIMEPlain          = "text/plain"
+	MIMEPOSTForm       = "application/x-www-form-urlencoded"
 )
 
 const (
@@ -170,9 +173,19 @@ func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 	r.Handlers = append(r.Handlers, middlewares...)
 }
 
+func (r *RouterGroup) joinGroupPath(elems ...string) string {
+	joined := path.Join(elems...)
+	lastComponent := elems[len(elems)-1]
+	if len(lastComponent) > 0 && lastComponent[len(lastComponent)-1] == '/' && joined[len(joined)-1] != '/' {
+		joined += "/"
+	}
+
+	return joined
+}
+
 // 返回新的group
 func (r *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
-	prefix := path.Join(r.prefix, component)
+	prefix := r.joinGroupPath(r.prefix, component)
 	return &RouterGroup{
 		Handlers: handlers,
 		prefix:   prefix,
@@ -248,6 +261,7 @@ type Engine struct {
 	HTMLTemplates *template.Template
 	// context pool
 	ctxPool sync.Pool
+	addr    string
 }
 
 func (e *Engine) NotFound404(handler ...HandlerFunc) {
@@ -259,23 +273,67 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	e.router.ServeHTTP(w, req)
 }
 
-func (e *Engine) Run(c context.Context, addr string) {
-	s := http.Server{
-		Addr:    addr,
-		Handler: e,
-	}
+// 检查服务是否已开启
+func (e *Engine) checkServerIsRunning(wg *sync.WaitGroup) {
 	go func() {
-		err := s.ListenAndServe()
-		if err != http.ErrServerClosed {
-			log.Fatalf("http server start error:%v\n", err)
+		tick := time.Tick(time.Millisecond * 500)
+		for {
+			select {
+			case <-tick:
+				conn, err := net.DialTimeout("tcp", e.addr, time.Millisecond*500)
+				// 服务已启动,记得return,停掉goroutine
+				if err == nil {
+					_ = conn.Close()
+					wg.Done()
+					return
+				}
+			}
 		}
 	}()
+}
 
-	<-c.Done()
+func (e *Engine) run(c context.Context, addr string, handle func(s *http.Server) error) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	e.addr = addr
 
-	_ = s.Shutdown(context.Background())
+	go func() {
+		s := &http.Server{
+			Addr:    addr,
+			Handler: e,
+		}
 
-	log.Printf("http server stopped!\n")
+		e.checkServerIsRunning(&wg)
+
+		go func() {
+			err := handle(s)
+			if err != nil && err != http.ErrServerClosed {
+				log.Fatalf("http server start error:%v\n", err)
+			}
+		}()
+
+		<-c.Done()
+
+		_ = s.Shutdown(context.Background())
+
+		log.Printf("http server stopped!\n")
+	}()
+
+	wg.Wait()
+}
+
+// http服务
+func (e *Engine) Run(c context.Context, addr string) {
+	e.run(c, addr, func(s *http.Server) error {
+		return s.ListenAndServe()
+	})
+}
+
+// https服务
+func (e *Engine) RunTLS(c context.Context, addr string, cert string, key string) {
+	e.run(c, addr, func(s *http.Server) error {
+		return s.ListenAndServeTLS(cert, key)
+	})
 }
 
 func (e *Engine) LoadHTMLTemplates(pattern string) {
@@ -416,7 +474,7 @@ func (c *Context) Bind(v interface{}) bool {
 	var b binding.Binding
 	contentType := c.filterFlags(c.Req.Header.Get("Content-Type"))
 	switch {
-	case c.Req.Method == "GET":
+	case c.Req.Method == "GET" || contentType == MIMEPOSTForm:
 		b = binding.FORM
 	case contentType == MIMEJSON:
 		b = binding.JSON
