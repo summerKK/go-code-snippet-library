@@ -67,17 +67,14 @@ func Logger(writer io.Writer) HandlerFunc {
 			color = red
 		}
 
-		logger.Printf("[GIN] %v |%s %3d %s| %12v | %s %4s %s\n",
+		logger.Printf("[GIN] %v |%s %3d %s| %12v | %s %4s %s\n%s",
 			time.Now().Format("2006/01/02 - 15:04:05"),
 			color, c.Writer.Status(), reset,
 			time.Since(t),
 			requester,
 			c.Req.Method,
 			c.Req.URL.Path,
+			c.Errors.String(),
 		)
-
-		if len(c.Errors) > 0 {
-			log.Println(c.Errors)
-		}
 	}
 }

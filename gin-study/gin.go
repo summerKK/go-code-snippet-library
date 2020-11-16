@@ -3,7 +3,6 @@ package gin
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -18,17 +17,12 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/summerKK/go-code-snippet-library/gin-study/binding"
+	"github.com/summerKK/go-code-snippet-library/gin-study/render"
 )
 
 const (
 	AbortIndex         = math.MaxInt8 / 2
 	DefaultCtxPoolSize = 1024
-	MIMEJSON           = "application/json"
-	MIMEHTML           = "text/html"
-	MIMEXML            = "application/xml"
-	MIMEXML2           = "text/xml"
-	MIMEPlain          = "text/plain"
-	MIMEPOSTForm       = "application/x-www-form-urlencoded"
 )
 
 const (
@@ -67,6 +61,10 @@ func (e errorMsgs) ByType(typ uint32) errorMsgs {
 }
 
 func (e errorMsgs) String() string {
+	if len(e) == 0 {
+		return ""
+	}
+
 	var buf bytes.Buffer
 	for i, msg := range e {
 		text := fmt.Sprintf("Error #%02d: %s\n     Meta:%v\n\n", i+1, msg.Err, msg.Meta)
@@ -83,7 +81,7 @@ func (e errorMsgs) String() string {
 type H map[string]interface{}
 
 func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	start.Name = xml.Name{"", "map"}
+	start.Name = xml.Name{Space: "", Local: "map"}
 
 	if err := e.EncodeToken(start); err != nil {
 		return err
@@ -256,12 +254,28 @@ type Config struct {
 type Engine struct {
 	*RouterGroup
 	// api未找到,触发的方法
-	handlers404   []HandlerFunc
-	router        *httprouter.Router
-	HTMLTemplates *template.Template
+	handlers404 []HandlerFunc
+	router      *httprouter.Router
+	HTMLRender  render.Render
 	// context pool
 	ctxPool sync.Pool
 	addr    string
+}
+
+func (e *Engine) LoadHTMLGlob(pattern string) {
+	tmpl := template.Must(template.ParseGlob(pattern))
+	e.SetHTTPTemplate(tmpl)
+}
+
+func (e *Engine) LoadHTMLFiles(files ...string) {
+	tmpl := template.Must(template.ParseFiles(files...))
+	e.SetHTTPTemplate(tmpl)
+}
+
+func (e *Engine) SetHTTPTemplate(tmpl *template.Template) {
+	e.HTMLRender = render.HTMLRender{
+		Template: tmpl,
+	}
 }
 
 func (e *Engine) NotFound404(handler ...HandlerFunc) {
@@ -336,10 +350,6 @@ func (e *Engine) RunTLS(c context.Context, addr string, cert string, key string)
 	})
 }
 
-func (e *Engine) LoadHTMLTemplates(pattern string) {
-	e.HTMLTemplates = template.Must(template.ParseGlob(pattern))
-}
-
 // 放回池子
 func (e *Engine) freeCtx(c *Context) {
 	e.ctxPool.Put(c)
@@ -392,7 +402,7 @@ type Context struct {
 
 // 执行middleware
 // gin的中间件实现很巧妙.主要是在 c.index < s.当c.index == 0 //标记为`a` 的时候.
-// 在 c.handers[0](c) 调用后.在c.handers[0](c) {c.Next() //标记为`b`} 会调用下一次的Next()方法
+// 在 c.handlers[0](c) 调用后.在c.handlers[0](c) {c.Next() //标记为`b`} 会调用下一次的Next()方法
 // 此时在`a`的循环里面c.index已经变成了1
 func (c *Context) Next() {
 	// index 初始值为 -1
@@ -474,11 +484,11 @@ func (c *Context) Bind(v interface{}) bool {
 	var b binding.Binding
 	contentType := c.filterFlags(c.Req.Header.Get("Content-Type"))
 	switch {
-	case c.Req.Method == "GET" || contentType == MIMEPOSTForm:
+	case c.Req.Method == "GET" || contentType == render.MIMEPOSTForm:
 		b = binding.FORM
-	case contentType == MIMEJSON:
+	case contentType == render.MIMEJSON:
 		b = binding.JSON
-	case contentType == MIMEXML || contentType == MIMEXML2:
+	case contentType == render.MIMEXML || contentType == render.MIMEXML2:
 		b = binding.XML
 	default:
 		c.Fail(400, errors.New("unknown content-type: "+contentType))
@@ -496,54 +506,28 @@ func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
 	return false
 }
 
-func (c *Context) JSON(code int, v interface{}) {
-	c.Writer.Header().Set("Content-Type", MIMEJSON)
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
-	encoder := json.NewEncoder(c.Writer)
-	if err := encoder.Encode(v); err != nil {
-		// 内部错误
-		c.ErrorTyped(err, ErrorTypeInternal, v)
+func (c *Context) Render(render render.Render, code int, obj ...interface{}) {
+	if err := render.Render(c.Writer, code, obj...); err != nil {
+		c.ErrorTyped(err, ErrorTypeInternal, obj)
 		c.Abort(http.StatusInternalServerError)
 	}
 }
 
-func (c *Context) XML(code int, v interface{}) {
-	c.Writer.Header().Set("Content-Type", MIMEXML)
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
+func (c *Context) JSON(code int, v interface{}) {
+	c.Render(render.JSON, code, v)
+}
 
-	encoder := xml.NewEncoder(c.Writer)
-	if err := encoder.Encode(v); err != nil {
-		c.ErrorTyped(err, ErrorTypeInternal, v)
-		c.Abort(http.StatusInternalServerError)
-	}
+func (c *Context) XML(code int, v interface{}) {
+	c.Render(render.XML, code, v)
 }
 
 // https://golang.org/pkg/text/template/#Template
 func (c *Context) HTML(code int, name string, data interface{}) {
-	c.Writer.Header().Set("Content-Type", MIMEHTML)
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
-	if err := c.Engine.HTMLTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
-		c.ErrorTyped(err, ErrorTypeInternal, H{
-			"name": name,
-			"data": data,
-		})
-		c.Abort(http.StatusInternalServerError)
-	}
+	c.Render(c.Engine.HTMLRender, code, name, data)
 }
 
-func (c *Context) String(code int, msg string) {
-	c.Writer.Header().Set("Content-Type", MIMEPlain)
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
-
-	_, _ = c.Writer.Write([]byte(msg))
+func (c *Context) String(code int, format string, args ...interface{}) {
+	c.Render(render.Plain, code, format, args)
 }
 
 func (c *Context) Data(code int, contentType string, data []byte) {
