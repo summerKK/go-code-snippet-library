@@ -219,6 +219,17 @@ func (r *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
 	r.Handle("OPTIONS", path, handlers)
 }
 
+func (r *RouterGroup) Static(p, root string) {
+	p = path.Join(p, "/*filepath")
+	fileServer := http.FileServer(http.Dir(root))
+	r.GET(p, func(c *Context) {
+		original := c.Req.URL.Path
+		c.Req.URL.Path = c.Params.ByName("filepath")
+		fileServer.ServeHTTP(c.Writer, c.Req)
+		c.Req.URL.Path = original
+	})
+}
+
 /************************************/
 /********** Engine *********/
 /************************************/
@@ -241,10 +252,6 @@ type Engine struct {
 
 func (e *Engine) NotFound404(handler ...HandlerFunc) {
 	e.handlers404 = handler
-}
-
-func (e *Engine) ServeFiles(path string, root http.FileSystem) {
-	e.router.ServeFiles(path, root)
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
