@@ -37,10 +37,13 @@ type handlers404 struct {
 func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handlers := h.engine.allHandlers(h.engine.handlers404...)
 	c := h.engine.createContext(w, r, nil, handlers)
+	c.Writer.WriteHeader(http.StatusNotFound)
 	c.Next()
+
 	if !c.Writer.Written() {
-		http.NotFound(w, r)
+		c.Data(http.StatusNotFound, render.MIMEPlain, []byte("404 page not found"))
 	}
+
 	// 放回池子
 	c.Engine.freeCtx(c)
 }
@@ -68,6 +71,8 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 	ctx.Params = params
 	ctx.handlers = handlers
 	ctx.index = -1
+	// 情况错误
+	ctx.Errors = ctx.Errors[0:0]
 
 	return ctx
 }
@@ -146,12 +151,20 @@ func (r *RouterGroup) OPTIONS(path string, handlers ...HandlerFunc) {
 	r.Handle("OPTIONS", path, handlers)
 }
 
+func (r *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
+	r.Handle("HEAD", path, handlers)
+}
+
 func (r *RouterGroup) Static(p, root string) {
 	prefix := r.pathFor(p)
 	p = path.Join(p, "/*filepath")
 	// see https://studygolang.com/articles/9197
 	fileServer := http.StripPrefix(prefix, http.FileServer(http.Dir(root)))
 	r.GET(p, func(c *Context) {
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+
+	r.HEAD(p, func(c *Context) {
 		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 }
@@ -193,7 +206,7 @@ func (e *Engine) SetHTMLTemplate(tmpl *template.Template) {
 	}
 }
 
-func (e *Engine) NotFound404(handler ...HandlerFunc) {
+func (e *Engine) NoRoute(handler ...HandlerFunc) {
 	e.handlers404 = handler
 }
 
