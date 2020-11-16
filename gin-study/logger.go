@@ -44,14 +44,14 @@ func Logger(writer io.Writer) HandlerFunc {
 
 		c.Next()
 
-		requester := c.Req.Header.Get("X-Real-IP")
+		requester := c.Request.Header.Get("X-Real-IP")
 		if requester == "" {
-			requester = c.Req.Header.Get("X-Forwarded-For")
+			requester = c.Request.Header.Get("X-Forwarded-For")
 		}
 
 		// 如果还是为空直接取request的ip
 		if requester == "" {
-			requester = c.Req.RemoteAddr
+			requester = c.Request.RemoteAddr
 		}
 
 		var color string
@@ -72,8 +72,8 @@ func Logger(writer io.Writer) HandlerFunc {
 			color, c.Writer.Status(), reset,
 			time.Since(t),
 			requester,
-			c.Req.Method,
-			c.Req.URL.Path,
+			c.Request.Method,
+			c.Request.URL.Path,
 			c.Errors.String(),
 		)
 	}

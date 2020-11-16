@@ -78,7 +78,7 @@ func BasicAuth(accounts Accounts) HandlerFunc {
 		panic(err)
 	}
 	return func(c *Context) {
-		user := SearchCredential(pairs, c.Req.Header.Get("Authorization"))
+		user := SearchCredential(pairs, c.Request.Header.Get("Authorization"))
 		if len(user) == 0 {
 			c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"Authorization Required\"")
 			c.Fail(401, errors.New("Unauthorized"))

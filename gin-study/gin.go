@@ -64,7 +64,7 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 	ctx := r.engine.ctxPool.Get().(*Context)
 	// 初始化ctx
 	ctx.Writer.Reset(w)
-	ctx.Req = req
+	ctx.Request = req
 	ctx.Params = params
 	ctx.handlers = handlers
 	ctx.index = -1
@@ -141,10 +141,10 @@ func (r *RouterGroup) Static(p, root string) {
 	p = path.Join(p, "/*filepath")
 	fileServer := http.FileServer(http.Dir(root))
 	r.GET(p, func(c *Context) {
-		original := c.Req.URL.Path
-		c.Req.URL.Path = c.Params.ByName("filepath")
-		fileServer.ServeHTTP(c.Writer, c.Req)
-		c.Req.URL.Path = original
+		original := c.Request.URL.Path
+		c.Request.URL.Path = c.Params.ByName("filepath")
+		fileServer.ServeHTTP(c.Writer, c.Request)
+		c.Request.URL.Path = original
 	})
 }
 

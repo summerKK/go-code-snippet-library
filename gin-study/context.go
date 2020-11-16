@@ -85,10 +85,10 @@ func (h H) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 
 // gin的核心模块.
 type Context struct {
-	Req    *http.Request
-	Writer ResponseWriterInterface
-	Keys   map[string]interface{}
-	Params httprouter.Params
+	Request *http.Request
+	Writer  ResponseWriterInterface
+	Keys    map[string]interface{}
+	Params  httprouter.Params
 	// 收集错误.在logger中间件进行记录
 	Errors errorMsgs
 	// 中间件
@@ -169,9 +169,9 @@ func (c *Context) MustGet(key string) interface{} {
 
 func (c *Context) Bind(v interface{}) bool {
 	var b binding.Binding
-	contentType := filterFlags(c.Req.Header.Get("Content-Type"))
+	contentType := filterFlags(c.Request.Header.Get("Content-Type"))
 	switch {
-	case c.Req.Method == "GET" || contentType == render.MIMEPOSTForm:
+	case c.Request.Method == "GET" || contentType == render.MIMEPOSTForm:
 		b = binding.FORM
 	case contentType == render.MIMEJSON:
 		b = binding.JSON
@@ -186,7 +186,7 @@ func (c *Context) Bind(v interface{}) bool {
 }
 
 func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
-	if err := b.Bind(c.Req, v); err == nil {
+	if err := b.Bind(c.Request, v); err == nil {
 		return true
 	}
 
@@ -227,6 +227,10 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 	}
 
 	_, _ = c.Writer.Write(data)
+}
+
+func (c *Context) File(filepath string) {
+	http.ServeFile(c.Writer, c.Request, filepath)
 }
 
 func (c *Context) SetIndex(index int8) {

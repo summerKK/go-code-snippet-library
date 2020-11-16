@@ -28,9 +28,9 @@ func runRequest(B *testing.B, r *gin.Engine, path string) {
 func runHandle(B *testing.B, handler gin.HandlerFunc) {
 	req := httptest.NewRequest("GET", "http://localhost/foo", nil)
 	c := &gin.Context{
-		Req:    req,
-		Writer: gin.NewResponseWriter(httptest.NewRecorder(), 0, false),
-		Engine: gin.New(),
+		Request: req,
+		Writer:  gin.NewResponseWriter(httptest.NewRecorder(), 0, false),
+		Engine:  gin.New(),
 	}
 
 	B.ReportAllocs()
