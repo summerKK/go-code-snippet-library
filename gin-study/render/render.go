@@ -27,14 +27,17 @@ type xmlRender struct{}
 
 type plainRender struct{}
 
+type redirectRender struct{}
+
 type HTMLRender struct {
 	Template *template.Template
 }
 
 var (
-	JSON  = jsonRender{}
-	XML   = xmlRender{}
-	Plain = plainRender{}
+	JSON     = jsonRender{}
+	XML      = xmlRender{}
+	Plain    = plainRender{}
+	Redirect = redirectRender{}
 )
 
 func WriteHeader(w http.ResponseWriter, code int, contentType string) {
@@ -78,4 +81,11 @@ func (_ plainRender) Render(writer http.ResponseWriter, code int, data ...interf
 	}
 
 	return err
+}
+
+func (_ redirectRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
+	writer.WriteHeader(code)
+	writer.Header().Set("Location", data[0].(string))
+
+	return nil
 }

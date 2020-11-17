@@ -389,3 +389,19 @@ func TestEngine_LoadHTMLGlob(t *testing.T) {
 	assertIs.Equal(http.StatusOK, w.Code)
 	assertIs.Equal(respText, w.Body.String())
 }
+
+func TestContext_Redirect(t *testing.T) {
+	engine := gin.New()
+	assertIs := is.New(t)
+
+	engine.GET("/redirect1", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/redirect0")
+	})
+
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "redirect1"), nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(http.StatusFound, w.Code)
+}
