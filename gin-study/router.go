@@ -5,9 +5,28 @@ import (
 	"path"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/summerKK/go-code-snippet-library/gin-study/render"
 )
 
 type HandlerFunc func(c *Context)
+
+type handlers404 struct {
+	engine *Engine
+}
+
+func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handlers := h.engine.combineHandlers(h.engine.finalNoRoute)
+	c := h.engine.createContext(w, r, nil, handlers)
+	c.Writer.WriteHeader(http.StatusNotFound)
+	c.Next()
+
+	if !c.Writer.Written() {
+		c.Data(http.StatusNotFound, render.MIMEPlain, []byte("404 page not found"))
+	}
+
+	// 放回池子
+	c.Engine.freeCtx(c)
+}
 
 // 路由
 type RouterGroup struct {
@@ -37,6 +56,8 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 //  添加中间件
 func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 	r.Handlers = append(r.Handlers, middlewares...)
+	// 给找不到路由的handler赋值,并且放在最后执行
+	r.engine.finalNoRoute = r.engine.combineHandlers(r.engine.noRoute)
 }
 
 // 返回新的group

@@ -70,7 +70,12 @@ func (_ plainRender) Render(writer http.ResponseWriter, code int, data ...interf
 	WriteHeader(writer, code, MIMEPlain)
 	format := data[0].(string)
 	args := data[1].([]interface{})
-	_, err := writer.Write([]byte(fmt.Sprintf(format, args...)))
+	var err error
+	if len(args) > 0 {
+		_, err = writer.Write([]byte(fmt.Sprintf(format, args...)))
+	} else {
+		_, err = writer.Write([]byte(format))
+	}
 
 	return err
 }

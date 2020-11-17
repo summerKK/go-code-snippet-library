@@ -43,8 +43,15 @@ func TestRouterGroup_Use(t *testing.T) {
 		log.Println("      >>>>>>>>>>>>>")
 	})
 
+	group.Use(func(c *gin.Context) {
+		log.Println("            >>>>>>>>>>>>>")
+		c.Next()
+		log.Println("            >>>>>>>>>>>>>")
+	})
+
 	group.GET("/middleware", func(c *gin.Context) {
-		c.Writer.Write([]byte(respText))
+		_, _ = c.Writer.Write([]byte(respText))
+		log.Println("                   hello,world")
 		c.Abort(200)
 	})
 

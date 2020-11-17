@@ -20,28 +20,6 @@ const (
 )
 
 /************************************/
-/********** handlers404 *********/
-/************************************/
-
-type handlers404 struct {
-	engine *Engine
-}
-
-func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handlers := h.engine.combineHandlers(h.engine.handlers404)
-	c := h.engine.createContext(w, r, nil, handlers)
-	c.Writer.WriteHeader(http.StatusNotFound)
-	c.Next()
-
-	if !c.Writer.Written() {
-		c.Data(http.StatusNotFound, render.MIMEPlain, []byte("404 page not found"))
-	}
-
-	// 放回池子
-	c.Engine.freeCtx(c)
-}
-
-/************************************/
 /********** Engine *********/
 /************************************/
 
@@ -54,9 +32,11 @@ type Config struct {
 type Engine struct {
 	*RouterGroup
 	// api未找到,触发的方法
-	handlers404 []HandlerFunc
-	router      *httprouter.Router
-	HTMLRender  render.Render
+	noRoute []HandlerFunc
+	// 路由未找到触发的handle,`finalNoRoute`包含了`noRoute`
+	finalNoRoute []HandlerFunc
+	router       *httprouter.Router
+	HTMLRender   render.Render
 	// context pool
 	ctxPool sync.Pool
 	addr    string
@@ -79,7 +59,8 @@ func (e *Engine) SetHTMLTemplate(tmpl *template.Template) {
 }
 
 func (e *Engine) NoRoute(handler ...HandlerFunc) {
-	e.handlers404 = handler
+	e.noRoute = handler
+	e.finalNoRoute = e.combineHandlers(e.noRoute)
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
