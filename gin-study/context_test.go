@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 
@@ -160,4 +161,39 @@ func TestContext_Redirect(t *testing.T) {
 	engine.ServeHTTP(w, req)
 
 	assertIs.Equal(http.StatusFound, w.Code)
+}
+
+func TestContext_XML(t *testing.T) {
+	engine := gin.New()
+	assertIs := is.New(t)
+
+	engine.GET("/xml", func(c *gin.Context) {
+		c.XML(http.StatusOK, gin.H{"hello": "world"})
+	})
+
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "xml"), nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(http.StatusOK, w.Code)
+	assertIs.Equal("<map><hello>world</hello></map>", w.Body.String())
+}
+
+func TestContext_File(t *testing.T) {
+	engine := gin.New()
+	assertIs := is.New(t)
+
+	engine.GET("/file", func(c *gin.Context) {
+		c.File("./gin.go")
+	})
+
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "file"), nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(http.StatusOK, w.Code)
+	assertIs.Equal("text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+	assertIs.True(strings.Contains(w.Body.String(), "package gin"))
 }
