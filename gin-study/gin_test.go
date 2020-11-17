@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -28,17 +29,26 @@ var (
 func TestRouterGroup_Use(t *testing.T) {
 	assertIs := is.New(t)
 	engine := gin.New()
-
 	engine.Use(func(c *gin.Context) {
+		log.Println("<<<<<<<<<<<<<")
 		c.Next()
-		_, _ = c.Writer.Write([]byte(respText))
+		log.Println("<<<<<<<<<<<<<")
 	})
 
-	engine.GET("/middleware", func(c *gin.Context) {
+	group := engine.Group("/api")
+
+	group.Use(func(c *gin.Context) {
+		log.Println("      >>>>>>>>>>>>>")
+		c.Next()
+		log.Println("      >>>>>>>>>>>>>")
+	})
+
+	group.GET("/middleware", func(c *gin.Context) {
+		c.Writer.Write([]byte(respText))
 		c.Abort(200)
 	})
 
-	req := httptest.NewRequest("GET", fmt.Sprintf(url, "middleware"), nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "api/middleware"), nil)
 	w := httptest.NewRecorder()
 
 	engine.ServeHTTP(w, req)

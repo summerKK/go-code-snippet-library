@@ -117,6 +117,10 @@ func (r *RouterGroup) Static(p, root string) {
 }
 
 func (r *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
+	if len(handlers) == 0 {
+		return r.Handlers
+	}
+
 	l := len(r.Handlers) + len(handlers)
 	h := make([]HandlerFunc, 0, l)
 	h = append(h, r.Handlers...)
