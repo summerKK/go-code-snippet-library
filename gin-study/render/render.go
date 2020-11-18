@@ -41,10 +41,8 @@ var (
 )
 
 func WriteHeader(w http.ResponseWriter, code int, contentType string) {
-	if code >= 0 {
-		w.Header().Set("Content-Type", contentType)
-		w.WriteHeader(code)
-	}
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(code)
 }
 
 func (_ jsonRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {

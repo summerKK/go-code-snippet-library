@@ -1,13 +1,16 @@
 package gin
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 type ResponseWriterInterface interface {
 	http.ResponseWriter
 	Status() int
 	Written() bool
 
-	SetStatus(int)
+	WriteHeaderNow()
 	Reset(w http.ResponseWriter)
 }
 
@@ -33,21 +36,30 @@ func (r *ResponseWriter) Written() bool {
 	return r.written
 }
 
-func (r *ResponseWriter) SetStatus(i int) {
-	r.status = i
-}
-
 func (r *ResponseWriter) Reset(w http.ResponseWriter) {
-	r.status = 0
+	r.status = http.StatusOK
 	r.written = false
 	r.ResponseWriter = w
 }
 
 func (r *ResponseWriter) WriteHeader(s int) {
-	r.ResponseWriter.WriteHeader(s)
-	r.status = s
+	if s != 0 {
+		r.status = s
+		if r.written {
+			log.Println("[GIN] WARNING. Headers were already written!")
+		}
+	}
+}
+
+func (r *ResponseWriter) WriteHeaderNow() {
+	if !r.written {
+		r.written = true
+		r.ResponseWriter.WriteHeader(r.status)
+	}
 }
 
 func (r *ResponseWriter) Write(b []byte) (int, error) {
+	r.WriteHeaderNow()
+
 	return r.ResponseWriter.Write(b)
 }

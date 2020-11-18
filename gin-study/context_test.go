@@ -197,3 +197,35 @@ func TestContext_File(t *testing.T) {
 	assertIs.Equal("text/plain; charset=utf-8", w.Header().Get("Content-Type"))
 	assertIs.True(strings.Contains(w.Body.String(), "package gin"))
 }
+
+func TestContextHandlersChain0(t *testing.T) {
+	engine := gin.New()
+	assertIs := is.New(t)
+	stepsPassed := 0
+	engine.Use(func(c *gin.Context) {
+		stepsPassed += 1
+		// abort后,后面的中间件就不会执行了
+		c.Abort(409)
+		c.Next()
+		stepsPassed += 1
+	})
+
+	engine.Use(func(c *gin.Context) {
+		stepsPassed += 1
+		c.Next()
+		stepsPassed += 1
+		c.Abort(403)
+	})
+
+	engine.GET("/count", func(c *gin.Context) {
+		stepsPassed += 1
+	})
+
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "count"), nil)
+	w := httptest.NewRecorder()
+
+	engine.ServeHTTP(w, req)
+
+	assertIs.Equal(409, w.Code)
+	assertIs.Equal(2, stepsPassed)
+}

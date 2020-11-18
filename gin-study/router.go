@@ -15,13 +15,16 @@ type handlers404 struct {
 }
 
 func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handlers := h.engine.combineHandlers(h.engine.finalNoRoute)
-	c := h.engine.createContext(w, r, nil, handlers)
+	c := h.engine.createContext(w, r, nil, h.engine.finalNoRoute)
 	c.Writer.WriteHeader(http.StatusNotFound)
 	c.Next()
 
 	if !c.Writer.Written() {
-		c.Data(http.StatusNotFound, render.MIMEPlain, []byte("404 page not found"))
+		if c.Writer.Status() == http.StatusNotFound {
+			c.Data(http.StatusNotFound, render.MIMEPlain, []byte("404 page not found"))
+		} else {
+			c.Writer.WriteHeaderNow()
+		}
 	}
 
 	// 放回池子
@@ -82,7 +85,7 @@ func (r *RouterGroup) pathFor(p string) string {
 }
 
 func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
-	pathName := path.Join(r.prefix, p)
+	pathName := r.pathFor(p)
 	// 获取所有的中间件
 	combinedHandlers := r.combineHandlers(handlers)
 	// 处理请求
@@ -90,6 +93,8 @@ func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 		// 创建context
 		ctx := r.createContext(writer, req, params, combinedHandlers)
 		ctx.Next()
+		// 添加响应头
+		ctx.Writer.WriteHeaderNow()
 		// 回收ctx
 		r.engine.freeCtx(ctx)
 	})

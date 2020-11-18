@@ -112,9 +112,7 @@ func (c *Context) Next() {
 
 // 终止请求
 func (c *Context) Abort(code int) {
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
+	c.Writer.WriteHeader(code)
 	// 把index设置到最大,让剩余的中间件不执行
 	c.index = AbortIndex
 }
