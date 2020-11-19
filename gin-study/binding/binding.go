@@ -180,6 +180,9 @@ func Validate(value interface{}) error {
 				fieldType := field.Type.Kind()
 				// 结构体嵌套
 				if fieldType == reflect.Struct {
+					if reflect.DeepEqual(zero, fieldValue) {
+						return errors.New("Required " + field.Name)
+					}
 					// 验证结构体
 					err = Validate(fieldValue)
 					if err != nil {
