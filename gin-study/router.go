@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"fmt"
 	"net/http"
 	"path"
 
@@ -88,6 +89,11 @@ func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	pathName := r.pathFor(p)
 	// 获取所有的中间件
 	combinedHandlers := r.combineHandlers(handlers)
+	if ginMode == debugCode {
+		numHandlers := len(combinedHandlers)
+		name := funcName(combinedHandlers[numHandlers-1])
+		fmt.Printf("[GIN-debug] %-5s %-25s --> %s (%d handlers)\n", method, p, name, numHandlers)
+	}
 	// 处理请求
 	r.engine.router.Handle(method, pathName, func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		// 创建context

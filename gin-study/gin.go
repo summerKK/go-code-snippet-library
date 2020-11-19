@@ -2,6 +2,7 @@ package gin
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"log"
 	"math"
@@ -119,6 +120,10 @@ func (e *Engine) run(c context.Context, addr string, handle func(s *http.Server)
 
 // http服务
 func (e *Engine) Run(c context.Context, addr string) {
+	if ginMode == debugCode {
+		fmt.Println("[GIN-debug] Listening and serving HTTP on " + addr)
+	}
+
 	e.run(c, addr, func(s *http.Server) error {
 		return s.ListenAndServe()
 	})
@@ -126,6 +131,10 @@ func (e *Engine) Run(c context.Context, addr string) {
 
 // https服务
 func (e *Engine) RunTLS(c context.Context, addr string, cert string, key string) {
+	if ginMode == debugCode {
+		fmt.Println("[GIN-debug] Listening and serving HTTPS on " + addr)
+	}
+
 	e.run(c, addr, func(s *http.Server) error {
 		return s.ListenAndServeTLS(cert, key)
 	})

@@ -1,6 +1,10 @@
 package gin
 
-import "path"
+import (
+	"path"
+	"reflect"
+	"runtime"
+)
 
 func joinGroupPath(elems ...string) string {
 	joined := path.Join(elems...)
@@ -20,4 +24,8 @@ func filterFlags(content string) string {
 	}
 
 	return content
+}
+
+func funcName(f interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
