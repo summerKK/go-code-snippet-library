@@ -7,11 +7,13 @@ const GINMode = "GIN_MODE"
 const (
 	DebugMode   string = "debug"
 	ReleaseMode string = "release"
+	TestModel   string = "test"
 )
 
 const (
 	debugCode = iota
 	releaseCode
+	testMode
 )
 
 var ginMode int = debugCode
@@ -31,6 +33,8 @@ func SetMode(v string) {
 		ginMode = debugCode
 	case ReleaseMode:
 		ginMode = releaseCode
+	case TestModel:
+		ginMode = testMode
 	default:
 		panic("gin mode unknown, the allowed modes are: " + DebugMode + " and " + ReleaseMode)
 	}

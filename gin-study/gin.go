@@ -54,8 +54,12 @@ func (e *Engine) LoadHTMLFiles(files ...string) {
 }
 
 func (e *Engine) SetHTMLTemplate(tmpl *template.Template) {
-	e.HTMLRender = render.HTMLRender{
-		Template: tmpl,
+	if ginMode == debugCode {
+		e.HTMLRender = render.HTMLDebug
+	} else {
+		e.HTMLRender = render.HTMLRender{
+			Template: tmpl,
+		}
 	}
 }
 

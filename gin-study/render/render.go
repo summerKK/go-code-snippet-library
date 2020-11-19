@@ -33,11 +33,14 @@ type HTMLRender struct {
 	Template *template.Template
 }
 
+type htmlDebugRender struct{}
+
 var (
-	JSON     = jsonRender{}
-	XML      = xmlRender{}
-	Plain    = plainRender{}
-	Redirect = redirectRender{}
+	JSON      = jsonRender{}
+	XML       = xmlRender{}
+	Plain     = plainRender{}
+	Redirect  = redirectRender{}
+	HTMLDebug = htmlDebugRender{}
 )
 
 func WriteHeader(w http.ResponseWriter, code int, contentType string) {
@@ -59,14 +62,6 @@ func (_ xmlRender) Render(writer http.ResponseWriter, code int, data ...interfac
 	return encoder.Encode(data[0])
 }
 
-func (r HTMLRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
-	WriteHeader(writer, code, MIMEHTML)
-	file := data[0].(string)
-	obj := data[1]
-
-	return r.Template.ExecuteTemplate(writer, file, obj)
-}
-
 func (_ plainRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
 	WriteHeader(writer, code, MIMEPlain)
 	format := data[0].(string)
@@ -86,4 +81,25 @@ func (_ redirectRender) Render(writer http.ResponseWriter, code int, data ...int
 	writer.Header().Set("Location", data[0].(string))
 
 	return nil
+}
+
+func (r HTMLRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
+	WriteHeader(writer, code, MIMEHTML)
+	file := data[0].(string)
+	obj := data[1]
+
+	return r.Template.ExecuteTemplate(writer, file, obj)
+}
+
+func (html htmlDebugRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
+	WriteHeader(writer, code, MIMEHTML)
+	file := data[0].(string)
+	obj := data[1]
+
+	t, err := template.ParseFiles(file)
+	if err != nil {
+		return err
+	}
+
+	return t.ExecuteTemplate(writer, file, obj)
 }

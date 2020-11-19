@@ -21,6 +21,10 @@ var (
 	respText = "hello,world"
 )
 
+func init() {
+	gin.SetMode(gin.TestModel)
+}
+
 func TestHandleStaticFile(t *testing.T) {
 	assertIs := is.New(t)
 	engine := gin.New()
