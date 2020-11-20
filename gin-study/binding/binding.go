@@ -148,7 +148,7 @@ func setWithProperType(valueKind reflect.Kind, v string, structField reflect.Val
 }
 
 // 对提交的字段进行校验
-func Validate(value interface{}) error {
+func Validate(value interface{}, parents ...string) error {
 	var err error
 	typ := reflect.TypeOf(value)
 	val := reflect.ValueOf(value)
@@ -181,21 +181,30 @@ func Validate(value interface{}) error {
 				// 结构体嵌套
 				if fieldType == reflect.Struct {
 					if reflect.DeepEqual(zero, fieldValue) {
-						return errors.New("Required " + field.Name)
+						errMsg := "Required " + field.Name
+						if len(parents) > 0 {
+							errMsg += strings.Join(parents, ".")
+						}
+
+						return errors.New(errMsg)
 					}
 					// 验证结构体
-					err = Validate(fieldValue)
+					err = Validate(fieldValue, append(parents, field.Name)...)
 					if err != nil {
 						return err
 					}
 
 					// 空值
 				} else if reflect.DeepEqual(zero, fieldValue) {
-					return errors.New("Required " + field.Name)
+					errMsg := "Required " + field.Name
+					if len(parents) > 0 {
+						errMsg += " on " + strings.Join(parents, ".")
+					}
+					return errors.New(errMsg)
 
-					// 如果 字段是slice,并且slice里面的元素类型也是struct
-				} else if fieldType == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
-					err = Validate(fieldValue)
+					// slice
+				} else if fieldType == reflect.Slice {
+					err = Validate(fieldValue, append(parents, field.Name)...)
 					if err != nil {
 						return err
 					}
@@ -206,7 +215,7 @@ func Validate(value interface{}) error {
 	case reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			fieldValue := val.Index(i).Interface()
-			err = Validate(fieldValue)
+			err = Validate(fieldValue, parents...)
 			if err != nil {
 				return err
 			}
