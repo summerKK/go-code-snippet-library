@@ -1,17 +1,22 @@
 package gin
 
 import (
+	"bufio"
+	"errors"
 	"log"
+	"net"
 	"net/http"
 )
 
 type ResponseWriterInterface interface {
-	http.ResponseWriter
 	Status() int
 	Written() bool
-
 	WriteHeaderNow()
 	Reset(w http.ResponseWriter)
+
+	http.ResponseWriter
+	http.Hijacker
+	http.Flusher
 }
 
 type ResponseWriter struct {
@@ -43,7 +48,7 @@ func (r *ResponseWriter) Reset(w http.ResponseWriter) {
 }
 
 func (r *ResponseWriter) WriteHeader(s int) {
-	if s != 0 {
+	if s > 0 {
 		r.status = s
 		if r.written {
 			log.Println("[GIN] WARNING. Headers were already written!")
@@ -62,4 +67,21 @@ func (r *ResponseWriter) Write(b []byte) (int, error) {
 	r.WriteHeaderNow()
 
 	return r.ResponseWriter.Write(b)
+}
+
+// 劫持
+func (r *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := r.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("the ResponseWriter doesn't support the Hijacker interface")
+	}
+
+	return hijacker.Hijack()
+}
+
+// implements the http.Flush interface
+func (r *ResponseWriter) Flush() {
+	if flusher, ok := r.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
 }
