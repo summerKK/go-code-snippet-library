@@ -53,6 +53,7 @@ func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, pa
 	ctx.index = -1
 	// 情况错误
 	ctx.Errors = ctx.Errors[0:0]
+	ctx.accepted = nil
 
 	return ctx
 }

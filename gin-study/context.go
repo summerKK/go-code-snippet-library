@@ -25,6 +25,16 @@ type errorMsg struct {
 	Meta interface{} `json:"meta"`
 }
 
+// 网络协商
+type Negotiate struct {
+	Offered  []string
+	Data     interface{}
+	JSONData interface{}
+	XMLData  interface{}
+	HTMLData interface{}
+	HTMLPath string
+}
+
 type errorMsgs []errorMsg
 
 // 返回特定的错误
@@ -95,6 +105,7 @@ type Context struct {
 	handlers []HandlerFunc
 	index    int8
 	Engine   *Engine
+	accepted []string
 }
 
 // 执行middleware
@@ -249,4 +260,54 @@ func (c *Context) ErrorTyped(err error, typ uint32, meta interface{}) {
 		Type: typ,
 		Meta: meta,
 	})
+}
+
+func (c *Context) Negotiate(code int, config Negotiate) {
+	switch c.NegotiateFormat(config.Offered...) {
+	case render.MIMEJSON:
+		data := chooseData(config.JSONData, config.Data)
+		c.JSON(code, data)
+
+	case render.MIMEHTML:
+		data := chooseData(config.HTMLData, config.Data)
+		if len(config.HTMLPath) == 0 {
+			panic("negotiate config is wrong. html path is needed.")
+		}
+		c.HTML(code, config.HTMLPath, data)
+
+	case render.MIMEXML:
+		data := chooseData(config.XMLData, config.Data)
+		c.XML(code, data)
+
+	default:
+		c.Fail(http.StatusNotAcceptable, errors.New("the accepted formats are not offered by the server"))
+	}
+}
+
+func (c *Context) NegotiateFormat(offered ...string) string {
+	if len(offered) == 0 {
+		panic("you must provide at least one offer")
+	}
+
+	if c.accepted == nil {
+		c.accepted = parseAccept(c.Request.Header.Get("Accept"))
+	}
+
+	if len(c.accepted) == 0 {
+		return offered[0]
+	} else {
+		for _, accepted := range c.accepted {
+			for _, offert := range offered {
+				if accepted == offert {
+					return offert
+				}
+			}
+		}
+	}
+
+	return ""
+}
+
+func (c *Context) SetAccepted(formats ...string) {
+	c.accepted = formats
 }

@@ -4,6 +4,7 @@ import (
 	"path"
 	"reflect"
 	"runtime"
+	"strings"
 )
 
 func joinGroupPath(elems ...string) string {
@@ -28,4 +29,29 @@ func filterFlags(content string) string {
 
 func funcName(f interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+}
+
+func chooseData(custom, wildcard interface{}) interface{} {
+	if custom == nil {
+		if wildcard == nil {
+			panic("negotiation config is invalid")
+		}
+		return wildcard
+	}
+	return custom
+}
+
+func parseAccept(accept string) []string {
+	parts := strings.Split(accept, ",")
+
+	for i, part := range parts {
+		index := strings.IndexByte(part, ';')
+		if index >= 0 {
+			part = accept[0:index]
+		}
+		part = strings.TrimSpace(part)
+		parts[i] = part
+	}
+
+	return parts
 }
