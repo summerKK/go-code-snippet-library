@@ -17,6 +17,7 @@ const (
 )
 
 var ginMode int = debugCode
+var modelName string = DebugMode
 
 func init() {
 	value := os.Getenv(GINMode)
@@ -25,6 +26,10 @@ func init() {
 	} else {
 		SetMode(value)
 	}
+}
+
+func Model() string {
+	return modelName
 }
 
 func SetMode(v string) {

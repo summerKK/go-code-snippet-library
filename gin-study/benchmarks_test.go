@@ -29,7 +29,7 @@ func runHandle(B *testing.B, handler gin.HandlerFunc) {
 	req := httptest.NewRequest("GET", "http://localhost/foo", nil)
 	c := &gin.Context{
 		Request: req,
-		Writer:  gin.NewResponseWriter(httptest.NewRecorder(), 0, false),
+		Writer:  gin.NewResponseWriter(httptest.NewRecorder(), 0),
 		Engine:  gin.New(),
 	}
 

@@ -33,14 +33,17 @@ type HTMLRender struct {
 	Template *template.Template
 }
 
-type htmlDebugRender struct{}
+type htmlDebugRender struct {
+	globs []string
+	files []string
+}
 
 var (
 	JSON      = jsonRender{}
 	XML       = xmlRender{}
 	Plain     = plainRender{}
 	Redirect  = redirectRender{}
-	HTMLDebug = htmlDebugRender{}
+	HTMLDebug = &htmlDebugRender{}
 )
 
 func WriteHeader(w http.ResponseWriter, code int, contentType string) {
@@ -91,15 +94,32 @@ func (r HTMLRender) Render(writer http.ResponseWriter, code int, data ...interfa
 	return r.Template.ExecuteTemplate(writer, file, obj)
 }
 
-func (html htmlDebugRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
+func (html *htmlDebugRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
 	WriteHeader(writer, code, MIMEHTML)
 	file := data[0].(string)
 	obj := data[1]
 
-	t, err := template.ParseFiles(file)
-	if err != nil {
-		return err
+	t := template.New("")
+
+	if len(html.files) > 0 {
+		if _, err := t.ParseFiles(html.files...); err != nil {
+			return err
+		}
+	}
+
+	for _, glob := range html.globs {
+		if _, err := t.ParseGlob(glob); err != nil {
+			return err
+		}
 	}
 
 	return t.ExecuteTemplate(writer, file, obj)
+}
+
+func (html *htmlDebugRender) AddGlob(pattern string) {
+	html.globs = append(html.globs, pattern)
+}
+
+func (html *htmlDebugRender) AddFiles(files ...string) {
+	html.files = append(html.files, files...)
 }

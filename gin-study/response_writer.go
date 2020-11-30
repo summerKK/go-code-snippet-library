@@ -12,6 +12,7 @@ type ResponseWriterInterface interface {
 	Status() int
 	Written() bool
 	WriteHeaderNow()
+	Size() int
 	Reset(w http.ResponseWriter)
 
 	http.ResponseWriter
@@ -19,17 +20,21 @@ type ResponseWriterInterface interface {
 	http.Flusher
 }
 
+const (
+	NoWritten = -1
+)
+
 type ResponseWriter struct {
 	http.ResponseWriter
-	status  int
-	written bool
+	status int
+	size   int
 }
 
-func NewResponseWriter(w http.ResponseWriter, status int, written bool) *ResponseWriter {
+func NewResponseWriter(w http.ResponseWriter, status int) *ResponseWriter {
 	return &ResponseWriter{
 		w,
 		status,
-		written,
+		NoWritten,
 	}
 }
 
@@ -37,28 +42,32 @@ func (r *ResponseWriter) Status() int {
 	return r.status
 }
 
+func (r *ResponseWriter) Size() int {
+	return r.size
+}
+
 func (r *ResponseWriter) Written() bool {
-	return r.written
+	return r.size != NoWritten
 }
 
 func (r *ResponseWriter) Reset(w http.ResponseWriter) {
 	r.status = http.StatusOK
-	r.written = false
+	r.size = NoWritten
 	r.ResponseWriter = w
 }
 
 func (r *ResponseWriter) WriteHeader(s int) {
 	if s > 0 {
 		r.status = s
-		if r.written {
+		if r.Written() {
 			log.Println("[GIN] WARNING. Headers were already written!")
 		}
 	}
 }
 
 func (r *ResponseWriter) WriteHeaderNow() {
-	if !r.written {
-		r.written = true
+	if !r.Written() {
+		r.size = 0
 		r.ResponseWriter.WriteHeader(r.status)
 	}
 }
@@ -66,7 +75,10 @@ func (r *ResponseWriter) WriteHeaderNow() {
 func (r *ResponseWriter) Write(b []byte) (int, error) {
 	r.WriteHeaderNow()
 
-	return r.ResponseWriter.Write(b)
+	n, err := r.ResponseWriter.Write(b)
+	r.size += n
+
+	return n, err
 }
 
 // 劫持

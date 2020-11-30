@@ -44,22 +44,28 @@ type Engine struct {
 }
 
 func (e *Engine) LoadHTMLGlob(pattern string) {
-	tmpl := template.Must(template.ParseGlob(pattern))
-	e.SetHTMLTemplate(tmpl)
+	if ginMode == debugCode {
+		render.HTMLDebug.AddGlob(pattern)
+		e.HTMLRender = render.HTMLDebug
+	} else {
+		tmpl := template.Must(template.ParseGlob(pattern))
+		e.SetHTMLTemplate(tmpl)
+	}
 }
 
 func (e *Engine) LoadHTMLFiles(files ...string) {
-	tmpl := template.Must(template.ParseFiles(files...))
-	e.SetHTMLTemplate(tmpl)
+	if ginMode == debugCode {
+		render.HTMLDebug.AddFiles(files...)
+		e.HTMLRender = render.HTMLDebug
+	} else {
+		tmpl := template.Must(template.ParseFiles(files...))
+		e.SetHTMLTemplate(tmpl)
+	}
 }
 
 func (e *Engine) SetHTMLTemplate(tmpl *template.Template) {
-	if ginMode == debugCode {
-		e.HTMLRender = render.HTMLDebug
-	} else {
-		e.HTMLRender = render.HTMLRender{
-			Template: tmpl,
-		}
+	e.HTMLRender = render.HTMLRender{
+		Template: tmpl,
 	}
 }
 
