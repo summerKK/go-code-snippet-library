@@ -315,13 +315,5 @@ func (c *Context) SetAccepted(formats ...string) {
 }
 
 func (c *Context) ClientIp() string {
-	clientIp := c.Request.Header.Get("X-Real-IP")
-	if clientIp == "" {
-		clientIp = c.Request.Header.Get("X-Forwarded-For")
-	}
-	if clientIp == "" {
-		clientIp = c.Request.RemoteAddr
-	}
-
-	return clientIp
+	return c.Request.RemoteAddr
 }

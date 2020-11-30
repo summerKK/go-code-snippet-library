@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -228,4 +229,70 @@ func TestContextHandlersChain0(t *testing.T) {
 
 	assertIs.Equal(409, w.Code)
 	assertIs.Equal(2, stepsPassed)
+}
+
+func TestClientIP(t *testing.T) {
+	r := gin.New()
+
+	var clientIP string = ""
+	r.GET("/ip", func(c *gin.Context) {
+		clientIP = c.ClientIp()
+	})
+
+	body := bytes.NewBuffer([]byte(""))
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "ip"), body)
+	req.RemoteAddr = "clientip:1234"
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if clientIP != "clientip:1234" {
+		t.Errorf("ClientIP should not be %s, but clientip:1234", clientIP)
+	}
+}
+
+func TestClientIPWithXForwardedForWithProxy(t *testing.T) {
+	r := gin.New()
+	r.Use(gin.ForwardedFor())
+
+	var clientIP string = ""
+	r.GET("/ip", func(c *gin.Context) {
+		clientIP = c.ClientIp()
+	})
+
+	body := bytes.NewBuffer([]byte(""))
+	req := httptest.NewRequest("GET", fmt.Sprintf(url, "ip"), body)
+	req.RemoteAddr = "172.16.8.3:1234"
+	req.Header.Set("X-Real-Ip", "realip")
+	req.Header.Set("X-Forwarded-For", "1.2.3.4, 10.10.0.4, 192.168.0.43, 172.16.8.4")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if clientIP != "1.2.3.4:0" {
+		t.Errorf("ClientIP should not be %s, but 1.2.3.4:0", clientIP)
+	}
+}
+
+func TestContextHTML(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/test", nil)
+	w := httptest.NewRecorder()
+
+	r := gin.New()
+	tmpl, _ := template.New("t").Parse(`Hello {{.Name}}`)
+	r.SetHTMLTemplate(tmpl)
+
+	type TestData struct{ Name string }
+
+	r.GET("/test", func(c *gin.Context) {
+		c.HTML(200, "t", TestData{"Summer"})
+	})
+
+	r.ServeHTTP(w, req)
+
+	if w.Body.String() != "Hello Summer" {
+		t.Errorf("Response should be Hello Summer, was: %s", w.Body.String())
+	}
+
+	if w.Header().Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Errorf("Content-Type should be text/html, was %s", w.Header().Get("Content-Type"))
+	}
 }

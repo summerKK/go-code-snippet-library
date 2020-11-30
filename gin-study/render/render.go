@@ -47,8 +47,12 @@ var (
 )
 
 func WriteHeader(w http.ResponseWriter, code int, contentType string) {
-	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Type", CombineContentType(contentType))
 	w.WriteHeader(code)
+}
+
+func CombineContentType(contentType string) string {
+	return contentType + "; charset=utf-8"
 }
 
 func (_ jsonRender) Render(writer http.ResponseWriter, code int, data ...interface{}) error {
