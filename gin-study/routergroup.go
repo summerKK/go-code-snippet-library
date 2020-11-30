@@ -15,13 +15,13 @@ type handlers404 struct {
 }
 
 func (h *handlers404) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	c := h.engine.createContext(w, r, nil, h.engine.finalNoRoute)
+	c := h.engine.createContext(w, r, nil, h.engine.allNoRoute)
 	c.Writer.WriteHeader(http.StatusNotFound)
 	c.Next()
 
 	if !c.Writer.Written() {
 		if c.Writer.Status() == http.StatusNotFound {
-			c.Data(http.StatusNotFound, render.MIMEPlain, []byte("404 page not found"))
+			c.Data(http.StatusNotFound, render.MIMEPlain, h.engine.Default404Body)
 		} else {
 			c.Writer.WriteHeaderNow()
 		}
@@ -45,7 +45,7 @@ type RouterGroup struct {
 func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 	r.Handlers = append(r.Handlers, middlewares...)
 	// 给找不到路由的handler赋值,并且放在最后执行
-	r.engine.finalNoRoute = r.engine.combineHandlers(r.engine.noRoute)
+	r.engine.allNoRoute = r.engine.combineHandlers(r.engine.noRoute)
 }
 
 // 返回新的group
@@ -132,9 +132,7 @@ func (r *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
 	l := len(r.Handlers) + len(handlers)
 	h := make([]HandlerFunc, 0, l)
 	h = append(h, r.Handlers...)
-	h = append(h, handlers...)
-
-	return h
+	return append(h, handlers...)
 }
 
 // 合并地址

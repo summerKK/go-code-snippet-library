@@ -33,13 +33,14 @@ type Engine struct {
 	*RouterGroup
 	// api未找到,触发的方法
 	noRoute []HandlerFunc
-	// 路由未找到触发的handle,`finalNoRoute`包含了`noRoute`
-	finalNoRoute []HandlerFunc
-	router       *httprouter.Router
-	HTMLRender   render.Render
+	// 路由未找到触发的handle,`allNoRoute`包含了`noRoute`
+	allNoRoute []HandlerFunc
+	router     *httprouter.Router
+	HTMLRender render.Render
 	// context pool
-	ctxPool sync.Pool
-	addr    string
+	ctxPool        sync.Pool
+	addr           string
+	Default404Body []byte
 }
 
 func (e *Engine) LoadHTMLGlob(pattern string) {
@@ -70,7 +71,7 @@ func (e *Engine) SetHTMLTemplate(tmpl *template.Template) {
 
 func (e *Engine) NoRoute(handler ...HandlerFunc) {
 	e.noRoute = handler
-	e.finalNoRoute = e.combineHandlers(e.noRoute)
+	e.allNoRoute = e.combineHandlers(e.noRoute)
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
@@ -170,6 +171,10 @@ func (e *Engine) freeCtx(c *Context) {
 	e.ctxPool.Put(c)
 }
 
+func (e *Engine) rebuild404Handlers() {
+	e.allNoRoute = e.combineHandlers(e.noRoute)
+}
+
 func New() *Engine {
 	engine := &Engine{}
 	engine.RouterGroup = &RouterGroup{
@@ -180,6 +185,7 @@ func New() *Engine {
 	}
 	engine.router = httprouter.New()
 	engine.router.NotFound = &handlers404{engine: engine}
+	engine.Default404Body = []byte("404 page not found")
 	engine.ctxPool.New = func() interface{} {
 		return &Context{
 			Engine: engine,

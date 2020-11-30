@@ -47,58 +47,56 @@ func Logger(writer io.Writer) HandlerFunc {
 
 		c.Next()
 
-		requester := c.Request.Header.Get("X-Real-IP")
-		if requester == "" {
-			requester = c.Request.Header.Get("X-Forwarded-For")
-		}
-
-		// 如果还是为空直接取request的ip
-		if requester == "" {
-			requester = c.Request.RemoteAddr
-		}
-
-		var color string
-		code := c.Writer.Status()
-		switch {
-		case code >= 200 && code <= 299:
-			color = green
-		case code >= 300 && code <= 399:
-			color = white
-		case code >= 400 && code <= 499:
-			color = yellow
-		default:
-			color = red
-		}
-
-		var methodColor string
+		clientIp := c.ClientIp()
 		method := c.Request.Method
-		switch {
-		case method == "GET":
-			methodColor = blue
-		case method == "POST":
-			methodColor = cyan
-		case method == "PUT":
-			methodColor = yellow
-		case method == "DELETE":
-			methodColor = red
-		case method == "PATCH":
-			methodColor = green
-		case method == "HEAD":
-			methodColor = magenta
-		case method == "OPTIONS":
-			methodColor = white
-		}
+		methodColor := colorForMethod(method)
+		statusCode := c.Writer.Status()
+		statusColor := colorForStatus(statusCode)
 
 		logger.Printf("[GIN] %v |%s %3d %s| %12v | %s |%s %-7s %s|%s\n%s",
 			time.Now().Format("2006/01/02 - 15:04:05"),
-			color, c.Writer.Status(), reset,
+			statusColor, statusCode, reset,
 			time.Since(t),
-			requester,
+			clientIp,
 			methodColor,
-			c.Request.Method,
+			method,
 			reset,
 			c.Request.URL.Path,
 			c.Errors.String(),
 		)
+	}
+}
+
+func colorForStatus(code int) string {
+	switch {
+	case code >= 200 && code <= 299:
+		return green
+	case code >= 300 && code <= 399:
+		return white
+	case code >= 400 && code <= 499:
+		return yellow
+	default:
+		return red
+	}
+}
+
+func colorForMethod(method string) string {
+	switch {
+	case method == "GET":
+		return blue
+	case method == "POST":
+		return cyan
+	case method == "PUT":
+		return yellow
+	case method == "DELETE":
+		return red
+	case method == "PATCH":
+		return green
+	case method == "HEAD":
+		return magenta
+	case method == "OPTIONS":
+		return white
+	default:
+		return reset
 	}
 }
