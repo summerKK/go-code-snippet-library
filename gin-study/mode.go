@@ -44,3 +44,7 @@ func SetMode(v string) {
 		panic("gin mode unknown, the allowed modes are: " + DebugMode + " and " + ReleaseMode)
 	}
 }
+
+func IsDebugging() bool {
+	return ginMode == debugCode
+}

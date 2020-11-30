@@ -31,6 +31,7 @@ func TestValidate(t *testing.T) {
 		P4 string `binding:"required"`
 		P5 p2     `binding:"required"`
 		P6 p3     `binding:"required"`
+		p7 string `binding:"required"`
 	}
 
 	v := p1{

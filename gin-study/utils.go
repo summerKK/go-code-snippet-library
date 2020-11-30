@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"fmt"
 	"path"
 	"reflect"
 	"runtime"
@@ -54,4 +55,10 @@ func parseAccept(accept string) []string {
 	}
 
 	return parts
+}
+
+func debugPrint(format string, values ...interface{}) {
+	if IsDebugging() {
+		fmt.Printf("[GIN-debug] "+format, values...)
+	}
 }

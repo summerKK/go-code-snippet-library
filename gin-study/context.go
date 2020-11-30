@@ -121,8 +121,13 @@ func (c *Context) Next() {
 	}
 }
 
-// 终止请求
 func (c *Context) Abort(code int) {
+	// 把index设置到最大,让剩余的中间件不执行
+	c.index = AbortIndex
+}
+
+// 终止请求
+func (c *Context) AbortWithStatus(code int) {
 	c.Writer.WriteHeader(code)
 	// 把index设置到最大,让剩余的中间件不执行
 	c.index = AbortIndex
@@ -131,7 +136,7 @@ func (c *Context) Abort(code int) {
 // 失败调用方法
 func (c *Context) Fail(code int, err error) {
 	c.Error(err, "Operation aborted")
-	c.Abort(code)
+	c.AbortWithStatus(code)
 }
 
 // 添加错误
@@ -205,7 +210,7 @@ func (c *Context) BindWith(v interface{}, b binding.Binding) bool {
 func (c *Context) Render(render render.Render, code int, obj ...interface{}) {
 	if err := render.Render(c.Writer, code, obj...); err != nil {
 		c.ErrorTyped(err, ErrorTypeInternal, obj)
-		c.Abort(http.StatusInternalServerError)
+		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 }
 
@@ -231,10 +236,7 @@ func (c *Context) Data(code int, contentType string, data []byte) {
 		c.Writer.Header().Set("Content-Type", contentType)
 	}
 
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
-
+	c.Writer.WriteHeader(code)
 	_, _ = c.Writer.Write(data)
 }
 

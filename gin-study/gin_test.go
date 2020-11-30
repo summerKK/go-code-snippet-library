@@ -81,7 +81,7 @@ func TestEngine_Run(t *testing.T) {
 	engine := gin.New()
 
 	engine.GET("/", func(c *gin.Context) {
-		c.Abort(http.StatusOK)
+		c.AbortWithStatus(http.StatusOK)
 	})
 
 	engine.Run(context.Background(), ":8899")

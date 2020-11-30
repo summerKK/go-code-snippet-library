@@ -167,7 +167,8 @@ func Validate(value interface{}, parents ...string) error {
 			field := typ.Field(i)
 
 			// 过滤字段
-			if field.Tag.Get("form") == "-" {
+			// 未导出的字段直接忽略
+			if field.Tag.Get("form") == "-" || !val.Field(i).CanSet() {
 				continue
 			}
 

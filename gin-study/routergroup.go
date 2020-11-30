@@ -1,7 +1,6 @@
 package gin
 
 import (
-	"fmt"
 	"net/http"
 	"path"
 
@@ -42,22 +41,6 @@ type RouterGroup struct {
 	engine *Engine
 }
 
-// 创建context,贯穿整个请求
-func (r *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
-	ctx := r.engine.ctxPool.Get().(*Context)
-	// 初始化ctx
-	ctx.Writer.Reset(w)
-	ctx.Request = req
-	ctx.Params = params
-	ctx.handlers = handlers
-	ctx.index = -1
-	// 情况错误
-	ctx.Errors = ctx.Errors[0:0]
-	ctx.accepted = nil
-
-	return ctx
-}
-
 //  添加中间件
 func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 	r.Handlers = append(r.Handlers, middlewares...)
@@ -90,15 +73,15 @@ func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	pathName := r.pathFor(p)
 	// 获取所有的中间件
 	combinedHandlers := r.combineHandlers(handlers)
-	if ginMode == debugCode {
+	if IsDebugging() {
 		numHandlers := len(combinedHandlers)
 		name := funcName(combinedHandlers[numHandlers-1])
-		fmt.Printf("[GIN-debug] %-5s %-25s --> %s (%d handlers)\n", method, p, name, numHandlers)
+		debugPrint("%-5s %-25s --> %s (%d handlers)\n", method, p, name, numHandlers)
 	}
 	// 处理请求
 	r.engine.router.Handle(method, pathName, func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		// 创建context
-		ctx := r.createContext(writer, req, params, combinedHandlers)
+		ctx := r.engine.createContext(writer, req, params, combinedHandlers)
 		ctx.Next()
 		// 添加响应头
 		ctx.Writer.WriteHeaderNow()

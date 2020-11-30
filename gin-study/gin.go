@@ -2,7 +2,6 @@ package gin
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log"
 	"math"
@@ -44,7 +43,7 @@ type Engine struct {
 }
 
 func (e *Engine) LoadHTMLGlob(pattern string) {
-	if ginMode == debugCode {
+	if IsDebugging() {
 		render.HTMLDebug.AddGlob(pattern)
 		e.HTMLRender = render.HTMLDebug
 	} else {
@@ -54,7 +53,7 @@ func (e *Engine) LoadHTMLGlob(pattern string) {
 }
 
 func (e *Engine) LoadHTMLFiles(files ...string) {
-	if ginMode == debugCode {
+	if IsDebugging() {
 		render.HTMLDebug.AddFiles(files...)
 		e.HTMLRender = render.HTMLDebug
 	} else {
@@ -130,8 +129,8 @@ func (e *Engine) run(c context.Context, addr string, handle func(s *http.Server)
 
 // http服务
 func (e *Engine) Run(c context.Context, addr string) {
-	if ginMode == debugCode {
-		fmt.Println("[GIN-debug] Listening and serving HTTP on " + addr)
+	if IsDebugging() {
+		debugPrint("Listening and serving HTTP on " + addr)
 	}
 
 	e.run(c, addr, func(s *http.Server) error {
@@ -141,13 +140,29 @@ func (e *Engine) Run(c context.Context, addr string) {
 
 // https服务
 func (e *Engine) RunTLS(c context.Context, addr string, cert string, key string) {
-	if ginMode == debugCode {
-		fmt.Println("[GIN-debug] Listening and serving HTTPS on " + addr)
+	if IsDebugging() {
+		debugPrint("Listening and serving HTTPS on " + addr)
 	}
 
 	e.run(c, addr, func(s *http.Server) error {
 		return s.ListenAndServeTLS(cert, key)
 	})
+}
+
+// 创建context,贯穿整个请求
+func (e *Engine) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
+	ctx := e.ctxPool.Get().(*Context)
+	// 初始化ctx
+	ctx.Writer.Reset(w)
+	ctx.Request = req
+	ctx.Params = params
+	ctx.handlers = handlers
+	ctx.index = -1
+	// 情况错误
+	ctx.Errors = ctx.Errors[0:0]
+	ctx.accepted = nil
+
+	return ctx
 }
 
 // 放回池子

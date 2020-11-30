@@ -37,7 +37,7 @@ func TestRouterGroup_Use(t *testing.T) {
 	group.GET("/middleware", func(c *gin.Context) {
 		_, _ = c.Writer.Write([]byte(respText))
 		log.Println("                   hello,world")
-		c.Abort(200)
+		c.AbortWithStatus(200)
 	})
 
 	req := httptest.NewRequest("GET", fmt.Sprintf(url, "api/middleware"), nil)

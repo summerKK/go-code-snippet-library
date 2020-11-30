@@ -35,7 +35,7 @@ func TestContext_Bind(t *testing.T) {
 		assertIs.True(c.Bind(&params0))
 		assertIs.Equal(params0.Name, params1.Name)
 		assertIs.Equal(params0.Age, params1.Age)
-		c.Abort(200)
+		c.AbortWithStatus(200)
 	})
 
 	values := make(map[string]interface{})
@@ -64,7 +64,7 @@ func TestContext_Bind2(t *testing.T) {
 		if c.Bind(&params0) {
 			assertIs.Equal([]string{"summer", "summer"}, params0.Name)
 			assertIs.Equal([]int{28, 28}, params0.Age)
-			c.Abort(http.StatusOK)
+			c.AbortWithStatus(http.StatusOK)
 			return
 		}
 
@@ -82,7 +82,7 @@ func TestContext_Pool(t *testing.T) {
 	engine := gin.New()
 
 	engine.GET("/pool", func(c *gin.Context) {
-		c.Abort(http.StatusOK)
+		c.AbortWithStatus(http.StatusOK)
 	})
 
 	wg := &sync.WaitGroup{}
@@ -205,7 +205,7 @@ func TestContextHandlersChain0(t *testing.T) {
 	engine.Use(func(c *gin.Context) {
 		stepsPassed += 1
 		// abort后,后面的中间件就不会执行了
-		c.Abort(409)
+		c.AbortWithStatus(409)
 		c.Next()
 		stepsPassed += 1
 	})
@@ -214,7 +214,7 @@ func TestContextHandlersChain0(t *testing.T) {
 		stepsPassed += 1
 		c.Next()
 		stepsPassed += 1
-		c.Abort(403)
+		c.AbortWithStatus(403)
 	})
 
 	engine.GET("/count", func(c *gin.Context) {
