@@ -36,9 +36,9 @@ type RouterGroup struct {
 	// 中间件
 	Handlers []HandlerFunc
 	// 前缀
-	prefix string
-	parent *RouterGroup
-	engine *Engine
+	absolutePath string
+	parent       *RouterGroup
+	engine       *Engine
 }
 
 //  添加中间件
@@ -50,32 +50,21 @@ func (r *RouterGroup) Use(middlewares ...HandlerFunc) {
 
 // 返回新的group
 func (r *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
-	prefix := r.pathFor(component)
-
 	return &RouterGroup{
-		Handlers: r.combineHandlers(handlers),
-		prefix:   prefix,
-		parent:   r,
-		engine:   r.engine,
+		Handlers:     r.combineHandlers(handlers),
+		absolutePath: r.calcAbsolutePath(component),
+		parent:       r,
+		engine:       r.engine,
 	}
-}
-
-func (r *RouterGroup) pathFor(p string) string {
-	joined := path.Join(r.prefix, p)
-	if len(p) > 0 && p[len(p)-1] == '/' && joined[len(joined)-1] != '/' {
-		joined += "/"
-	}
-
-	return joined
 }
 
 func (r *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
-	pathName := r.pathFor(p)
+	pathName := r.calcAbsolutePath(p)
 	// 获取所有的中间件
 	combinedHandlers := r.combineHandlers(handlers)
 	if IsDebugging() {
 		numHandlers := len(combinedHandlers)
-		name := funcName(combinedHandlers[numHandlers-1])
+		name := nameOfFunction(combinedHandlers[numHandlers-1])
 		debugPrint("%-5s %-25s --> %s (%d handlers)\n", method, p, name, numHandlers)
 	}
 	// 处理请求
@@ -118,18 +107,21 @@ func (r *RouterGroup) HEAD(path string, handlers ...HandlerFunc) {
 	r.Handle("HEAD", path, handlers)
 }
 
+// 静态文件
 func (r *RouterGroup) Static(p, root string) {
-	prefix := r.pathFor(p)
+	prefix := r.calcAbsolutePath(p)
+	handler := r.createStaticHandler(prefix, root)
 	p = path.Join(p, "/*filepath")
-	// see https://studygolang.com/articles/9197
-	fileServer := http.StripPrefix(prefix, http.FileServer(http.Dir(root)))
-	r.GET(p, func(c *Context) {
-		fileServer.ServeHTTP(c.Writer, c.Request)
-	})
+	r.GET(p, handler)
+	r.HEAD(p, handler)
+}
 
-	r.HEAD(p, func(c *Context) {
-		fileServer.ServeHTTP(c.Writer, c.Request)
-	})
+func (r *RouterGroup) createStaticHandler(prefix, root string) func(ctx *Context) {
+	// see https://studygolang.com/articles/9197
+	serve := http.StripPrefix(prefix, http.FileServer(http.Dir(root)))
+	return func(c *Context) {
+		serve.ServeHTTP(c.Writer, c.Request)
+	}
 }
 
 func (r *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
@@ -143,4 +135,20 @@ func (r *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
 	h = append(h, handlers...)
 
 	return h
+}
+
+// 合并地址
+func (r *RouterGroup) calcAbsolutePath(relativePath string) string {
+	if relativePath == "" {
+		return r.absolutePath
+	}
+
+	absolutePath := path.Join(r.absolutePath, relativePath)
+	// path.Join 会把 第二个参数的 `/` 省略掉.这里判断是否需要加回去
+	appendSlash := lastChar(relativePath) == '/' && lastChar(absolutePath) != '/'
+	if appendSlash {
+		absolutePath += "/"
+	}
+
+	return absolutePath
 }

@@ -66,7 +66,7 @@ func function(pc uintptr) []byte {
 	// and want
 	//	*T.ptrmethod
 	// Also the package path might contains dot (e.g. code.google.com/...),
-	// so first eliminate the path prefix
+	// so first eliminate the path absolutePath
 	if lastslash := bytes.LastIndex(name, slash); lastslash >= 0 {
 		name = name[lastslash+1:]
 	}
