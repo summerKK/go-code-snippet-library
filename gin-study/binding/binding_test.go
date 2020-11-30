@@ -24,7 +24,11 @@ func TestValidate(t *testing.T) {
 		Items p0 `binding:"required"`
 	}
 
-	type p1 struct {
+	type Anonymous struct {
+		Name string `binding:"required"`
+	}
+
+	type Struct struct {
 		P0 p0     `binding:"required"`
 		P1 []p0   `binding:"required"`
 		P3 [][]p0 `binding:"required"`
@@ -32,9 +36,10 @@ func TestValidate(t *testing.T) {
 		P5 p2     `binding:"required"`
 		P6 p3     `binding:"required"`
 		p7 string `binding:"required"`
+		Anonymous
 	}
 
-	v := p1{
+	v := Struct{
 		P0: p0{
 			Name: "summer0",
 			Age:  28,
@@ -76,9 +81,12 @@ func TestValidate(t *testing.T) {
 				Age:  33,
 			},
 		},
+		Anonymous: Anonymous{
+			Name: "Summer",
+		},
 	}
 
-	err := binding.Validate(v)
+	err := binding.Validate(&v)
 	log.Println(err)
 
 	assertIs.True(err == nil)

@@ -168,7 +168,9 @@ func Validate(value interface{}, parents ...string) error {
 
 			// 过滤字段
 			// 未导出的字段直接忽略
-			if field.Tag.Get("form") == "-" || !val.Field(i).CanSet() {
+			// val.Field(i).CanInterface()可以判断字段是否导出.
+			// CanSet()无法判断,因为CanSet的字段需要可寻址的(`addressable`)
+			if field.Tag.Get("form") == "-" || !val.Field(i).CanInterface() {
 				continue
 			}
 
@@ -176,9 +178,9 @@ func Validate(value interface{}, parents ...string) error {
 			// 零值
 			zero := reflect.Zero(field.Type).Interface()
 
+			fieldType := field.Type.Kind()
 			// 必填认证
 			if strings.Index(field.Tag.Get("binding"), "required") > -1 {
-				fieldType := field.Type.Kind()
 				// 结构体嵌套
 				if fieldType == reflect.Struct {
 					if reflect.DeepEqual(zero, fieldValue) {
@@ -205,6 +207,14 @@ func Validate(value interface{}, parents ...string) error {
 
 					// slice
 				} else if fieldType == reflect.Slice {
+					err = Validate(fieldValue, append(parents, field.Name)...)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				// 判断匿名字段
+				if fieldType == reflect.Struct {
 					err = Validate(fieldValue, append(parents, field.Name)...)
 					if err != nil {
 						return err
