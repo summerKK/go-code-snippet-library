@@ -191,6 +191,8 @@ func (c *Context) Bind(v interface{}) bool {
 		b = binding.JSON
 	case contentType == render.MIMEXML || contentType == render.MIMEXML2:
 		b = binding.XML
+	case contentType == render.MIMEMultipartPOSTForm:
+		b = binding.MultipartForm
 	default:
 		c.Fail(400, errors.New("unknown content-type: "+contentType))
 		return false

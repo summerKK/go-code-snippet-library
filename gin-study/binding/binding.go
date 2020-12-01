@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+// 1Mb
+const MAX_MEMORY = 1 * 1024 * 1024
+
 type Binding interface {
 	Bind(req *http.Request, v interface{}) error
 }
@@ -20,10 +23,13 @@ type xmlBinding struct{}
 
 type formBinding struct{}
 
+type multipartFormBinding struct{}
+
 var (
-	JSON = jsonBinding{}
-	XML  = xmlBinding{}
-	FORM = formBinding{}
+	JSON          = jsonBinding{}
+	XML           = xmlBinding{}
+	FORM          = formBinding{}
+	MultipartForm = multipartFormBinding{}
 )
 
 func (_ jsonBinding) Bind(req *http.Request, v interface{}) error {
@@ -53,6 +59,18 @@ func (_ formBinding) Bind(req *http.Request, v interface{}) error {
 	}
 
 	return Validate(v)
+}
+
+func (_ multipartFormBinding) Bind(req *http.Request, v interface{}) error {
+	if err := req.ParseMultipartForm(MAX_MEMORY); err != nil {
+		return err
+	}
+
+	if err := mapForm(v, req.Form); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // 把form隐射到ptr上面
