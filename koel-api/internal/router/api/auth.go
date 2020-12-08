@@ -2,13 +2,14 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/summerKK/go-code-snippet-library/koel-api/internal/dto"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/service"
 	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/app"
 	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/errcode"
 )
 
 func GetAuth(c *gin.Context) {
-	params := &service.UserRequest{}
+	params := &dto.UserRequest{}
 	response := app.NewResponse(c)
 	ok, errors := app.BindAndValid(c, params)
 	if !ok {
@@ -23,13 +24,13 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	token, err := app.GenerateToken(params.Email)
+	token, err := app.GenerateToken(params.UserName)
 	if err != nil {
 		response.ToErrorResponse(errcode.UnauthorizedTokenGenerate)
 		return
 	}
 
-	response.ToResponse(gin.H{
+	response.Success(gin.H{
 		"token": token,
 	})
 }

@@ -2,23 +2,12 @@ package model
 
 import (
 	"fmt"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/summerKK/go-code-snippet-library/koel-api/global"
 	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/setting"
 )
-
-type Model struct {
-	ID int `json:"id" gorm:"primary_key"`
-	CommonTime
-}
-
-type CommonTime struct {
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
 
 // 初始化数据库
 func NewDbEngine(dbSetting *setting.DatabaseSettingS) (*gorm.DB, error) {

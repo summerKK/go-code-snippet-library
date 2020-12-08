@@ -3,7 +3,7 @@ Database:
   Username: root
   Password: root
   Host: 127.0.0.1:3306
-  DBName: koel
+  DBName: mall
   TablePrefix:
   Charset: utf8mb4,utf8
   ParseTime: True
