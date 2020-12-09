@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/errcode"
+	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/error"
 )
 
 type Response struct {
@@ -13,7 +13,7 @@ func NewResponse(ctx *gin.Context) *Response {
 	return &Response{Ctx: ctx}
 }
 
-func (r *Response) ToResponse(data interface{}, err *errcode.Error) {
+func (r *Response) ToResponse(data interface{}, err *error.Error) {
 	h := gin.H{
 		"code":    err.Code(),
 		"message": err.Msg(),
@@ -28,10 +28,10 @@ func (r *Response) ToResponse(data interface{}, err *errcode.Error) {
 
 // 列表返回
 func (r *Response) Success(data interface{}) {
-	r.ToResponse(data, errcode.Success)
+	r.ToResponse(data, error.Success)
 }
 
-func (r *Response) ToErrorResponse(err *errcode.Error) {
+func (r *Response) ToErrorResponse(err *error.Error) {
 	r.ToResponse(nil, err)
 }
 

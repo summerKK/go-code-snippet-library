@@ -36,7 +36,7 @@ func (v ValidatorErrors) Errors() []string {
 
 // 对数据绑定并且验证
 func BindAndValid(c *gin.Context, v interface{}) (bool, ValidatorErrors) {
-	var errs []*ValidatorError
+	var errs ValidatorErrors
 	// 从 c 中解析字段,并绑定到 v 上面.并且对数据进行验证
 	err := c.ShouldBind(v)
 	if err != nil {
@@ -44,10 +44,11 @@ func BindAndValid(c *gin.Context, v interface{}) (bool, ValidatorErrors) {
 		trans, _ := v.(ut.Translator)
 		validErrors, ok := err.(validator.ValidationErrors)
 		if !ok {
-			return false, []*ValidatorError{&ValidatorError{
+			errs = append(errs, &ValidatorError{
 				Key:     "unknown",
 				Message: "unknown",
-			}}
+			})
+			return false, errs
 		}
 
 		for k, v := range validErrors.Translate(trans) {

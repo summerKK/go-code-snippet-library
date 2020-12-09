@@ -20,17 +20,17 @@ type UmsAdmin struct {
 	NickName   string    `json:"nick_name"`
 	Note       string    `json:"note"`
 	CreateTime time.Time `json:"create_time"`
-	LoginTime  time.Time `json:"login_time"`
-	Status     uint8     `json:"status"`
+	// 设置gorm tag.这样调用create() 方法的时候,如果当前字段为零值会自动过滤掉
+	LoginTime time.Time `json:"login_time" gorm:"default:null"`
+	Status    uint8     `json:"status" gorm:"default:1"`
 }
 
 func (a *UmsAdmin) TableName() string {
 	return "ums_admin"
 }
 
-func (a *UmsAdmin) GetUserByName(db *gorm.DB) (*UmsAdmin, error) {
-	var user UmsAdmin
-	err := db.Where("username = ?", a.Username).First(&user).Error
+func (a *UmsAdmin) BeforeCreate(tx *gorm.DB) (err error) {
+	a.CreateTime = time.Now()
 
-	return &user, err
+	return nil
 }

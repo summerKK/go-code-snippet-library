@@ -1,4 +1,4 @@
-package errcode
+package error
 
 import (
 	"fmt"
@@ -16,6 +16,19 @@ func NewError(code int, msg string) *Error {
 	return &Error{
 		code:     code,
 		msg:      msg,
+		httpCode: http.StatusOK,
+	}
+}
+
+func NewErrWithBusinessError(error error) *Error {
+	errMsg := "business error"
+	if _, ok := error.(*BusinessError); ok {
+		errMsg = error.Error()
+	}
+
+	return &Error{
+		code:     500,
+		msg:      errMsg,
 		httpCode: http.StatusOK,
 	}
 }
@@ -56,6 +69,12 @@ func (e *Error) WithDetails(details ...string) *Error {
 
 func (e *Error) WithHttpCode(code int) *Error {
 	e.httpCode = code
+
+	return e
+}
+
+func (e *Error) WithMsg(msg string) *Error {
+	e.msg = msg
 
 	return e
 }
