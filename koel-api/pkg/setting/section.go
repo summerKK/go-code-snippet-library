@@ -7,6 +7,7 @@ type ServerSettingS struct {
 	HttpPort     string
 	ReadTimeOut  time.Duration
 	WriteTimeOut time.Duration
+	ProjectName  string
 }
 
 type DatabaseSettingS struct {

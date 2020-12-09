@@ -1,27 +1,24 @@
 package service
 
 import (
-	"context"
 	"errors"
 
-	"github.com/summerKK/go-code-snippet-library/koel-api/global"
-	"github.com/summerKK/go-code-snippet-library/koel-api/internal/dao"
+	"github.com/gin-gonic/gin"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/dto/admin"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/model"
 	businessError "github.com/summerKK/go-code-snippet-library/koel-api/pkg/error"
 	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/security"
+	"github.com/summerKK/go-code-snippet-library/koel-api/pkg/util"
 )
 
 type AdminService struct {
 	*service
 }
 
-func NewAdminService(ctx context.Context) *AdminService {
+func NewAdminService(ctx *gin.Context) *AdminService {
+	svc := NewService(ctx)
 	return &AdminService{
-		service: &service{
-			ctx: ctx,
-			dao: dao.New(global.DBEngine),
-		},
+		service: svc,
 	}
 }
 
@@ -40,6 +37,10 @@ func (s *AdminService) CheckAuth(param *admin.UserLoginRequest) error {
 }
 
 func (s *AdminService) Register(param *admin.UserRegisterRequest) (user *model.UmsAdmin, err error) {
+	defer func() {
+		util.AddErrorToCtx(s.ctx, err)
+	}()
+
 	user = param.Convert2Model()
 	// 查看用户是否已经存在
 	existsUser, err := s.dao.GetUserByName(user.Username)

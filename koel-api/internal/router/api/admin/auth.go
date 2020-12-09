@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/dto/admin"
 	"github.com/summerKK/go-code-snippet-library/koel-api/internal/service"
@@ -23,7 +21,7 @@ func (_ umsAdminController) Login(c *gin.Context) {
 		return
 	}
 
-	svc := service.NewAdminService(c.Request.Context())
+	svc := service.NewAdminService(c)
 	err := svc.CheckAuth(params)
 	if err != nil {
 		response.ToErrorResponse(error.UnauthorizedAuthNotExist)
@@ -50,9 +48,8 @@ func (_ umsAdminController) Register(c *gin.Context) {
 		return
 	}
 
-	svc := service.NewAdminService(c.Request.Context())
+	svc := service.NewAdminService(c)
 	user, err := svc.Register(params)
-	log.Print(err)
 	if err != nil {
 		response.ToErrorResponse(error.NewErrWithBusinessError(err))
 		return

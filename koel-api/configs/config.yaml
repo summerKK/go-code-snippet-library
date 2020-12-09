@@ -16,6 +16,7 @@ Server:
   # debug/prod 模式
   RunModel: debug
   HttpPort: 2020
+  ProjectName: admin
 
 App:
   # 列表最大返回数据

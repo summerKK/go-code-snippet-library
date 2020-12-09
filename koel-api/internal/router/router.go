@@ -8,7 +8,7 @@ import (
 func NewRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.Use(middleware.Translations())
+	r.Use(middleware.Translations(), middleware.CollectError())
 
 	r1 := r.Group("/api")
 	umsAdminRoute(r1)
