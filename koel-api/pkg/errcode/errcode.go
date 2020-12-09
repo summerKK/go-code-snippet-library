@@ -6,15 +6,17 @@ import (
 )
 
 type Error struct {
-	code    int
-	msg     string
-	details []string
+	code     int
+	msg      string
+	details  []string
+	httpCode int
 }
 
 func NewError(code int, msg string) *Error {
 	return &Error{
-		code: code,
-		msg:  msg,
+		code:     code,
+		msg:      msg,
+		httpCode: http.StatusOK,
 	}
 }
 
@@ -30,8 +32,12 @@ func (e *Error) Msg() string {
 	return e.msg
 }
 
-func (e Error) Details() []string {
+func (e *Error) Details() []string {
 	return e.details
+}
+
+func (e *Error) HttpCode() int {
+	return e.httpCode
 }
 
 func (e *Error) Msgf(args []interface{}) string {
@@ -48,20 +54,8 @@ func (e *Error) WithDetails(details ...string) *Error {
 	return e
 }
 
-// 判断返回服务器的状态码
-func (e *Error) StatusCode() int {
-	switch e.Code() {
-	case Success.Code():
-		return http.StatusOK
-	case UnauthorizedAuthNotExist.Code():
-		fallthrough
-	case UnauthorizedTokenError.Code():
-		fallthrough
-	case UnauthorizedTokenGenerate.Code():
-		fallthrough
-	case UnauthorizedTokenTimeout.Code():
-		return http.StatusUnauthorized
-	default:
-		return http.StatusInternalServerError
-	}
+func (e *Error) WithHttpCode(code int) *Error {
+	e.httpCode = code
+
+	return e
 }

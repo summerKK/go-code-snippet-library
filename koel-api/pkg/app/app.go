@@ -14,12 +14,16 @@ func NewResponse(ctx *gin.Context) *Response {
 }
 
 func (r *Response) ToResponse(data interface{}, err *errcode.Error) {
-	r.Ctx.JSON(err.StatusCode(), gin.H{
+	h := gin.H{
 		"code":    err.Code(),
 		"message": err.Msg(),
 		"data":    data,
-		"details": err.Details(),
-	})
+	}
+	if len(err.Details()) > 0 {
+		h["error_details"] = err.Details()
+	}
+
+	r.Ctx.JSON(err.HttpCode(), h)
 }
 
 // 列表返回
