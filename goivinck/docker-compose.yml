@@ -1,0 +1,117 @@
+version: '3.5'
+
+# 网络配置
+networks:
+  backend:
+    driver: ${NETWORKS_DRIVER}
+
+
+# 服务容器配置
+services:
+  golang: # 自定义容器名称
+    build: # 指定构建使用的 Dockerfile 文件
+      context: ./golang
+    environment:
+      - TZ=${TZ}
+    volumes: # 设置挂载目录
+      - ${CODE_PATH_HOST}:/usr/src/code
+    ports: # 设置端口映射
+      - "18000:8000"
+      - "18001:8001"
+      - "18002:8002"
+      - "18003:8003"
+      - "19000:9000"
+      - "19001:9001"
+      - "19002:9002"
+      - "19003:9003"
+    stdin_open: true
+    tty: true
+    networks:
+      - backend
+
+  etcd:
+    build:
+      context: ./etcd
+    environment:
+      - TZ=${TZ}
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    ports:
+      - "${ETCD_PORT}:2379"
+    networks:
+      - backend
+
+  mysql:
+    build:
+      context: ./mysql
+    environment:
+      - TZ=${TZ}
+      - MYSQL_USER=${MYSQL_USERNAME}                  # 设置 Mysql 用户名称
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}              # 设置 Mysql 用户密码
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}    # 设置 Mysql root 用户密码
+    volumes:
+      - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT}:3306"
+    networks:
+      - backend
+
+  redis:
+    build:
+      context: ./redis
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${DATA_PATH_HOST}/redis:/data                 # 引用 .env 配置中 DATA_PATH_HOST 变量，将宿主机上存放 Redis 数据的目录挂载到容器中 /data 目录
+    ports:
+      - "${REDIS_PORT}:6379"                          # 设置容器6379端口映射指定宿主机端口
+    networks:
+      - backend
+
+  prometheus:
+    build:
+      context: ./prometheus
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./prometheus/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml  # 将 prometheus 配置文件挂载到容器里
+    ports:
+      - "${PROMETHEUS_PORT}:9090"                     # 设置容器9090端口映射指定宿主机端口，用于宿主机访问可视化web
+    networks:
+      - backend
+
+  grafana:
+    build:
+      context: ./grafana
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "${GRAFANA_PORT}:3000"                        # 设置容器3000端口映射指定宿主机端口，用于宿主机访问可视化web
+    networks:
+      - backend
+
+  jaeger:
+    build:
+      context: ./jaeger
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "${JAEGER_PORT}:16686"                        # 设置容器16686端口映射指定宿主机端口，用于宿主机访问可视化web
+    networks:
+      - backend
+
+  dtm:
+    build:
+      context: ./dtm
+    environment:
+      - TZ=${TZ}
+    entrypoint:
+      - "/app/dtm/dtm"
+      - "-c=/app/dtm/configs/config.yaml"
+    volumes:
+      - ./dtm/config.yml:/app/dtm/configs/config.yaml # 将 dtm 配置文件挂载到容器里
+    ports:
+      - "${DTM_HTTP_PORT}:36789"
+      - "${DTM_GRPC_PORT}:36790"
+    networks:
+      - backend
