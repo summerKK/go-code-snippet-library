@@ -1,0 +1,20 @@
+Name: Product
+Host: 0.0.0.0
+Port: 8001
+
+Mysql:
+  DataSource: admin:123456@tcp(127.0.0.1:13306)/mall?charset=utf8mb4&parseTime=true&loc=Asia%2fShanghai
+
+CacheRedis:
+  - Host: 127.0.0.1:16379
+    Type: node
+
+Auth:
+  AccessSecret: uOvKLmVfztaXGpNYd4Z0I1SiT7MweJhl
+  AccessExpire: 86400
+
+ProductRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:12379
+    Key: product.rpc

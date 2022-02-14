@@ -19,7 +19,7 @@ RUN apt-get update && \
 USER root
 RUN GOPROXY=https://goproxy.cn/,direct go install github.com/zeromicro/go-zero/tools/goctl@latest
 
-# 安装 protoc
+# 安装 protocx
 USER root
 RUN curl -L -o /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v3.19.1/protoc-3.19.1-linux-x86_64.zip && \
     unzip -d /tmp/protoc /tmp/protoc.zip && \

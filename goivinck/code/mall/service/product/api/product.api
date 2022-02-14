@@ -1,0 +1,58 @@
+type (
+	CreateReqeust {
+		Name   string `json:"name"`
+		Desc   string `json:"desc"`
+		Stock  int64  `json:"stock"`
+		Amount int64  `json:"amount"`
+		Status int64  `json:"status"`
+	}
+	CreateResponse {
+		Id int64 `json:"id"`
+	}
+
+	UpdateRequest {
+		Id     int64  `json:"id"`
+		Name   string `json:"name,optional"`
+		Desc   string `json:"desc,optional"`
+		Stock  int64  `json:"stock,optional"`
+		Amount int64  `json:"amount,optional"`
+		Status int64  `json:"status,optional"`
+	}
+	UpdateResponse {
+	}
+
+	RemoveRequest {
+		Id int64 `json:"id"`
+	}
+	RemoveResponse {
+	}
+
+	DetailReqeust {
+		Id int64 `json:"id"`
+	}
+	DetailResponse {
+		Id     int64  `json:"id"`
+		Name   string `json:"name"`
+		Desc   string `json:"desc"`
+		Stock  int64  `json:"stock"`
+		Amount int64  `json:"amount"`
+		Status int64  `json:"status"`
+	}
+)
+
+@server(
+	jwt: Auth
+)
+service Product {
+	@handler Create
+	post /api/product/create (CreateReqeust) returns (CreateResponse)
+	
+	@handler Update
+	post /api/product/update (UpdateRequest) returns (UpdateResponse)
+	
+	@handler Remove
+	post /api/product/remove (RemoveRequest) returns (RemoveResponse)
+	
+	@handler Detail
+	post /api/product/detail (DetailReqeust) returns (DetailResponse)
+}

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package productClient;
+
+option go_package = "product";
+
+message CreateRequest{
+  string Name = 1;
+  string Desc = 2;
+  int64 Stock = 3;
+  int64 Amount = 4;
+  int64 Status = 5;
+}
+message CreateResponse{
+  int64 Id = 1;
+}
+
+message UpdateRequest{
+  int64 Id = 1;
+  string Name = 2;
+  string Desc = 3;
+  int64 Stock = 4;
+  int64 Amount = 5;
+  int64 Status = 6;
+}
+message UpdateResponse {
+}
+
+message RemoveRequest {
+  int64 id = 1;
+}
+message RemoveResponse {
+}
+
+message DetailRequest {
+  int64 id = 1;
+}
+message DetailResponse {
+  int64 id = 1;
+  string Name = 2;
+  string Desc = 3;
+  int64 Stock = 4;
+  int64 Amount = 5;
+  int64 Status = 6;
+}
+
+service Product{
+  rpc Create(CreateRequest) returns(CreateResponse);
+  rpc Update(UpdateRequest) returns(UpdateResponse);
+  rpc Remove(RemoveRequest) returns(RemoveResponse);
+  rpc Detail(DetailRequest) returns(DetailResponse);
+}

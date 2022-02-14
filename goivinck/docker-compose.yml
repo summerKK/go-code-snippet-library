@@ -8,26 +8,27 @@ networks:
 
 # 服务容器配置
 services:
-  golang: # 自定义容器名称
-    build: # 指定构建使用的 Dockerfile 文件
-      context: ./golang
-    environment:
-      - TZ=${TZ}
-    volumes: # 设置挂载目录
-      - ${CODE_PATH_HOST}:/usr/src/code
-    ports: # 设置端口映射
-      - "18000:8000"
-      - "18001:8001"
-      - "18002:8002"
-      - "18003:8003"
-      - "19000:9000"
-      - "19001:9001"
-      - "19002:9002"
-      - "19003:9003"
-    stdin_open: true
-    tty: true
-    networks:
-      - backend
+#  golang: # 自定义容器名称
+#    build: # 指定构建使用的 Dockerfile 文件
+#      context: ./golang
+#    environment:
+#      - TZ=${TZ}
+#    volumes: # 设置挂载目录
+#      - ${CODE_PATH_HOST}:/usr/src/code
+#      - ${GO_MODE_PATH}:/go
+#    ports: # 设置端口映射
+#      - "18000:8000"
+#      - "18001:8001"
+#      - "18002:8002"
+#      - "18003:8003"
+#      - "19000:9000"
+#      - "19001:9001"
+#      - "19002:9002"
+#      - "19003:9003"
+#    stdin_open: true
+#    tty: true
+#    networks:
+#      - backend
 
   etcd:
     build:
