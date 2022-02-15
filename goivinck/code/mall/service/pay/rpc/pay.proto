@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package PayClient;
+
+option go_package = "pay";
+
+message CreateRequest{
+  int64 Uid = 1;
+  int64 Oid = 2;
+  int64 Amount = 3;
+}
+message CreateResponse{
+  int64 Id = 1;
+}
+
+message DetailRequest{
+  int64 Id = 1;
+}
+message DetailResponse{
+  int64 Id = 1;
+  int64 Uid = 2;
+  int64 Oid = 3;
+  int64 Amount = 4;
+  int64 Source = 5;
+  int64 Status = 6;
+}
+
+message CallbackRequest {
+  int64 id = 1;
+  int64 Uid = 2;
+  int64 Oid = 3;
+  int64 Amount = 4;
+  int64 Source = 5;
+  int64 Status = 6;
+}
+message CallbackResponse {
+}
+
+service Pay{
+  rpc Create(CreateRequest) returns(CreateResponse);
+  rpc Detail(DetailRequest) returns(DetailResponse);
+  rpc Callback(CallbackRequest) returns(CallbackResponse);
+}
