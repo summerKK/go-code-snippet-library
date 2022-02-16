@@ -23,3 +23,8 @@ OrderRpc:
     Hosts:
       - 127.0.0.1:12379
     Key: order.rpc
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9093
+  Path: /metrics

@@ -14,3 +14,18 @@ CacheRedis:
     Type: node
 
 Salt: HWVOFkGgPTryzICwd7qnJaZR9KQ2i8xe
+
+# 是否开启 Auth 验证
+#Auth: true
+# 是否开启严格模式
+StrictControl: true
+# 指定Redis服务
+Redis:
+  Key: rpc:auth:user
+  Host: 127.0.0.1:16379
+  Type: node
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9090
+  Path: /metrics
