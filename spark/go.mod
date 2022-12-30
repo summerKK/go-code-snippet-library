@@ -1,7 +1,7 @@
 module github.com/summerKK/go-code-snippet-library/spark
 
 require (
-	github.com/gin-gonic/gin v1.5.0
+	github.com/gin-gonic/gin v1.7.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.1.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jmoiron/sqlx v1.2.0
